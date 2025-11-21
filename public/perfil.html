@@ -13,6 +13,106 @@
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success px-3">
+  <div class="container-fluid">
+
+    <a class="navbar-brand" href="#">Panadería</a>
+
+    <!-- botón hamburguesa -->
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+            aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- CONTENIDO DEL NAV -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+        <li class="nav-item">
+          <button class="btn-modal" commandfor="si" command="show-modal" type="submit">Inicio de sesión</button>
+</li>
+
+<dialog id="si">
+    <h2>Inicio de Sesión</h2>
+    <form method="dialog">
+        <label>Usuario:</label>
+        <input type="text" title="Ingresa tu nombre de usuario"><br><br>
+        <label>Contraseña:</label>
+        <input type="password" title="Ingresa tu contraseña"><br><br>
+        <input type="submit">
+        <button class="btn-modal" id="btn-cerrar-modal">Cerrar</button>
+    </form>
+</dialog>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="#acerca">Nosotros</a>
+        </li>
+
+        <!-- Dropdown integrado en el navbar -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+            Menú
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="perfil.html">Perfil</a></li>
+            <li><a class="dropdown-item" href="inventario.html">Inventario</a></li>
+            <li><a class="dropdown-item" href="compra.html">Compra</a></li>
+          </ul>
+        </li>
+
+		<li class="nav-item"><a class="nav-link active" href="#" role="button" data-bs-toggle="dropdown">🎅</a></li>
+		<li class="nav-item"><a class="nav-link active" href="#" role="button" data-bs-toggle="dropdown">🎄</a></li>
+		<li class="nav-item"><a class="nav-link active" href="#" role="button" data-bs-toggle="dropdown">❄️</a></li>
+
+      </ul>
+
+    </div>
+  </div>
+</nav>
     
+    <div class="container">
+	<div class="snowflakes" aria-hidden="true">
+		<div class="snowflake">
+			❅
+		</div>
+		<div class="snowflake">
+			❆
+		</div>
+		<div class="snowflake">
+			❅
+		</div>
+		<div class="snowflake">
+			❆
+		</div>
+		<div class="snowflake">
+			❅
+		</div>
+		<div class="snowflake">
+			❆
+		</div>
+		<div class="snowflake">
+			❅
+		</div>
+		<div class="snowflake">
+			❆
+		</div>
+		<div class="snowflake">
+			❅
+		</div>
+		<div class="snowflake">
+			❆
+		</div>
+		<div class="snowflake">
+			❅
+		</div>
+		<div class="snowflake">
+			❆
+		</div>
+	</div>
+    </div>
+	<script src="script.js"></script>
 </body>
 </html>
