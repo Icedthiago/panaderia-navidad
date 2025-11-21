@@ -36,21 +36,67 @@
 
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
 
-        <li class="nav-item">
-          <button class="btn-modal" commandfor="si" command="show-modal" type="submit">Inicio de sesión</button>
+<!-- BOTONES EN NAV (abre directamente cada modal) -->
+<li class="nav-item">
+  <button class="btn-modal" data-open="modal-login" type="button">Inicio de sesión</button>
+</li>
+<li class="nav-item">
+  <button class="btn-modal" data-open="modal-registro" type="button">Registrar</button>
 </li>
 
-<dialog id="si">
-    <h2>Inicio de Sesión</h2>
-    <form method="dialog">
-        <label>Usuario:</label>
-        <input type="text" title="Ingresa tu nombre de usuario"><br><br>
-        <label>Contraseña:</label>
-        <input type="password" title="Ingresa tu contraseña"><br><br>
-        <input type="submit">
-        <button class="btn-modal" id="btn-cerrar-modal">Cerrar</button>
-    </form>
+<!-- MODAL LOGIN (NO anidar) -->
+<dialog id="modal-login">
+  <h2>Inicio de Sesión</h2>
+
+  <form id="loginForm">
+    <label for="login-email">Correo electrónico:</label>
+    <input type="email" id="login-email" name="email" required><br><br>
+
+    <label for="login-password">Contraseña:</label>
+    <input type="password" id="login-password" name="password" required><br><br>
+
+    <button type="submit">Ingresar</button>
+  </form>
+
+  <p style="margin-top: 10px;">
+    ¿No tienes cuenta?
+    <a href="#" id="link-abrir-registro">Regístrate aquí</a>
+  </p>
+
+  <button class="btn-modal cerrar-btn" data-close="modal-login" type="button">Cerrar</button>
 </dialog>
+
+<!-- MODAL REGISTRO (NO anidar) -->
+<dialog id="modal-registro">
+  <h2>Registro de Usuario</h2>
+
+  <form id="registroForm">
+    <label for="reg-nombre">Nombre:</label>
+    <input type="text" id="reg-nombre" name="nombre" required><br><br>
+
+    <label for="reg-email">Correo electrónico:</label>
+    <input type="email" id="reg-email" name="email" required><br><br>
+
+    <label for="reg-password">Contraseña:</label>
+    <input type="password" id="reg-password" name="password" required><br><br>
+
+    <label for="reg-rol">Rol:</label>
+    <select id="reg-rol" name="rol">
+      <option value="cliente">Cliente</option>
+      <option value="admin">Admin</option>
+    </select><br><br>
+
+    <button type="submit">Registrar</button>
+  </form>
+
+  <p style="margin-top: 10px;">
+    ¿Ya tienes cuenta?
+    <a href="#" id="link-abrir-login">Inicia sesión</a>
+  </p>
+
+  <button class="btn-modal cerrar-btn" data-close="modal-registro" type="button">Cerrar</button>
+</dialog>
+
         </li>
 
         <li class="nav-item">
@@ -226,5 +272,88 @@ L.marker([19.362349, -99.270401]).addTo(map)
 
 </footer>
 
+<script>
+/* ----- configuración: tiempo de la animación (ms) ----- */
+const ANIM_MS = 300;
+
+/* ----- helpers de animación ----- */
+function abrirModal(modal) {
+  modal.classList.remove("cerrando");
+  // showModal puede tirar en navegadores que no soportan dialog nativo,
+  // pero asumimos compatibilidad moderna
+  modal.showModal();
+}
+
+function cerrarModalConAnimacion(modal, callback) {
+  modal.classList.add("cerrando");
+  setTimeout(() => {
+    try { modal.close(); } catch(e) {}
+    modal.classList.remove("cerrando");
+    if (typeof callback === "function") callback();
+  }, ANIM_MS);
+}
+
+/* ----- elementos ----- */
+const botonesAbrir = document.querySelectorAll("[data-open]");
+const botonesCerrar = document.querySelectorAll(".cerrar-btn");
+const loginModal = document.getElementById("modal-login");
+const registroModal = document.getElementById("modal-registro");
+const linkAbrirRegistro = document.getElementById("link-abrir-registro");
+const linkAbrirLogin = document.getElementById("link-abrir-login");
+
+/* ----- abrir por botones del nav (data-open="id-del-modal") ----- */
+botonesAbrir.forEach(btn => {
+  btn.addEventListener("click", (e) => {
+    const id = btn.getAttribute("data-open");
+    const m = document.getElementById(id);
+    if (!m) return;
+    abrirModal(m);
+  });
+});
+
+/* ----- cerrar por botones con data-close (o clase .cerrar-btn) ----- */
+botonesCerrar.forEach(btn => {
+  btn.addEventListener("click", (e) => {
+    const id = btn.getAttribute("data-close");
+    const m = id ? document.getElementById(id) : btn.closest("dialog");
+    if (!m) return;
+    cerrarModalConAnimacion(m);
+  });
+});
+
+/* ----- cambiar entre modales desde enlaces internos (con animación) ----- */
+linkAbrirRegistro.addEventListener("click", (e) => {
+  e.preventDefault();
+  cerrarModalConAnimacion(loginModal, () => abrirModal(registroModal));
+});
+
+linkAbrirLogin.addEventListener("click", (e) => {
+  e.preventDefault();
+  cerrarModalConAnimacion(registroModal, () => abrirModal(loginModal));
+});
+
+/* ----- cerrar con clic fuera del diálogo ----- */
+function onClickFuera(e, modal) {
+  const rect = modal.getBoundingClientRect();
+  const dentro = e.clientX >= rect.left && e.clientX <= rect.right &&
+                 e.clientY >= rect.top && e.clientY <= rect.bottom;
+  if (!dentro) cerrarModalConAnimacion(modal);
+}
+loginModal.addEventListener("click", (e) => onClickFuera(e, loginModal));
+registroModal.addEventListener("click", (e) => onClickFuera(e, registroModal));
+
+/* ----- prevenir que submit de formularios recargue página durante pruebas ----- */
+document.getElementById("loginForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+  // aquí puedes hacer fetch() para autenticar o mostrar mensaje
+  cerrarModalConAnimacion(loginModal);
+});
+
+document.getElementById("registroForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+  // aquí puedes enviar datos al backend
+  cerrarModalConAnimacion(registroModal);
+});
+</script>
 </body>
 </html>

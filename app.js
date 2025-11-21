@@ -1,4 +1,5 @@
 import http from "http";
+import bcrypt from "bcrypt";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -58,7 +59,7 @@ const server = http.createServer((req, res) => {
   let requested = safePath.split("?")[0];
   if (requested === "/" || requested === "") requested = "/index.html";
 
-  const filePath = path.join(__dirname, requested);
+  const filePath = path.join(__dirname, "public", requested);
   serveStatic(filePath, res);
 });
 
@@ -84,6 +85,89 @@ const pool = new Pool({
   password: "K4kspDfnESIP2gSkmCcWyqBgw8SpFRgG",
   port: 5432,
   ssl: { rejectUnauthorized: false }
+});
+
+//metodos de SQL
+// REGISTRARSE
+app.post('/api/usuarios', async (req, res) => {
+  const { nombre, email, password, rol } = req.body;
+
+  try {
+    // Encriptar contraseña
+    const hash = await bcrypt.hash(password, 10);
+
+    const query = `
+      INSERT INTO usuario (nombre, email, password, rol)
+      VALUES ($1, $2, $3, $4)
+      RETURNING id_usuario;
+    `;
+
+    const result = await pool.query(query, [nombre, email, hash, rol]);
+
+    res.json({
+      success: true,
+      message: "Usuario registrado correctamente",
+      id_usuario: result.rows[0].id_usuario
+    });
+
+  } catch (err) {
+
+    // correo duplicado (postgres error code 23505)
+    if (err.code === "23505") {
+      return res.status(400).json({
+        success: false,
+        message: "El correo ya está registrado"
+      });
+    }
+
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      message: "Error al registrar usuario"
+    });
+  }
+});
+
+// INICIAR SESIÓN
+app.post('/api/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const query = 'SELECT * FROM usuario WHERE email = $1';
+    const result = await pool.query(query, [email]);
+
+    if (result.rows.length === 0) {
+      return res.json({
+        success: false,
+        message: "Usuario no encontrado"
+      });
+    }
+
+    const usuario = result.rows[0];
+
+    const match = await bcrypt.compare(password, usuario.password);
+
+    if (!match) {
+      return res.json({
+        success: false,
+        message: "Contraseña incorrecta"
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Inicio de sesión exitoso",
+      nombre: usuario.nombre,
+      rol: usuario.rol
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      message: "Error en el servidor"
+    });
+  }
 });
 
 // RUTA DE PRUEBA

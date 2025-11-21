@@ -207,7 +207,7 @@ footer p {
 	background: rgba(0, 0, 0, 0.8);
 }
 dialog {
-    width: 400px;
+    width: 500px;
     max-width: 90%;
     max-height: 95vh;
     background: linear-gradient(to bottom,#790A07 0%,#DC4141 50%,#400505 100%);
@@ -230,6 +230,11 @@ dialog[open] {
 		scale: 0;
 	}
 }
+dialog.cerrando {
+    scale: 0;
+    transition: scale .3s ease-in-out;
+}
+
 /* Contenedor de iconos */
 .wrapper {
   display: flex;
