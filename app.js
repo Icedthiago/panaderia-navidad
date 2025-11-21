@@ -68,10 +68,10 @@ const server = http.createServer((req, res) => {
 // ----------------------------
 
 import express from "express";
-import pkg from "pg";
+import pg from "pg";
 import cors from "cors";
 
-const { Pool } = pkg;
+const { Pool } = pg;
 
 const app = express();
 app.use(cors());

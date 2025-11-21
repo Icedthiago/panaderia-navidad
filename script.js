@@ -1,15 +1,4 @@
-/*const btnAbrirModal = document.querySelector('#btn-abrir-modal');
-const btnCerrarModal = document.querySelector('#btn-cerrar-modal');
-const modal = document.querySelector('#modal');
-
-btnAbrirModal.addEventListener('click', () => {
-  modal.showModal();
-});
-
-btnCerrarModal.addEventListener('click', () => {
-  modal.close();
-});*/
-
+const API_URL = "https://dpg-d4fve0efu37c739k38m0-a.oregon-postgres.render.com"; // <-- PON AQUÍ LA REAL
 
 document.getElementById("registroForm").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -21,16 +10,22 @@ document.getElementById("registroForm").addEventListener("submit", async (e) => 
     rol: document.getElementById("reg-rol").value
   };
 
-  const res = await fetch("https://tu-api/render.com/api/usuarios", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(datos)
-  });
+  try {
+    const res = await fetch(`${API_URL}/api/usuarios`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(datos)
+    });
 
-  const data = await res.json();
+    const data = await res.json();
+    console.log("Respuesta registro:", data);
 
-  alert(data.message);  // 👈 muestra éxito o error
+    alert(data.message || "Registro completado");
+  } catch (err) {
+    alert("Error conectando con el servidor");
+  }
 });
+
 
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -40,17 +35,22 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     password: document.getElementById("login-password").value
   };
 
-  const res = await fetch("https://tu-api/render.com/api/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(datos)
-  });
+  try {
+    const res = await fetch(`${API_URL}/api/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(datos)
+    });
 
-  const data = await res.json();
+    const data = await res.json();
+    console.log("Respuesta login:", data);
 
-  alert(data.message);  // 👈 "Inicio exitoso" o "Contraseña incorrecta"
+    alert(data.message);
 
-  if (data.success) {
-    // redirigir, abrir modal, etc.
+    if (data.success) {
+      console.log("Bienvenido", data.nombre);
+    }
+  } catch (err) {
+    alert("Error conectando con el servidor");
   }
 });
