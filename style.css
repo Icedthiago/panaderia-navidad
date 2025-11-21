@@ -1,0 +1,325 @@
+.body {
+		background: black;
+		width: 400px; 
+		height: 100%;
+}
+/* Apply background to the page (use the element selector so it always applies) */
+body {
+	margin: 0;
+	padding: 0;
+	background: linear-gradient(#820D13 0%, #ecebf1 60%, #1E9965 100%);
+	font-family: 'Mountains of Christmas', cursive;
+}
+@-webkit-keyframes action {
+	0% {
+		transform: translateY(0);
+	}
+	100% {
+		transform: translateY(-10px);
+	}
+}
+@keyframes action {
+	0% {
+		transform: translateY(0);
+	}
+	100% {
+		transform: translateY(-10px);
+	}
+}
+.snowflake {
+	color: #fff;
+	font-size: 1.2em;
+	font-family: Arial, sans-serif;
+	text-shadow: 0 0 8px rgba(255,255,255,0.7);
+	filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));
+	will-change: transform, opacity;
+}
+@-webkit-keyframes snowflakes-fall {
+	0% {
+		top: -10%;
+	}
+	100% {
+		top: 100%;
+	}
+}
+@-webkit-keyframes snowflakes-shake {
+	0%,
+	100% {
+		-webkit-transform: translateX(0);
+		transform: translateX(0);
+	}
+	50% {
+		-webkit-transform: translateX(80px);
+		transform: translateX(80px);
+	}
+}
+@keyframes snowflakes-fall {
+	0% {
+		top: -10%;
+	}
+	100% {
+		top: 100%;
+	}
+}
+@keyframes snowflakes-shake {
+	0%,
+	100% {
+		transform: translateX(0);
+	}
+	50% {
+		transform: translateX(80px);
+	}
+}
+.snowflake {
+	position: fixed;
+	top: -10%;
+	z-index: 9999;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	cursor: default;
+	-webkit-animation-name: snowflakes-fall, snowflakes-shake;
+	-webkit-animation-duration: 10s, 3s;
+	-webkit-animation-timing-function: linear, ease-in-out;
+	-webkit-animation-iteration-count: infinite, infinite;
+	-webkit-animation-play-state: running, running;
+	animation-name: snowflakes-fall, snowflakes-shake;
+	animation-duration: 10s, 3s;
+	animation-timing-function: linear, ease-in-out;
+	animation-iteration-count: infinite, infinite;
+	animation-play-state: running, running;
+}
+h1, h2, h3 {
+	text-align: center;
+	margin: 18px 0 0 0;
+	color: #ffd700;
+	text-shadow: 0 0 12px rgba(255,215,0,0.25);
+	letter-spacing: 1px;
+}
+.snowflake:nth-of-type(0) {
+	left: 1%;
+	-webkit-animation-delay: 0s, 0s;
+	animation-delay: 0s, 0s;
+}
+.snowflake:nth-of-type(1) {
+	left: 10%;
+	-webkit-animation-delay: 1s, 1s;
+	animation-delay: 1s, 1s;
+}
+.snowflake:nth-of-type(2) {
+	left: 20%;
+	-webkit-animation-delay: 6s, 0.5s;
+	animation-delay: 6s, 0.5s;
+}
+.snowflake:nth-of-type(3) {
+	left: 30%;
+	-webkit-animation-delay: 4s, 2s;
+	animation-delay: 4s, 2s;
+}
+.snowflake:nth-of-type(4) {
+	left: 40%;
+	-webkit-animation-delay: 2s, 2s;
+	animation-delay: 2s, 2s;
+}
+.snowflake:nth-of-type(5) {
+	left: 50%;
+	-webkit-animation-delay: 8s, 3s;
+	animation-delay: 8s, 3s;
+}
+.snowflake:nth-of-type(6) {
+	left: 60%;
+	-webkit-animation-delay: 6s, 2s;
+	animation-delay: 6s, 2s;
+}
+.snowflake:nth-of-type(7) {
+	left: 70%;
+	-webkit-animation-delay: 2.5s, 1s;
+	animation-delay: 2.5s, 1s;
+}
+.snowflake:nth-of-type(8) {
+	left: 80%;
+	-webkit-animation-delay: 1s, 0s;
+	animation-delay: 1s, 0s;
+}
+.snowflake:nth-of-type(9) {
+	left: 90%;
+	-webkit-animation-delay: 3s, 1.5s;
+	animation-delay: 3s, 1.5s;
+}
+.snowflake:nth-of-type(10) {
+	left: 25%;
+	-webkit-animation-delay: 2s, 0s;
+	animation-delay: 2s, 0s;
+}
+.snowflake:nth-of-type(11) {
+	left: 65%;
+	-webkit-animation-delay: 4s, 2.5s;
+	animation-delay: 4s, 2.5s;
+}
+.header {
+    width: 100%;
+    padding: 20px 0;
+    background: linear-gradient(to bottom, #c82333, #9b1e29);
+    border-bottom: 6px solid #ffffffaa; /* borde tipo nieve */
+    box-shadow: 0 4px 15px rgba(255, 50, 50, 0.3);
+    text-align: center;
+    position: relative;
+    z-index: 10;
+    font-family: 'Mountains of Christmas', cursive;
+}
+.header h1 {
+    margin: 0;
+    color: #fff5e6;
+    font-size: 2rem;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px rgba(255, 200, 200, 0.7);
+    font-family: 'Mountains of Christmas', cursive;
+}
+footer {
+    width: 100%;
+    padding: 15px 0;
+    background: linear-gradient(to top, #14a207, #0d3b20);
+    border-top: 6px solid #ffffffaa; /* nieve */
+    box-shadow: 0 -4px 15px rgb(40,114,51);
+    text-align: center;
+    margin-top: 40px;
+    position: relative;
+    z-index: 10;
+    font-family: 'Mountains of Christmas', cursive;
+}
+footer p {
+    margin: 0;
+    color: #dfffe3;
+    font-size: 1rem;
+    letter-spacing: 1px;
+    font-family: 'Mountains of Christmas', cursive;
+    text-shadow: 0 0 8px rgba(255,255,255,0.3);
+	text-align: center;
+}
+.btn-modal {
+	background-color: black;
+	padding: 5px 15px;
+	border-radius: 5px;
+	color: white;
+}
+#modal::backdrop {
+	background: rgba(0, 0, 0, 0.8);
+}
+dialog {
+    width: 400px;
+    max-width: 90%;
+    max-height: 95vh;
+    background: linear-gradient(to bottom,#790A07 0%,#DC4141 50%,#400505 100%);
+    color: white;
+    overflow-y: auto;
+    margin: auto;
+    text-align: center;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
+    padding: 30px 40px;
+    transition: scale .3s ease-in-out;
+    scale: 0;
+}
+dialog[open] {
+	scale: 1;
+	transition: scale .3s ease-in-out;
+
+	@starting-style {
+		scale: 0;
+	}
+}
+/* Contenedor de iconos */
+.wrapper {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-bottom: 20px;
+}
+.icon {
+  position: relative;
+  background: white;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  color: #b30000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  transition: 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  cursor: pointer;
+}
+.icon .tooltip {
+  position: absolute;
+  top: -40px;
+  background: #b30000;
+  color: white;
+  padding: 6px 10px;
+  font-size: 14px;
+  border-radius: 6px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: 0.3s;
+  pointer-events: none;
+}
+.icon:hover .tooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
+/* Efecto hover general */
+.icon:hover {
+  background: #e6ffe6;
+  transform: scale(1.15);
+  color: #0a3d18;
+}
+/* Efectos únicos por red */
+.icon.facebook:hover { box-shadow: 0 0 15px #3b5998; }
+.icon.twitter:hover { box-shadow: 0 0 15px #00acee; }
+.icon.instagram:hover { box-shadow: 0 0 15px #e1306c; }
+.icon.github:hover { box-shadow: 0 0 15px #333; }
+.icon.youtube:hover { box-shadow: 0 0 15px #ff0000; }
+.chest-contenedor {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+}
+.chest-mapa {
+    width: 800px;
+    height: 400px;
+    border-radius: 15px;
+    border: 2px solid black;
+}
+.chest-p {
+    max-width: 300px;
+    background: linear-gradient(to bottom,#6f0f11 0%,#1d351d 50%,#325632 100%);
+    color: white;
+    padding: 15px;
+    border-radius: 15px;
+    border: 2px solid black;
+}
+/* Contenedor general tipo “caja” como el del mapa */
+.carrusel-contenedor {
+    display: flex;
+    justify-content: center;
+    margin: 30px auto; /* separación vertical */
+}
+/* Caja del carrusel */
+.carrusel-box {
+    width: 80%;
+    max-width: 1000px;   /* Cambia el tamaño que quieras */
+    margin: 0 auto;     /* Centrado */
+    border-radius: 10px;
+    overflow: hidden;   /* 🔥 Esto evita que las imágenes se salgan */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+	background-color: linear-gradient(to bottom,#825128 0%,#b4864b 50%,#2d6d5c 100%);
+}
+
+/* Opcional: que las imágenes tengan puntas redondeadas */
+.carrusel-box img {
+    border-radius: 10px;
+}
