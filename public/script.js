@@ -1,185 +1,168 @@
-//Script.js
-
-// URL del backend en Render
+// -----------------------------------------
+// CONFIG
+// -----------------------------------------
 const API_URL = "https://panaderia-navidad.onrender.com";
 
-// ---------------- REGISTRO ----------------
+
+// -----------------------------------------
+// REGISTRO
+// -----------------------------------------
 document.getElementById("registroForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const datos = {
-    nombre: document.getElementById("reg-nombre").value,
-    email: document.getElementById("reg-email").value,
-    password: document.getElementById("reg-password").value,
-    rol: document.getElementById("reg-rol").value
-  };
+    const nombre = document.getElementById("reg-nombre").value.trim();
+    const email = document.getElementById("reg-email").value.trim();
+    const password = document.getElementById("reg-password").value.trim();
+    const rol = document.getElementById("reg-rol").value;
+    const errorMsg = document.getElementById("msg-error");
 
-  try {
-    const res = await fetch(`${API_URL}/api/usuarios`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(datos)
-    });
+    errorMsg.textContent = "";
 
-    const data = await res.json();
+    if (nombre.length < 3) return errorMsg.textContent = "El nombre debe tener mínimo 3 caracteres";
+    if (!email.includes("@")) return errorMsg.textContent = "Correo inválido";
+    if (password.length < 6) return errorMsg.textContent = "La contraseña debe tener mínimo 6 caracteres";
 
-    if (res.ok) {
-      alert("✔ Usuario registrado correctamente");
-      document.getElementById("registroForm").reset();
+    const datos = { nombre, email, password, rol };
 
-      // OPCIONAL: login automático
-      await loginAutomatico(datos.email, datos.password);
+    try {
+        const res = await fetch(`${API_URL}/api/usuarios`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(datos)
+        });
 
-    } else {
-      alert("❌ " + data.message);
+        const data = await res.json();
+
+        if (!res.ok) {
+            errorMsg.textContent = data.message;
+            return;
+        }
+
+        alert("✔ Registro exitoso");
+
+        // Login automático
+        await loginAutomatico(email, password);
+
+        document.getElementById("registroForm").reset();
+        document.getElementById("modal-registro").close();
+
+    } catch (err) {
+        errorMsg.textContent = "Error conectando con el servidor";
     }
-
-  } catch (err) {
-    alert("Error de conexión con el servidor");
-    console.error(err);
-  }
 });
 
-// ------------ LOGIN AUTOMÁTICO ------------
+
+// -----------------------------------------
+// LOGIN AUTOMATICO
+// -----------------------------------------
 async function loginAutomatico(email, password) {
-  const datos = { email, password };
-
-  const res = await fetch(`${API_URL}/api/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(datos)
-  });
-
-  const data = await res.json();
-
-  if (res.ok) {
-    alert("🎉 Sesión iniciada automáticamente como: " + data.usuario.nombre);
-  } else {
-    alert("No se pudo iniciar sesión automáticamente");
-  }
+    await realizarLogin(email, password);
 }
 
-document.getElementById("registroForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
 
-  const nombre = document.getElementById("reg-nombre").value.trim();
-  const email = document.getElementById("reg-email").value.trim();
-  const password = document.getElementById("reg-password").value.trim();
-  const rol = document.getElementById("reg-rol").value;
+// -----------------------------------------
+// LOGIN NORMAL
+// -----------------------------------------
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-  const errorMsg = document.getElementById("msg-error");
-  errorMsg.textContent = ""; // limpiar errores
+    const email = document.getElementById("login-email").value.trim();
+    const password = document.getElementById("login-password").value.trim();
+    const error = document.getElementById("login-error");
 
-  // -------------------------------------
-  // VALIDACIONES
-  // -------------------------------------
+    error.textContent = "";
 
-  // 1. Nombre
-  if (nombre.length < 3) {
-    errorMsg.textContent = "El nombre debe tener al menos 3 caracteres";
-    return;
-  }
+    if (!email) return error.textContent = "Ingresa tu correo";
+    if (!email.includes("@")) return error.textContent = "Correo inválido";
+    if (password.length < 6) return error.textContent = "Contraseña muy corta";
 
-  // 2. Email válido
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    errorMsg.textContent = "Ingresa un email válido";
-    return;
-  }
-
-  // 3. Password mínimo 6 caracteres
-  if (password.length < 6) {
-    errorMsg.textContent = "La contraseña debe tener mínimo 6 caracteres";
-    return;
-  }
-
-  // 4. Rol válido
-  if (!["admin", "cliente"].includes(rol)) {
-    errorMsg.textContent = "Rol inválido";
-    return;
-  }
-
-  // -------------------------------------
-  // SI LAS VALIDACIONES PASAN → ENVIAR AL SERVIDOR
-  // -------------------------------------
-  const datos = { nombre, email, password, rol };
-
-  try {
-    const res = await fetch("https://panaderia-navidad.onrender.com/api/usuarios", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(datos)
-    });
-
-    const data = await res.json();
-
-    if (data.success) {
-      alert("✔ Usuario registrado correctamente");
-      document.getElementById("registroForm").reset();  
-    } else {
-      errorMsg.textContent = "❌ " + data.message;
-    }
-
-  } catch (err) {
-    console.error(err);
-    errorMsg.textContent = "❌ Error al conectar con el servidor";
-  }
+    await realizarLogin(email, password);
 });
 
-// ---------- VALIDACIÓN DE INICIO DE SESIÓN ---------- //
-document.getElementById("loginForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
 
-  const email = document.getElementById("login-email").value.trim();
-  const password = document.getElementById("login-password").value.trim();
-  const error = document.getElementById("login-error");
+// -----------------------------------------
+// FUNCION REAL LOGIN
+// -----------------------------------------
+async function realizarLogin(email, password) {
+    try {
+        const res = await fetch(`${API_URL}/api/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+        });
 
-  // Reset mensaje
-  error.textContent = "";
+        const data = await res.json();
+        console.log("LOGIN:", data);
 
-  // Validaciones básicas
-  if (!email) {
-    error.textContent = "El correo es obligatorio";
-    return;
-  }
+        if (!data.success) {
+            document.getElementById("login-error").textContent = data.message;
+            return;
+        }
 
-  if (!email.includes("@")) {
-    error.textContent = "Correo inválido";
-    return;
-  }
+        // Guardar sesión
+        localStorage.setItem("usuario", JSON.stringify(data.usuario));
 
-  if (password.length < 6) {
-    error.textContent = "La contraseña debe tener al menos 6 caracteres";
-    return;
-  }
+        // Mostrar navbar
+        mostrarUsuarioNav(data.usuario.nombre);
 
-  // Enviar al backend
-  try {
-    const res = await fetch("https://panaderia-navidad.onrender.com/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password })
-    });
+        // Cerrar modal
+        document.getElementById("loginForm").reset();
+        document.getElementById("modal-login").close();
 
-    const data = await res.json();
-    console.log("LOGIN:", data);
+    } catch (err) {
+        console.error(err);
+        document.getElementById("login-error").textContent = "Error de servidor";
+    }
+}
 
-    if (!data.success) {
-      error.textContent = data.message || "Credenciales incorrectas";
-      return;
+
+// -----------------------------------------
+// MOSTRAR USUARIO EN NAVBAR
+// -----------------------------------------
+function mostrarUsuarioNav(nombre) {
+    const loginBtn = document.getElementById("nav-login-btn");
+    const registroBtn = document.getElementById("nav-registro-btn");
+    const usuarioDiv = document.getElementById("nav-usuario");
+    const usuarioNombre = document.getElementById("nav-usuario-nombre");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    if (!loginBtn || !registroBtn || !usuarioDiv || !usuarioNombre || !logoutBtn) {
+        console.warn("⚠ Faltan elementos del navbar en el HTML");
+        return;
     }
 
-    // Login correcto → cerrar modal o redirigir
-    alert("Inicio de sesión exitoso 🎉");
+    loginBtn.classList.add("d-none");
+    registroBtn.classList.add("d-none");
 
-    // opcional: guardar sesión
-    localStorage.setItem("usuario", JSON.stringify(data.usuario));
+    usuarioNombre.textContent = nombre;
+    usuarioDiv.classList.remove("d-none");
+    logoutBtn.classList.remove("d-none");
+}
 
-    document.getElementById("loginForm").reset();
-    document.getElementById("modal-login").close();
 
-  } catch (err) {
-    console.error(err);
-    error.textContent = "Error de conexión con el servidor";
-  }
+// -----------------------------------------
+// CARGAR SESIÓN AL ENTRAR
+// -----------------------------------------
+document.addEventListener("DOMContentLoaded", () => {
+    const usuario = JSON.parse(localStorage.getItem("usuario"));
+
+    if (usuario && usuario.nombre) {
+        mostrarUsuarioNav(usuario.nombre);
+    }
+});
+
+
+// -----------------------------------------
+// LOGOUT
+// -----------------------------------------
+document.getElementById("logoutBtn")?.addEventListener("click", () => {
+    localStorage.removeItem("usuario");
+
+    document.getElementById("nav-login-btn").classList.remove("d-none");
+    document.getElementById("nav-registro-btn").classList.remove("d-none");
+
+    document.getElementById("nav-usuario").classList.add("d-none");
+    document.getElementById("nav-logout").classList.add("d-none");
+
+    alert("Sesión cerrada");
 });
