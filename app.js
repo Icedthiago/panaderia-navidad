@@ -128,10 +128,9 @@ app.get("/api", (req, res) => {
 // --------------------------------------
 // SERVIR INDEX.HTML SI NO EXISTE RUTA
 // --------------------------------------
-app.get("*", (req, res) => {
+app.use((req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
-
 
 // --------------------------------------
 // INICIAR SERVIDOR
