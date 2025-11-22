@@ -48,26 +48,37 @@ app.post("/api/usuarios", async (req, res) => {
   const { nombre, email, password, rol } = req.body;
 
   try {
+    // Validar rol
+    const rolesPermitidos = ["admin", "cliente"];
+    const rolFinal = rolesPermitidos.includes(rol) ? rol : "admin";
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const query = `
       INSERT INTO usuario (nombre, email, password, rol)
       VALUES ($1, $2, $3, $4)
-      RETURNING id_usuario;
+      RETURNING id_usuario, nombre, email, rol;
     `;
 
-    const result = await pool.query(query, [nombre, email, hashedPassword, rol]);
+    const result = await pool.query(query, [
+      nombre,
+      email,
+      hashedPassword,
+      rolFinal
+    ]);
+
+    const usuario = result.rows[0];
 
     res.json({
       success: true,
       message: "Usuario registrado correctamente",
-      id_usuario: result.rows[0].id_usuario
+      usuario: usuario  // 👈 Enviamos el usuario completo
     });
 
   } catch (err) {
     console.error(err);
 
-    if (err.code === "23505") {
+    if (err.code === "23505") { // correo duplicado
       return res.status(400).json({
         success: false,
         message: "El correo ya está registrado"
@@ -80,7 +91,6 @@ app.post("/api/usuarios", async (req, res) => {
     });
   }
 });
-
 
 // --------------------------------------
 // API: LOGIN
@@ -106,8 +116,12 @@ app.post("/api/login", async (req, res) => {
     res.json({
       success: true,
       message: "Inicio de sesión exitoso",
-      nombre: usuario.nombre,
-      rol: usuario.rol
+      usuario: {
+        id_usuario: usuario.id_usuario,
+        nombre: usuario.nombre,
+        email: usuario.email,
+        rol: usuario.rol // 👈 el rol se manda al frontend
+      }
     });
 
   } catch (err) {
@@ -115,6 +129,7 @@ app.post("/api/login", async (req, res) => {
     res.status(500).json({ success: false, message: "Error en el servidor" });
   }
 });
+
 
 
 // --------------------------------------
