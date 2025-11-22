@@ -1,83 +1,36 @@
-//App.js
-import http from "http";
-import bcrypt from "bcrypt";
-import fs from "fs";
+// app.js unificado para Render
+// Servidor Express + archivos estáticos + PostgreSQL
+
+import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
-// Necesario porque __dirname no existe en ES Modules
+import pg from "pg";
+import bcrypt from "bcrypt";
+import cors from "cors";
+
+// --------------------------------------
+// CONFIGURACIONES BÁSICAS
+// --------------------------------------
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const app = express();
 const port = process.env.PORT || 3000;
 
-const mimeTypes = {
-  '.html': 'text/html',
-  '.js': 'application/javascript',
-  '.css': 'text/css',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.svg': 'image/svg+xml',
-  '.ico': 'image/x-icon',
-  '.json': 'application/json',
-  '.woff': 'font/woff',
-  '.woff2': 'font/woff2'
-};
-
-function serveStatic(filePath, res) {
-  fs.stat(filePath, (err, stats) => {
-    if (err) {
-      res.writeHead(404, { "Content-Type": "text/plain" });
-      res.end("404 - Not Found");
-      return;
-    }
-
-    if (stats.isDirectory()) {
-      filePath = path.join(filePath, "index.html");
-    }
-
-    const ext = path.extname(filePath).toLowerCase();
-    const contentType = mimeTypes[ext] || "application/octet-stream";
-
-    fs.readFile(filePath, (readErr, data) => {
-      if (readErr) {
-        res.writeHead(500, { "Content-Type": "text/plain" });
-        res.end("500 - Internal Server Error");
-        return;
-      }
-
-      res.writeHead(200, { "Content-Type": contentType });
-      res.end(data);
-    });
-  });
-}
-
-const server = http.createServer((req, res) => {
-  const safePath = path
-    .normalize(decodeURIComponent(req.url))
-    .replace(/^\.+/, "");
-
-  let requested = safePath.split("?")[0];
-  if (requested === "/" || requested === "") requested = "/index.html";
-
-  const filePath = path.join(__dirname, "public", requested);
-  serveStatic(filePath, res);
-});
-
-// ----------------------------
-//   EXPRESS + POSTGRES
-// ----------------------------
-
-import express from "express";
-import pg from "pg";
-import cors from "cors";
-
-const { Pool } = pg;
-
-const app = express();
 app.use(cors());
 app.use(express.json());
 
+// --------------------------------------
+// SERVIR ARCHIVOS ESTÁTICOS
+// --------------------------------------
+app.use(express.static(path.join(__dirname, "public")));
+
+
+// --------------------------------------
 // CONEXIÓN A POSTGRESQL
+// --------------------------------------
+const { Pool } = pg;
+
 const pool = new Pool({
   user: "root",
   host: "dpg-d4fve0efu37c739k38m0-a.oregon-postgres.render.com",
@@ -87,13 +40,14 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-//metodos de SQL
-// REGISTRARSE
+
+// --------------------------------------
+// API: REGISTRAR USUARIO
+// --------------------------------------
 app.post("/api/usuarios", async (req, res) => {
   const { nombre, email, password, rol } = req.body;
 
   try {
-    // Encriptar contraseña
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const query = `
@@ -102,12 +56,7 @@ app.post("/api/usuarios", async (req, res) => {
       RETURNING id_usuario;
     `;
 
-    const result = await pool.query(query, [
-      nombre,
-      email,
-      hashedPassword,
-      rol
-    ]);
+    const result = await pool.query(query, [nombre, email, hashedPassword, rol]);
 
     res.json({
       success: true,
@@ -132,30 +81,26 @@ app.post("/api/usuarios", async (req, res) => {
   }
 });
 
-// INICIAR SESIÓN
-app.post('/api/login', async (req, res) => {
+
+// --------------------------------------
+// API: LOGIN
+// --------------------------------------
+app.post("/api/login", async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const query = 'SELECT * FROM usuario WHERE email = $1';
+    const query = "SELECT * FROM usuario WHERE email = $1";
     const result = await pool.query(query, [email]);
 
     if (result.rows.length === 0) {
-      return res.json({
-        success: false,
-        message: "Usuario no encontrado"
-      });
+      return res.json({ success: false, message: "Usuario no encontrado" });
     }
 
     const usuario = result.rows[0];
 
     const match = await bcrypt.compare(password, usuario.password);
-
     if (!match) {
-      return res.json({
-        success: false,
-        message: "Contraseña incorrecta"
-      });
+      return res.json({ success: false, message: "Contraseña incorrecta" });
     }
 
     res.json({
@@ -167,24 +112,30 @@ app.post('/api/login', async (req, res) => {
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({
-      success: false,
-      message: "Error en el servidor"
-    });
+    res.status(500).json({ success: false, message: "Error en el servidor" });
   }
 });
 
+
+// --------------------------------------
 // RUTA DE PRUEBA
+// --------------------------------------
 app.get("/api", (req, res) => {
   res.send("Servidor funcionando con PostgreSQL");
 });
 
-// INICIAR EXPRESS
-app.listen(4000, () => {
-  console.log("API corriendo en http://localhost:4000");
+
+// --------------------------------------
+// SERVIR INDEX.HTML SI NO EXISTE RUTA
+// --------------------------------------
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// INICIAR SERVIDOR DE ARCHIVOS
-server.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}/`);
+
+// --------------------------------------
+// INICIAR SERVIDOR
+// --------------------------------------
+app.listen(port, () => {
+  console.log(`Servidor funcionando en http://localhost:${port}`);
 });
