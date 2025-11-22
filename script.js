@@ -1,5 +1,9 @@
-const API_URL = "https://dpg-d4fve0efu37c739k38m0-a.oregon-postgres.render.com"; // <-- PON AQUÍ LA REAL
+//Script.js
 
+// URL del backend en Render
+const API_URL = "https://panaderia-navidad.onrender.com";
+
+// ---------------- REGISTRO ----------------
 document.getElementById("registroForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -18,39 +22,39 @@ document.getElementById("registroForm").addEventListener("submit", async (e) => 
     });
 
     const data = await res.json();
-    console.log("Respuesta registro:", data);
 
-    alert(data.message || "Registro completado");
-  } catch (err) {
-    alert("Error conectando con el servidor");
-  }
-});
+    if (res.ok) {
+      alert("✔ Usuario registrado correctamente");
+      document.getElementById("registroForm").reset();
 
+      // OPCIONAL: login automático
+      await loginAutomatico(datos.email, datos.password);
 
-document.getElementById("loginForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const datos = {
-    email: document.getElementById("login-email").value,
-    password: document.getElementById("login-password").value
-  };
-
-  try {
-    const res = await fetch(`${API_URL}/api/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(datos)
-    });
-
-    const data = await res.json();
-    console.log("Respuesta login:", data);
-
-    alert(data.message);
-
-    if (data.success) {
-      console.log("Bienvenido", data.nombre);
+    } else {
+      alert("❌ " + data.message);
     }
+
   } catch (err) {
-    alert("Error conectando con el servidor");
+    alert("Error de conexión con el servidor");
+    console.error(err);
   }
 });
+
+// ------------ LOGIN AUTOMÁTICO ------------
+async function loginAutomatico(email, password) {
+  const datos = { email, password };
+
+  const res = await fetch(`${API_URL}/api/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(datos)
+  });
+
+  const data = await res.json();
+
+  if (res.ok) {
+    alert("🎉 Sesión iniciada automáticamente como: " + data.usuario.nombre);
+  } else {
+    alert("No se pudo iniciar sesión automáticamente");
+  }
+}

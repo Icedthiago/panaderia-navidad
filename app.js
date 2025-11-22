@@ -1,9 +1,9 @@
+//App.js
 import http from "http";
 import bcrypt from "bcrypt";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-
 // Necesario porque __dirname no existe en ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -89,12 +89,12 @@ const pool = new Pool({
 
 //metodos de SQL
 // REGISTRARSE
-app.post('/api/usuarios', async (req, res) => {
+app.post("/api/usuarios", async (req, res) => {
   const { nombre, email, password, rol } = req.body;
 
   try {
     // Encriptar contraseña
-    const hash = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const query = `
       INSERT INTO usuario (nombre, email, password, rol)
@@ -102,7 +102,12 @@ app.post('/api/usuarios', async (req, res) => {
       RETURNING id_usuario;
     `;
 
-    const result = await pool.query(query, [nombre, email, hash, rol]);
+    const result = await pool.query(query, [
+      nombre,
+      email,
+      hashedPassword,
+      rol
+    ]);
 
     res.json({
       success: true,
@@ -111,8 +116,8 @@ app.post('/api/usuarios', async (req, res) => {
     });
 
   } catch (err) {
+    console.error(err);
 
-    // correo duplicado (postgres error code 23505)
     if (err.code === "23505") {
       return res.status(400).json({
         success: false,
@@ -120,10 +125,9 @@ app.post('/api/usuarios', async (req, res) => {
       });
     }
 
-    console.error(err);
     res.status(500).json({
       success: false,
-      message: "Error al registrar usuario"
+      message: "Error en el servidor"
     });
   }
 });
