@@ -272,20 +272,8 @@ function onClickFuera(e, modal) {
 loginModal.addEventListener("click", (e) => onClickFuera(e, loginModal));
 registroModal.addEventListener("click", (e) => onClickFuera(e, registroModal));
 
-/* ----- prevenir que submit de formularios recargue página durante pruebas ----- */
-document.getElementById("loginForm").addEventListener("submit", (e) => {
-  e.preventDefault();
-  // aquí puedes hacer fetch() para autenticar o mostrar mensaje
-  cerrarModalConAnimacion(loginModal);
-});
-
-document.getElementById("registroForm").addEventListener("submit", (e) => {
-  e.preventDefault();
-  // aquí puedes enviar datos al backend
-  cerrarModalConAnimacion(registroModal);
-});
 </script>
 
-	<script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
