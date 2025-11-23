@@ -138,35 +138,50 @@ app.post("/api/login", async (req, res) => {
 // OBTENER PRODUCTOS
 // --------------------------------------
 app.get("/api/productos", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT * FROM producto ORDER BY id_producto ASC");
-    res.json(result.rows);
-  } catch (err) {
-    res.status(500).json({ error: "Error al obtener productos" });
-  }
+    try {
+        const result = await pool.query("SELECT * FROM producto");
+
+        const productos = result.rows.map(p => ({
+            ...p,
+            imagen: p.imagen ? Buffer.from(p.imagen).toString("base64") : null
+        }));
+
+        res.json(productos);
+
+    } catch (error) {
+        console.error("Error obteniendo productos:", error);
+        res.status(500).json({ error: "Error en el servidor" });
+    }
 });
 
 // --------------------------------------
 // AGREGAR PRODUCTO
 // --------------------------------------
 app.post("/api/producto", upload.single("imagen"), async (req, res) => {
-  try {
-    const { nombre, descripcion, precio, stock, temporada } = req.body;
-    const imagen = req.file ? req.file.buffer : null;
+    try {
+        const { nombre, descripcion, precio, stock, temporada } = req.body;
+        const imagen = req.file ? req.file.buffer : null;
 
-    const result = await pool.query(
-      `INSERT INTO producto (nombre, descripcion, precio, stock, imagen, temporada)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING *`,
-      [nombre, descripcion, precio, stock, imagen, temporada]
-    );
+        const sql = `
+            INSERT INTO producto (nombre, descripcion, precio, stock, imagen, temporada)
+            VALUES ($1, $2, $3, $4, $5, $6)
+        `;
 
-    res.json({ success: true, producto: result.rows[0] });
+        await pool.query(sql, [
+            nombre,
+            descripcion,
+            precio,
+            stock,
+            imagen,
+            temporada
+        ]);
 
-  } catch (err) {
-    console.error("Error al agregar producto:", err);
-    res.status(500).json({ error: "Error al agregar producto" });
-  }
+        res.json({ success: true });
+
+    } catch (error) {
+        console.error("Error guardando producto:", error);
+        res.status(500).json({ error: "Error al guardar producto" });
+    }
 });
 
 // --------------------------------------

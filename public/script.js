@@ -257,3 +257,38 @@ document.addEventListener("click", async e => {
     cargarProductos();
 });
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const form = document.getElementById("formAgregarProducto");
+    if (!form) {
+        console.error("ERROR: No se encontró el formulario formAgregarProducto");
+        return;
+    }
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch("https://panaderia-navidad.onrender.com/api/producto", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+            console.log("Respuesta del servidor:", data);
+
+            if (data.success) {
+                alert("Producto agregado correctamente");
+                form.reset();
+            } else {
+                alert("Error: " + data.error);
+            }
+        } catch (err) {
+            console.error("Error en fetch:", err);
+        }
+    });
+
+});
