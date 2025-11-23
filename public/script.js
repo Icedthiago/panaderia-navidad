@@ -214,35 +214,35 @@ async function cargarProductos() {
     });
 }
 
-document.getElementById("formProducto").addEventListener("submit", async e => {
+document.addEventListener("DOMContentLoaded", () => {
+    // Inicializar: cargar productos y actualizar UI según rol
+    cargarProductos().catch(err => console.error('Error cargando productos:', err));
+    actualizarOpcionesPorRol();
+
+    document.getElementById("formAgregarProducto")?.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const error = document.getElementById("producto-error");
-    error.textContent = "";
+    const form = document.getElementById("formAgregarProducto");
+    const formData = new FormData(form);
 
-    const data = new FormData();
-    data.append("nombre", p-nombre.value);
-    data.append("descripcion", p-descripcion.value);
-    data.append("precio", p-precio.value);
-    data.append("stock", p-stock.value);
-    data.append("temporada", p-temporada.value);
+    try {
+        const response = await fetch("https://panaderia-navidad.onrender.com/api/producto", {
+            method: "POST",
+            body: formData
+        });
 
-    if (p-imagen.files[0]) {
-        data.append("imagen", p-imagen.files[0]);
+        const data = await response.json();
+        console.log("Respuesta servidor:", data);
+
+        if (data.success) {
+            alert("Producto agregado correctamente");
+            form.reset();
+        } else {
+            alert("Error: " + data.error);
+        }
+    } catch (err) {
+        console.error("Error en fetch:", err);
     }
-
-    const res = await fetch(`${API_URL}/api/productos`, {
-        method: "POST",
-        body: data
-    });
-
-    if (!res.ok) {
-        error.textContent = "Error al guardar producto";
-        return;
-    }
-
-    dialogProducto.close();
-    cargarProductos();
 });
 
 document.addEventListener("click", async e => {
@@ -256,9 +256,4 @@ document.addEventListener("click", async e => {
 
     cargarProductos();
 });
-
-const formData = new FormData(document.getElementById("formProducto"));
-fetch("/api/producto", {
-  method: "POST",
-  body: formData
 });

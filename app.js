@@ -164,6 +164,7 @@ app.post("/api/producto", upload.single("imagen"), async (req, res) => {
     res.json({ success: true, producto: result.rows[0] });
 
   } catch (err) {
+    console.error("Error al agregar producto:", err);
     res.status(500).json({ error: "Error al agregar producto" });
   }
 });
