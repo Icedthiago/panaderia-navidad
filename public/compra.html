@@ -36,11 +36,21 @@
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
 
 <!-- BOTONES EN NAV (abre directamente cada modal) -->
-<li class="nav-item">
+<li class="nav-item" id="nav-login-btn">
   <button class="btn-modal" data-open="modal-login" type="button">Inicio de sesión</button>
 </li>
-<li class="nav-item">
+<li class="nav-item" id="nav-registro-btn">
   <button class="btn-modal" data-open="modal-registro" type="button">Registrar</button>
+</li>
+
+<!-- Texto visible cuando el usuario está logueado -->
+<li class="nav-item d-none" id="nav-usuario">
+  <span class="nav-link">Hola, <b id="nav-usuario-nombre"></b> 👋</span>
+</li>
+
+<!-- Botón de cerrar sesión (se muestra cuando hay sesión) -->
+<li class="nav-item d-none" id="nav-logout">
+  <button class="btn btn-danger" id="logoutBtn">Cerrar sesión</button>
 </li>
 
 <!-- MODAL LOGIN (NO anidar) -->
@@ -273,7 +283,6 @@ loginModal.addEventListener("click", (e) => onClickFuera(e, loginModal));
 registroModal.addEventListener("click", (e) => onClickFuera(e, registroModal));
 
 </script>
-
-    <script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

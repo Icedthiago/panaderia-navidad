@@ -1,285 +1,131 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>perfiles</title>
-    	<link rel="stylesheet" href="style.css">
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
-    <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas&display=swap" rel="stylesheet">
-	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<link rel="icon" href="https://www.flaticon.es/iconos-gratis/navidad" type="image/x-icon">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>perfiles</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 <body>
-	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
-<div class="header">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+  <div class="header">
     <h1 class="header h1">panaderia desesperanza</h1>
-</div>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-success px-3">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="#">Panadería</a>
-    <!-- botón hamburguesa -->
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-            data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-            aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <!-- CONTENIDO DEL NAV -->
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-<!-- BOTONES EN NAV (abre directamente cada modal) -->
-        <li class="nav-item">
-  <button class="btn-modal" data-open="modal-login" type="button">Inicio de sesión</button>
-</li>
-        <li class="nav-item">
-  <button class="btn-modal" data-open="modal-registro" type="button">Registrar</button>
-</li>
+  </div>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-success px-3">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">Panadería</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item" id="nav-login-btn">
+            <button class="btn-modal" data-open="modal-login" type="button">Inicio de sesión</button>
+          </li>
+          <li class="nav-item" id="nav-registro-btn">
+            <button class="btn-modal" data-open="modal-registro" type="button">Registrar</button>
+          </li>
+          <li class="nav-item d-none" id="nav-usuario">
+            <span class="nav-link">Hola, <b id="nav-usuario-nombre"></b> 👋</span>
+          </li>
+          <li class="nav-item d-none" id="nav-logout">
+            <button class="btn btn-danger" id="logoutBtn">Cerrar sesión</button>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#acerca">Nosotros</a>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Menú</a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="perfil.html">Perfil</a></li>
+              <li><a class="dropdown-item" href="inventario.html">Inventario</a></li>
+              <li><a class="dropdown-item" href="compra.html">Compra</a></li>
+              <li><a class="dropdown-item" href="ventas.html">ventas</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
 
-        <!-- MODAL LOGIN (NO anidar) -->
-        <dialog id="modal-login">
-  <h2>Inicio de Sesión</h2>
+  <!-- Modales -->
+  <dialog id="modal-login">
+    <h2>Inicio de Sesión</h2>
+    <form id="loginForm">
+      <label for="login-email">Correo electrónico:</label>
+      <input type="email" id="login-email" name="email" required><br><br>
+      <label for="login-password">Contraseña:</label>
+      <input type="password" id="login-password" name="password" required><br><br>
+      <button type="submit">Ingresar</button>
+    </form>
+    <p style="margin-top: 10px;">¿No tienes cuenta? <a href="#" id="link-abrir-registro">Regístrate aquí</a></p>
+    <button class="btn-modal cerrar-btn btn-x" data-close="modal-login" type="button">X</button>
+  </dialog>
 
-  <form id="loginForm">
-    <label for="login-email">Correo electrónico:</label>
-    <input type="email" id="login-email" name="email" required><br><br>
-
-    <label for="login-password">Contraseña:</label>
-    <input type="password" id="login-password" name="password" required><br><br>
-
-    <button type="submit">Ingresar</button>
-  </form>
-
-  <p style="margin-top: 10px;">
-    ¿No tienes cuenta?
-    <a href="#" id="link-abrir-registro">Regístrate aquí</a>
-  </p>
-
-  <button class="btn-modal cerrar-btn btn-x" data-close="modal-login" type="button">X</button>
-        </dialog>
-<!-- MODAL REGISTRO (NO anidar) -->
- <dialog id="modal-registro">
+  <dialog id="modal-registro">
     <h2>Registro de Usuario</h2>
+    <form id="registroForm">
+      <label for="reg-nombre">Nombre:</label>
+      <input type="text" id="reg-nombre" name="nombre" required><br><br>
+      <label for="reg-email">Correo electrónico:</label>
+      <input type="email" id="reg-email" name="email" required><br><br>
+      <label for="reg-password">Contraseña:</label>
+      <input type="password" id="reg-password" name="password" required><br><br>
+      <label for="reg-rol">Rol:</label>
+      <select id="reg-rol" name="rol"><option value="cliente">Cliente</option><option value="admin">Admin</option></select><br><br>
+      <button type="submit">Registrar</button>
+    </form>
+    <p style="margin-top: 10px;">¿Ya tienes cuenta? <a href="#" id="link-abrir-login">Inicia sesión</a></p>
+    <button class="btn-modal cerrar-btn btn-x" data-close="modal-registro" type="button">X</button>
+  </dialog>
 
-<form id="registroForm">
-    <label for="reg-nombre">Nombre:</label>
-    <input type="text" id="reg-nombre" name="nombre" required><br><br>
-
-    <label for="reg-email">Correo electrónico:</label>
-    <input type="email" id="reg-email" name="email" required><br><br>
-    <label for="reg-password">Contraseña:</label>
-    <input type="password" id="reg-password" name="password" required><br><br>
-
-    <label for="reg-rol">Rol:</label>
-    <select id="reg-rol" name="rol">
-      <option value="cliente">Cliente</option>
-      <option value="admin">Admin</option>
-    </select><br><br>
-
-    <button type="submit">Registrar</button>
-  </form>
-
-  <p style="margin-top: 10px;">
-    ¿Ya tienes cuenta?
-    <a href="#" id="link-abrir-login">Inicia sesión</a>
-  </p>
-
-  <button class="btn-modal cerrar-btn btn-x" data-close="modal-registro" type="button">X</button>
-</dialog>
-
-        </li>
-
-        <li class="nav-item">
-          <a class="nav-link" href="#acerca">Nosotros</a>
-        </li>
-
-        <!-- Dropdown integrado en el navbar -->
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-            Menú
-          </a>
-          <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="perfil.html">Perfil</a></li>
-            <li><a class="dropdown-item" href="inventario.html">Inventario</a></li>
-            <li><a class="dropdown-item" href="compra.html">Compra</a></li>
-            <li><a class="dropdown-item" href="ventas.html"> ventas</a></li>
-          </ul>
-        </li>
-
-		<li class="nav-item"><a class="nav-link active" href="#" role="button" data-bs-toggle="dropdown">🎅</a></li>
-		<li class="nav-item"><a class="nav-link active" href="#" role="button" data-bs-toggle="dropdown">🎄</a></li>
-		<li class="nav-item"><a class="nav-link active" href="#" role="button" data-bs-toggle="dropdown">❄️</a></li>
-
-      </ul>
-
+  <div class="container">
+    <div class="snowflakes" aria-hidden="true">
+      <div class="snowflake">❅</div>
+      <div class="snowflake">❆</div>
+      <div class="snowflake">❅</div>
+      <div class="snowflake">❆</div>
+      <div class="snowflake">❅</div>
+      <div class="snowflake">❆</div>
     </div>
   </div>
-</nav>
 
-<footer class="footer">
-  
-  <div class="wrapper">
-
-    <a href="#" class="icon facebook" name="acerca">
-      <div class="tooltip">Facebook</div>
-      <span><i class="fab fa-facebook-f"></i></span>
-    </a>
-
-    <a href="https://x.com/icedthiago" class="icon twitter">
-      <div class="tooltip">Twitter</div>
-      <span><i class="fab fa-twitter"></i></span>
-    </a>
-
-    <a href="https://www.instagram.com/1ced_thiag0" class="icon instagram">
-      <div class="tooltip">Instagram</div>
-      <span><i class="fab fa-instagram"></i></span>
-    </a>
-
-    <a href="https://github.com/Icedthiago" class="icon github">
-      <div class="tooltip">Github</div>
-      <span><i class="fab fa-github"></i></span>
-    </a>
-
-    <a href="#" class="icon youtube">
-      <div class="tooltip">Youtube</div>
-      <span><i class="fab fa-youtube"></i></span>
-    </a>
-
-  </div>
-
-  <br>
-
-  <p class="footer p">&copy; 2025 Panadería Navideña. All rights reserved.</p>
-
-</footer>
-    
-    <div class="container">
-	<div class="snowflakes" aria-hidden="true">
-		<div class="snowflake">
-			❅
-		</div>
-		<div class="snowflake">
-			❆
-		</div>
-		<div class="snowflake">
-			❅
-		</div>
-		<div class="snowflake">
-			❆
-		</div>
-		<div class="snowflake">
-			❅
-		</div>
-		<div class="snowflake">
-			❆
-		</div>
-		<div class="snowflake">
-			❅
-		</div>
-		<div class="snowflake">
-			❆
-		</div>
-		<div class="snowflake">
-			❅
-		</div>
-		<div class="snowflake">
-			❆
-		</div>
-		<div class="snowflake">
-			❅
-		</div>
-		<div class="snowflake">
-			❆
-		</div>
-	</div>
+  <footer class="footer">
+    <div class="wrapper">
+      <a href="#" class="icon facebook"><div class="tooltip">Facebook</div><span><i class="fab fa-facebook-f"></i></span></a>
+      <a href="https://x.com/icedthiago" class="icon twitter"><div class="tooltip">Twitter</div><span><i class="fab fa-twitter"></i></span></a>
+      <a href="https://www.instagram.com/1ced_thiag0" class="icon instagram"><div class="tooltip">Instagram</div><span><i class="fab fa-instagram"></i></span></a>
+      <a href="https://github.com/Icedthiago" class="icon github"><div class="tooltip">Github</div><span><i class="fab fa-github"></i></span></a>
+      <a href="#" class="icon youtube"><div class="tooltip">Youtube</div><span><i class="fab fa-youtube"></i></span></a>
     </div>
-	<script src="script.js"></script>
+    <br>
+    <p class="footer p">&copy; 2025 Panadería Navideña. All rights reserved.</p>
+  </footer>
 
-    <script>
-/* ----- configuración: tiempo de la animación (ms) ----- */
-const ANIM_MS = 300;
-
-/* ----- helpers de animación ----- */
-function abrirModal(modal) {
-  modal.classList.remove("cerrando");
-  // showModal puede tirar en navegadores que no soportan dialog nativo,
-  // pero asumimos compatibilidad moderna
-  modal.showModal();
-}
-
-function cerrarModalConAnimacion(modal, callback) {
-  modal.classList.add("cerrando");
-  setTimeout(() => {
-    try { modal.close(); } catch(e) {}
-    modal.classList.remove("cerrando");
-    if (typeof callback === "function") callback();
-  }, ANIM_MS);
-}
-
-/* ----- elementos ----- */
-const botonesAbrir = document.querySelectorAll("[data-open]");
-const botonesCerrar = document.querySelectorAll(".cerrar-btn");
-const loginModal = document.getElementById("modal-login");
-const registroModal = document.getElementById("modal-registro");
-const linkAbrirRegistro = document.getElementById("link-abrir-registro");
-const linkAbrirLogin = document.getElementById("link-abrir-login");
-
-/* ----- abrir por botones del nav (data-open="id-del-modal") ----- */
-botonesAbrir.forEach(btn => {
-  btn.addEventListener("click", (e) => {
-    const id = btn.getAttribute("data-open");
-    const m = document.getElementById(id);
-    if (!m) return;
-    abrirModal(m);
-  });
-});
-
-/* ----- cerrar por botones con data-close (o clase .cerrar-btn) ----- */
-botonesCerrar.forEach(btn => {
-  btn.addEventListener("click", (e) => {
-    const id = btn.getAttribute("data-close");
-    const m = id ? document.getElementById(id) : btn.closest("dialog");
-    if (!m) return;
-    cerrarModalConAnimacion(m);
-  });
-});
-
-/* ----- cambiar entre modales desde enlaces internos (con animación) ----- */
-linkAbrirRegistro.addEventListener("click", (e) => {
-  e.preventDefault();
-  cerrarModalConAnimacion(loginModal, () => abrirModal(registroModal));
-});
-
-linkAbrirLogin.addEventListener("click", (e) => {
-  e.preventDefault();
-  cerrarModalConAnimacion(registroModal, () => abrirModal(loginModal));
-});
-
-/* ----- cerrar con clic fuera del diálogo ----- */
-function onClickFuera(e, modal) {
-  const rect = modal.getBoundingClientRect();
-  const dentro = e.clientX >= rect.left && e.clientX <= rect.right &&
-                 e.clientY >= rect.top && e.clientY <= rect.bottom;
-  if (!dentro) cerrarModalConAnimacion(modal);
-}
-loginModal.addEventListener("click", (e) => onClickFuera(e, loginModal));
-registroModal.addEventListener("click", (e) => onClickFuera(e, registroModal));
-
-/* ----- prevenir que submit de formularios recargue página durante pruebas ----- */
-document.getElementById("loginForm").addEventListener("submit", (e) => {
-  e.preventDefault();
-  // aquí puedes hacer fetch() para autenticar o mostrar mensaje
-  cerrarModalConAnimacion(loginModal);
-});
-
-document.getElementById("registroForm").addEventListener("submit", (e) => {
-  e.preventDefault();
-  // aquí puedes enviar datos al backend
-  cerrarModalConAnimacion(registroModal);
-});
-</script>
-<script src="script.js"></script>
+  <script src="script.js"></script>
+  <script>
+    /* Modal open/close helper (same as other pages) */
+    const ANIM_MS = 300;
+    function abrirModal(modal){ modal.classList.remove('cerrando'); modal.showModal(); }
+    function cerrarModalConAnimacion(modal, cb){ modal.classList.add('cerrando'); setTimeout(()=>{ try{ modal.close(); }catch(e){} modal.classList.remove('cerrando'); if(cb) cb(); }, ANIM_MS); }
+    const botonesAbrir = document.querySelectorAll('[data-open]');
+    const botonesCerrar = document.querySelectorAll('.cerrar-btn');
+    const loginModal = document.getElementById('modal-login');
+    const registroModal = document.getElementById('modal-registro');
+    const linkAbrirRegistro = document.getElementById('link-abrir-registro');
+    const linkAbrirLogin = document.getElementById('link-abrir-login');
+    botonesAbrir.forEach(b=>b.addEventListener('click',()=>{ const id=b.getAttribute('data-open'); const m=document.getElementById(id); if(m) abrirModal(m); }));
+    botonesCerrar.forEach(b=>b.addEventListener('click', ()=>{ const id=b.getAttribute('data-close'); const m = id ? document.getElementById(id) : b.closest('dialog'); if(m) cerrarModalConAnimacion(m); }));
+    linkAbrirRegistro.addEventListener('click', (e)=>{ e.preventDefault(); cerrarModalConAnimacion(loginModal, ()=>abrirModal(registroModal)); });
+    linkAbrirLogin.addEventListener('click', (e)=>{ e.preventDefault(); cerrarModalConAnimacion(registroModal, ()=>abrirModal(loginModal)); });
+    loginModal.addEventListener('click',(e)=>{ const rect=loginModal.getBoundingClientRect(); const dentro = e.clientX>=rect.left && e.clientX<=rect.right && e.clientY>=rect.top && e.clientY<=rect.bottom; if(!dentro) cerrarModalConAnimacion(loginModal); });
+    registroModal.addEventListener('click',(e)=>{ const rect=registroModal.getBoundingClientRect(); const dentro = e.clientX>=rect.left && e.clientX<=rect.right && e.clientY>=rect.top && e.clientY<=rect.bottom; if(!dentro) cerrarModalConAnimacion(registroModal); });
+  </script>
 </body>
 </html>
