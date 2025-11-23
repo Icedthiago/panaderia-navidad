@@ -169,3 +169,96 @@ document.getElementById("logoutBtn")?.addEventListener("click", () => {
 
     alert("Sesión cerrada");
 });
+
+function actualizarOpcionesPorRol() {
+    const usuario = JSON.parse(localStorage.getItem("usuario"));
+
+    const elementosAdmin = document.querySelectorAll(".admin-only");
+
+    if (!usuario || usuario.rol !== "admin") {
+        elementosAdmin.forEach(el => el.classList.add("d-none"));
+    } else {
+        elementosAdmin.forEach(el => el.classList.remove("d-none"));
+    }
+}
+
+// --------------------------------------
+// CARGAR PRODUCTOS EN TABLA
+// --------------------------------------
+async function cargarProductos() {
+    const res = await fetch(`${API_URL}/api/productos`);
+    const data = await res.json();
+
+    const tbody = document.getElementById("tbodyProductos");
+    tbody.innerHTML = "";
+
+    data.forEach(p => {
+        let img = p.imagen
+            ? `data:image/jpeg;base64,${p.imagen}`
+            : "https://via.placeholder.com/60";
+
+        tbody.innerHTML += `
+            <tr>
+                <td>${p.id_producto}</td>
+                <td><img src="${img}" width="60"></td>
+                <td>${p.nombre}</td>
+                <td>${p.descripcion}</td>
+                <td>$${p.precio}</td>
+                <td>${p.stock}</td>
+                <td>${p.temporada}</td>
+                <td>
+                    <button class="btn-modal eliminar" data-id="${p.id_producto}">🗑 Eliminar</button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+document.getElementById("formProducto").addEventListener("submit", async e => {
+    e.preventDefault();
+
+    const error = document.getElementById("producto-error");
+    error.textContent = "";
+
+    const data = new FormData();
+    data.append("nombre", p-nombre.value);
+    data.append("descripcion", p-descripcion.value);
+    data.append("precio", p-precio.value);
+    data.append("stock", p-stock.value);
+    data.append("temporada", p-temporada.value);
+
+    if (p-imagen.files[0]) {
+        data.append("imagen", p-imagen.files[0]);
+    }
+
+    const res = await fetch(`${API_URL}/api/productos`, {
+        method: "POST",
+        body: data
+    });
+
+    if (!res.ok) {
+        error.textContent = "Error al guardar producto";
+        return;
+    }
+
+    dialogProducto.close();
+    cargarProductos();
+});
+
+document.addEventListener("click", async e => {
+    if (!e.target.classList.contains("eliminar")) return;
+
+    const id = e.target.dataset.id;
+
+    if (!confirm("¿Seguro que deseas eliminar este producto?")) return;
+
+    await fetch(`${API_URL}/api/productos/${id}`, { method: "DELETE" });
+
+    cargarProductos();
+});
+
+const formData = new FormData(document.getElementById("formProducto"));
+fetch("/api/producto", {
+  method: "POST",
+  body: formData
+});

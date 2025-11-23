@@ -118,9 +118,9 @@
           </a>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="perfil.html">Perfil</a></li>
-            <li><a class="dropdown-item" href="inventario.html">Inventario</a></li>
             <li><a class="dropdown-item" href="compra.html">Compra</a></li>
-            <li><a class="dropdown-item" href="ventas.html"> ventas</a></li>
+            <li><a class="dropdown-item admin-only" href="inventario.html">Inventario</a></li>
+            <li><a class="dropdown-item admin-only" href="ventas.html">Ventas</a></li>
           </ul>
         </li>
 
@@ -133,6 +133,42 @@
     </div>
   </div>
 </nav>
+<button class="btn-modal admin-only" onclick="dialogProducto.showModal()">Agregar producto</button>
+<dialog id="dialogProducto" class="modal">
+    <h2>Agregar producto</h2>
+
+    <form id="formProducto" enctype="multipart/form-data">
+
+        <label>Nombre:</label>
+        <input id="p-nombre" required />
+
+        <label>Descripción:</label>
+        <textarea id="p-descripcion" required></textarea>
+
+        <label>Precio:</label>
+        <input type="number" id="p-precio" required step="0.01" min="0" />
+
+        <label>Stock:</label>
+        <input type="number" id="p-stock" required min="0" />
+
+        <label>Temporada:</label>
+        <select id="p-temporada" required>
+            <option value="">Selecciona</option>
+            <option value="Navidad">Navidad</option>
+            <option value="DiaMuertos">Día de Muertos</option>
+            <option value="Invierno">Invierno</option>
+        </select>
+
+        <label>Imagen:</label>
+        <input type="file" id="p-imagen" accept="image/*" />
+
+        <p id="producto-error" style="color:red"></p>
+
+        <button class="btn-modal" type="submit">Guardar</button>
+        <button class="btn-modal cancelar" type="button" onclick="dialogProducto.close()">Cancelar</button>
+    </form>
+</dialog>
+
 
     <div class="container">
 	<div class="snowflakes" aria-hidden="true">
@@ -211,13 +247,6 @@
   <p class="footer p">&copy; 2025 Panadería Navideña. All rights reserved.</p>
 
 </footer>
-
-</script>
-  <script src="script.js"></script>
-
-</script>
-
-</script>
   <script src="script.js"></script>
 </body>
 </html>
