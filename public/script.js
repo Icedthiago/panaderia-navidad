@@ -1,12 +1,47 @@
-// =========================================
+// -----------------------------------------
 // CONFIG
-// =========================================
+// -----------------------------------------
 const API_URL = "https://panaderia-navidad.onrender.com";
 
 
-// =========================================
+// -----------------------------------------
+// UTILIDAD: Cerrar modal al hacer clic afuera
+// -----------------------------------------
+function activarCerrarModalFuera(modal) {
+    modal.addEventListener("click", (e) => {
+        const dialog = e.target.closest("dialog");
+        if (e.target === dialog) dialog.close();
+    });
+}
+
+
+// -----------------------------------------
+// ABRIR MODALES
+// -----------------------------------------
+document.querySelectorAll("[data-open]").forEach(btn => {
+    btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-open");
+        const modal = document.getElementById(id);
+        modal.showModal();
+    });
+});
+
+
+// -----------------------------------------
+// CERRAR MODALES
+// -----------------------------------------
+document.querySelectorAll("[data-close]").forEach(btn => {
+    btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-close");
+        const modal = document.getElementById(id);
+        modal.close();
+    });
+});
+
+
+// -----------------------------------------
 // REGISTRO
-// =========================================
+// -----------------------------------------
 document.getElementById("registroForm").addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -22,11 +57,13 @@ document.getElementById("registroForm").addEventListener("submit", async (e) => 
     if (!email.includes("@")) return errorMsg.textContent = "Correo inválido";
     if (password.length < 6) return errorMsg.textContent = "La contraseña debe tener mínimo 6 caracteres";
 
+    const datos = { nombre, email, password, rol };
+
     try {
         const res = await fetch(`${API_URL}/api/usuarios`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nombre, email, password, rol })
+            body: JSON.stringify(datos)
         });
 
         const data = await res.json();
@@ -35,23 +72,21 @@ document.getElementById("registroForm").addEventListener("submit", async (e) => 
 
         alert("✔ Registro exitoso");
 
-        await loginAutomatico(email, password);
+        // Login automático
+        await realizarLogin(email, password);
 
         document.getElementById("registroForm").reset();
         document.getElementById("modal-registro").close();
-    } catch {
+
+    } catch (err) {
         errorMsg.textContent = "Error conectando con el servidor";
     }
 });
 
 
-// =========================================
-// LOGIN
-// =========================================
-async function loginAutomatico(email, password) {
-    await realizarLogin(email, password);
-}
-
+// -----------------------------------------
+// LOGIN MANUAL
+// -----------------------------------------
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -61,13 +96,17 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
 
     error.textContent = "";
 
-    if (!email) return (error.textContent = "Ingresa tu correo");
-    if (!email.includes("@")) return (error.textContent = "Correo inválido");
-    if (password.length < 6) return (error.textContent = "Contraseña muy corta");
+    if (!email) return error.textContent = "Ingresa tu correo";
+    if (!email.includes("@")) return error.textContent = "Correo inválido";
+    if (password.length < 6) return error.textContent = "Contraseña muy corta";
 
     await realizarLogin(email, password);
 });
 
+
+// -----------------------------------------
+// FUNCIÓN REAL DE LOGIN
+// -----------------------------------------
 async function realizarLogin(email, password) {
     try {
         const res = await fetch(`${API_URL}/api/login`, {
@@ -77,46 +116,57 @@ async function realizarLogin(email, password) {
         });
 
         const data = await res.json();
-        console.log("LOGIN:", data);
 
-        if (!data.success)
-            return (document.getElementById("login-error").textContent = data.message);
+        if (!data.success) {
+            document.getElementById("login-error").textContent = data.message;
+            return;
+        }
 
         localStorage.setItem("usuario", JSON.stringify(data.usuario));
 
         mostrarUsuarioNav(data.usuario.nombre);
+        actualizarOpcionesPorRol();
 
         document.getElementById("loginForm").reset();
         document.getElementById("modal-login").close();
-    } catch {
+
+    } catch (err) {
         document.getElementById("login-error").textContent = "Error de servidor";
     }
 }
 
 
-// =========================================
-// NAVBAR SESIÓN
-// =========================================
+// -----------------------------------------
+// MOSTRAR USUARIO EN NAVBAR
+// -----------------------------------------
 function mostrarUsuarioNav(nombre) {
-    const loginBtn = document.getElementById("nav-login-btn");
-    const registroBtn = document.getElementById("nav-registro-btn");
-    const usuarioDiv = document.getElementById("nav-usuario");
-    const usuarioNombre = document.getElementById("nav-usuario-nombre");
-    const logoutLi = document.getElementById("nav-logout");
+    document.getElementById("nav-login-btn").classList.add("d-none");
+    document.getElementById("nav-registro-btn").classList.add("d-none");
 
-    if (!loginBtn || !registroBtn || !usuarioDiv || !usuarioNombre || !logoutLi) {
-        console.warn("⚠ Elementos faltantes en el navbar");
-        return;
-    }
-
-    loginBtn.classList.add("d-none");
-    registroBtn.classList.add("d-none");
-
-    usuarioNombre.textContent = nombre;
-    usuarioDiv.classList.remove("d-none");
-    logoutLi.classList.remove("d-none");
+    document.getElementById("nav-usuario-nombre").textContent = nombre;
+    document.getElementById("nav-usuario").classList.remove("d-none");
+    document.getElementById("nav-logout").classList.remove("d-none");
 }
 
+
+// -----------------------------------------
+// ACTUALIZAR UI POR ROL
+// -----------------------------------------
+function actualizarOpcionesPorRol() {
+    const usuario = JSON.parse(localStorage.getItem("usuario"));
+    const adminElements = document.querySelectorAll(".admin-only");
+
+    if (usuario?.rol === "admin") {
+        adminElements.forEach(el => el.classList.remove("d-none"));
+    } else {
+        adminElements.forEach(el => el.classList.add("d-none"));
+    }
+}
+
+
+// -----------------------------------------
+// LOGOUT
+// -----------------------------------------
 document.getElementById("logoutBtn")?.addEventListener("click", () => {
     localStorage.removeItem("usuario");
 
@@ -130,116 +180,190 @@ document.getElementById("logoutBtn")?.addEventListener("click", () => {
 });
 
 
-// =========================================
-// ROLES
-// =========================================
-function actualizarOpcionesPorRol() {
-    const usuario = JSON.parse(localStorage.getItem("usuario"));
-    const elementosAdmin = document.querySelectorAll(".admin-only");
-
-    if (!usuario || usuario.rol !== "admin") {
-        elementosAdmin.forEach((el) => el.classList.add("d-none"));
-    } else {
-        elementosAdmin.forEach((el) => el.classList.remove("d-none"));
-    }
-}
-
-
-// =========================================
-// PRODUCTOS: CARGAR TABLA
-// =========================================
+// -----------------------------------------
+// CARGAR PRODUCTOS
+// -----------------------------------------
 async function cargarProductos() {
-    const res = await fetch(`${API_URL}/api/productos`);
-    const data = await res.json();
+    try {
+        const res = await fetch(`${API_URL}/api/productos`);
+        const data = await res.json();
 
-    const tbody = document.getElementById("tbodyProductos");
-    tbody.innerHTML = "";
+        const tbody = document.getElementById("tbodyProductos");
+        tbody.innerHTML = "";
 
-    data.forEach((p) => {
-        const img = p.imagen
-            ? `data:image/jpeg;base64,${p.imagen}`
-            : "https://via.placeholder.com/60";
+        data.forEach(p => {
+            let img = p.imagen
+                ? `data:image/jpeg;base64,${p.imagen}`
+                : "https://via.placeholder.com/60";
 
-        tbody.innerHTML += `
-            <tr>
-                <td>${p.id_producto}</td>
-                <td><img src="${img}" width="60"></td>
-                <td>${p.nombre}</td>
-                <td>${p.descripcion}</td>
-                <td>$${p.precio}</td>
-                <td>${p.stock}</td>
-                <td>${p.temporada}</td>
-                <td>
-                    <button class="btn-modal eliminar" data-id="${p.id_producto}">
-                        🗑 Eliminar
-                    </button>
-                </td>
-            </tr>
-        `;
-    });
+            tbody.innerHTML += `
+                <tr>
+                    <td>${p.id_producto}</td>
+                    <td><img src="${img}" width="60"></td>
+                    <td>${p.nombre}</td>
+                    <td>${p.descripcion}</td>
+                    <td>$${p.precio}</td>
+                    <td>${p.stock}</td>
+                    <td>${p.temporada}</td>
+                    <td>
+    <button class="editar" data-id="${p.id_producto}">✏ Editar</button>
+    <button class="eliminar" data-id="${p.id_producto}">🗑 Eliminar</button>
+                    </td>
+
+                </tr>
+            `;
+        });
+
+    } catch (err) {
+        console.error("Error cargando productos:", err);
+    }
 }
 
 
-// =========================================
-// DOMContentLoaded — SOLO UNO
-// =========================================
-document.addEventListener("DOMContentLoaded", () => {
-    // Mostrar usuario si hay sesión
-    const usuario = JSON.parse(localStorage.getItem("usuario"));
-    if (usuario?.nombre) mostrarUsuarioNav(usuario.nombre);
+// -----------------------------------------
+// AGREGAR PRODUCTO
+// -----------------------------------------
+document.getElementById("formAgregarProducto").addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-    // Cargar productos
-    cargarProductos();
-    actualizarOpcionesPorRol();
-
-    // ============================
-    // AGREGAR PRODUCTO
-    // ============================
     const form = document.getElementById("formAgregarProducto");
+    const formData = new FormData(form);
 
-    if (!form) {
-        console.error("ERROR: No existe formAgregarProducto");
-        return;
-    }
+    try {
+        const res = await fetch(`${API_URL}/api/producto`, {
+            method: "POST",
+            body: formData
+        });
 
-    form.setAttribute("enctype", "multipart/form-data");
+        const data = await res.json();
 
-    form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        const formData = new FormData(form);
-
-        try {
-            const res = await fetch(`${API_URL}/api/producto`, {
-                method: "POST",
-                body: formData
-            });
-
-            const data = await res.json();
-            console.log("Agregar producto:", data);
-
-            if (data.success) {
-                alert("Producto agregado correctamente");
-                form.reset();
-                cargarProductos();
-            } else {
-                alert("Error: " + data.error);
-            }
-        } catch (error) {
-            console.error("Error en fetch:", error);
+        if (data.success) {
+            alert("Producto agregado correctamente");
+            form.reset();
+            document.getElementById("add-producto").close();
+            cargarProductos();
+        } else {
+            alert("Error: " + data.error);
         }
+
+    } catch (err) {
+        console.error("Error:", err);
+    }
+});
+
+
+// -----------------------------------------
+// ELIMINAR PRODUCTO
+// -----------------------------------------
+document.addEventListener("click", async (e) => {
+    if (!e.target.classList.contains("eliminar")) return;
+
+    const id = e.target.dataset.id;
+
+    if (!confirm("¿Seguro que deseas eliminar este producto?")) return;
+
+    try {
+        const res = await fetch(`${API_URL}/api/producto/${id}`, {
+            method: "DELETE"
+        });
+
+        const data = await res.json();
+
+        if (data.success || res.ok) {
+            alert("Producto eliminado");
+            cargarProductos();
+        } else {
+            alert("Error al eliminar: " + (data.message || data.error || "Error desconocido"));
+        }
+    } catch (err) {
+        console.error("Error eliminando:", err);
+        alert("Error de conexión al eliminar");
+    }
+});
+
+
+// -----------------------------------------
+// AL INICIAR LA PÁGINA
+// -----------------------------------------
+document.addEventListener("DOMContentLoaded", () => {
+    const registrarModales = ["modal-login", "modal-registro", "add-producto"];
+
+    registrarModales.forEach(id => {
+        const modal = document.getElementById(id);
+        if (modal) activarCerrarModalFuera(modal);
     });
 
-    // ============================
-    // ELIMINAR PRODUCTO
-    // ============================
-    document.addEventListener("click", async (e) => {
-        if (!e.target.classList.contains("eliminar")) return;
+    const usuario = JSON.parse(localStorage.getItem("usuario"));
+    if (usuario) mostrarUsuarioNav(usuario.nombre);
 
-        const id = e.target.dataset.id;
-        if (!confirm("¿Eliminar producto?")) return;
+    actualizarOpcionesPorRol();
+    cargarProductos();
+});
 
-        await fetch(`${API_URL}/api/producto/${id}`, { method: "DELETE" });
-        cargarProductos();
-    });
+// -----------------------------------------
+// EDITAR PRODUCTO – ABRIR MODAL CON DATOS
+// -----------------------------------------
+document.addEventListener("click", async (e) => {
+    if (!e.target.classList.contains("editar")) return;
+
+    const id = e.target.dataset.id;
+
+    try {
+        const res = await fetch(`${API_URL}/api/producto/${id}`);
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+            console.error("Error al cargar producto:", data);
+            alert("Error cargando producto");
+            return;
+        }
+
+        const p = data.producto;
+
+        document.getElementById("edit-id").value = p.id_producto;
+        document.getElementById("edit-nombre").value = p.nombre;
+        document.getElementById("edit-descripcion").value = p.descripcion;
+        document.getElementById("edit-precio").value = p.precio;
+        document.getElementById("edit-stock").value = p.stock;
+        document.getElementById("edit-temporada").value = p.temporada;
+
+        document.getElementById("edit-producto").showModal();
+
+    } catch (error) {
+        console.error("Error en editar:", error);
+        alert("Error de conexión");
+    }
+});
+
+// -----------------------------------------
+// GUARDAR CAMBIOS DEL PRODUCTO
+// -----------------------------------------
+document.getElementById("formEditarProducto").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const form = document.getElementById("formEditarProducto");
+    const formData = new FormData(form);
+
+    const id = document.getElementById("edit-id").value;
+
+    try {
+        const res = await fetch(`${API_URL}/api/producto/${id}`, {
+            method: "PUT",
+            body: formData
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            alert("✔ Producto actualizado");
+            form.reset();
+            document.getElementById("edit-producto").close();
+            cargarProductos();
+        } else {
+            alert("Error: " + data.error);
+        }
+
+    } catch (err) {
+        console.error("Error:", err);
+    }
 });

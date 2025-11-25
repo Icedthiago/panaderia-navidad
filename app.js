@@ -135,23 +135,47 @@ app.post("/api/login", async (req, res) => {
 });
 
 // --------------------------------------
-// OBTENER PRODUCTOS
+// OBTENER TODOS LOS PRODUCTOS
 // --------------------------------------
 app.get("/api/productos", async (req, res) => {
-    try {
-        const result = await pool.query("SELECT * FROM producto");
+  try {
+    const result = await pool.query("SELECT * FROM producto ORDER BY id_producto ASC");
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error al obtener productos:", err);
+    res.status(500).json({ error: "Error al obtener productos" });
+  }
+});
 
-        const productos = result.rows.map(p => ({
-            ...p,
-            imagen: p.imagen ? Buffer.from(p.imagen).toString("base64") : null
-        }));
+// --------------------------------------
+// OBTENER PRODUCTO POR ID (PARA EDITAR)
+// --------------------------------------
+app.get("/api/producto/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
 
-        res.json(productos);
+    const result = await pool.query(
+      `SELECT
+        id_producto, nombre, descripcion, precio, stock, temporada,
+        encode(imagen, 'base64') AS imagen
+       FROM producto
+       WHERE id_producto = $1`,
+      [id]
+    );
 
-    } catch (error) {
-        console.error("Error obteniendo productos:", error);
-        res.status(500).json({ error: "Error en el servidor" });
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: "Producto no encontrado" });
     }
+
+    res.json({
+      success: true,
+      producto: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error("Error cargando producto:", error);
+    res.status(500).json({ success: false, message: "Error en servidor" });
+  }
 });
 
 // --------------------------------------
@@ -191,27 +215,39 @@ app.put("/api/producto/:id", upload.single("imagen"), async (req, res) => {
   try {
     const { id } = req.params;
     const { nombre, descripcion, precio, stock, temporada } = req.body;
+
     const imagen = req.file ? req.file.buffer : null;
 
-    const fields = [nombre, descripcion, precio, stock, temporada];
-    let query = `
+    const sql = `
       UPDATE producto
-      SET nombre=$1, descripcion=$2, precio=$3, stock=$4, temporada=$5
+      SET nombre=$1,
+          descripcion=$2,
+          precio=$3,
+          stock=$4,
+          temporada=$5,
+          imagen = COALESCE($6, imagen)
+      WHERE id_producto=$7
+      RETURNING *;
     `;
 
-    if (imagen) {
-      query += `, imagen=$6 WHERE id_producto=$7 RETURNING *`;
-      fields.push(imagen, id);
-    } else {
-      query += ` WHERE id_producto=$6 RETURNING *`;
-      fields.push(id);
-    }
+    const result = await pool.query(sql, [
+      nombre,
+      descripcion,
+      precio,
+      stock,
+      temporada,
+      imagen,
+      id
+    ]);
 
-    const result = await pool.query(query, fields);
-    res.json({ success: true, producto: result.rows[0] });
+    res.json({
+      success: true,
+      producto: result.rows[0]
+    });
 
   } catch (err) {
-    res.status(500).json({ error: "Error al actualizar producto" });
+    console.error("Error al actualizar producto:", err);
+    res.status(500).json({ success: false, error: "Error al actualizar producto" });
   }
 });
 
@@ -227,10 +263,15 @@ app.delete("/api/producto/:id", async (req, res) => {
   }
 });
 
-// --------------------------------------
-// FALLBACK: SERVIR INDEX
-// --------------------------------------
+// FALLBACK SEGURO PARA TODAS LAS RUTAS
 app.use((req, res) => {
+  if (req.originalUrl.startsWith("/api")) {
+    return res.status(404).json({
+      success: false,
+      message: "Ruta no encontrada"
+    });
+  }
+
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
