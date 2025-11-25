@@ -153,7 +153,17 @@
   <input type="number" id="stockProducto" name="stock" required><br><br>
 
   <label for="temporadaProducto">Temporada:</label>
-  <input type="text" id="temporadaProducto" name="temporada" required><br><br>
+<select id="temporadaProducto" name="temporada" required>
+    <option value="">Seleccione una temporada</option>
+    <option value="De todo el año">De todo el año</option>
+    <option value="Navideño">Navideño</option>
+    <option value="Halloween">Halloween</option>
+    <option value="Día de muertos">Día de muertos</option>
+    <option value="Día de reyes">Día de reyes</option>
+    <option value="San Valentín">San Valentín</option>
+    <option value="Pascua">Pascua</option>
+</select>
+<br><br>
 
   <label for="imagenProducto">Imagen:</label>
   <input type="file" id="imagenProducto" name="imagen" accept="image/*"><br><br>
@@ -222,6 +232,7 @@
   <p class="footer p">&copy; 2025 Panadería Navideña. All rights reserved.</p>
 
 </footer>
+<script src="script.js"></script>
 <script>
 /* ----- configuración: tiempo de la animación (ms) ----- */
 const ANIM_MS = 300;
@@ -305,6 +316,5 @@ document.getElementById("registroForm").addEventListener("submit", (e) => {
   cerrarModalConAnimacion(registroModal);
 });
 </script>
-<script src="script.js"></script>
 </body>
 </html>
