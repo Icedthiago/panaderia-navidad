@@ -54,6 +54,31 @@
     </div>
   </nav>
 
+  <div class="background"></div>
+  <div class="outer-div">
+  <div class="inner-div">
+    <div class="front">
+      <div class="front__bkg-photo"></div>
+      <div class="front__face-photo"></div>
+      <div class="front__text">
+        <h3 class="front__text-header">Bobby Korec</h3>
+        <p class="front__text-para"><i class="fas fa-map-marker-alt front-icons"></i>Seattle</p>
+        
+        <span class="front__text-hover">Hover to Find Me</span>
+      </div>
+    </div>
+    <div class="back">
+      <div class="social-media-wrapper">
+        <a href="#" class="social-icon"><i class="fab fa-codepen" aria-hidden="true"></i></a> 
+        <a href="#" class="social-icon"><i class="fab fa-github-square" aria-hidden="true"></i></a>
+        <a href="#" class="social-icon"><i class="fab fa-linkedin-square" aria-hidden="true"></i></a>
+         <a href="#" class="social-icon"><i class="fab fa-instagram" aria-hidden="true"></i></a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
   <!-- Modales -->
   <dialog id="modal-login">
     <h2>Inicio de Sesión</h2>
@@ -110,22 +135,28 @@
 
   <script src="script.js"></script>
   <script>
-    /* Modal open/close helper (same as other pages) */
-    const ANIM_MS = 300;
-    function abrirModal(modal){ modal.classList.remove('cerrando'); modal.showModal(); }
-    function cerrarModalConAnimacion(modal, cb){ modal.classList.add('cerrando'); setTimeout(()=>{ try{ modal.close(); }catch(e){} modal.classList.remove('cerrando'); if(cb) cb(); }, ANIM_MS); }
-    const botonesAbrir = document.querySelectorAll('[data-open]');
-    const botonesCerrar = document.querySelectorAll('.cerrar-btn');
-    const loginModal = document.getElementById('modal-login');
-    const registroModal = document.getElementById('modal-registro');
-    const linkAbrirRegistro = document.getElementById('link-abrir-registro');
-    const linkAbrirLogin = document.getElementById('link-abrir-login');
-    botonesAbrir.forEach(b=>b.addEventListener('click',()=>{ const id=b.getAttribute('data-open'); const m=document.getElementById(id); if(m) abrirModal(m); }));
-    botonesCerrar.forEach(b=>b.addEventListener('click', ()=>{ const id=b.getAttribute('data-close'); const m = id ? document.getElementById(id) : b.closest('dialog'); if(m) cerrarModalConAnimacion(m); }));
-    linkAbrirRegistro.addEventListener('click', (e)=>{ e.preventDefault(); cerrarModalConAnimacion(loginModal, ()=>abrirModal(registroModal)); });
-    linkAbrirLogin.addEventListener('click', (e)=>{ e.preventDefault(); cerrarModalConAnimacion(registroModal, ()=>abrirModal(loginModal)); });
-    loginModal.addEventListener('click',(e)=>{ const rect=loginModal.getBoundingClientRect(); const dentro = e.clientX>=rect.left && e.clientX<=rect.right && e.clientY>=rect.top && e.clientY<=rect.bottom; if(!dentro) cerrarModalConAnimacion(loginModal); });
-    registroModal.addEventListener('click',(e)=>{ const rect=registroModal.getBoundingClientRect(); const dentro = e.clientX>=rect.left && e.clientX<=rect.right && e.clientY>=rect.top && e.clientY<=rect.bottom; if(!dentro) cerrarModalConAnimacion(registroModal); });
+    document.addEventListener("DOMContentLoaded", () => {
+    if (!window.location.pathname.includes("perfil.html")) return;
+
+    const user = JSON.parse(localStorage.getItem("usuario"));
+
+    if (!user) {
+        window.location.href = "index.html";
+        return;
+    }
+
+    document.querySelector(".front__text-header").textContent = user.nombre;
+    document.querySelector(".front__text-para").innerHTML =
+        `<i class="fas fa-envelope front-icons"></i> ${user.email}`;
+
+    const back = document.querySelector(".back");
+    const rolTag = document.createElement("p");
+    rolTag.style.color = "white";
+    rolTag.style.marginTop = "10px";
+    rolTag.innerHTML = `<b>Rol:</b> ${user.rol}`;
+    back.appendChild(rolTag);
+});
+
   </script>
 </body>
 </html>

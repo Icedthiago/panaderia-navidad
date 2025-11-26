@@ -364,3 +364,21 @@ dialog.cerrando {
     border-radius: 6px;
     border: 2px solid #790A07;
 }
+
+.inner-div {
+  transition: transform 0.8s;
+  transform-style: preserve-3d;
+  cursor: pointer;
+}
+
+.inner-div.flipped {
+  transform: rotateY(180deg);
+}
+
+.front, .back {
+  backface-visibility: hidden;
+}
+
+.back {
+  transform: rotateY(180deg);
+}
