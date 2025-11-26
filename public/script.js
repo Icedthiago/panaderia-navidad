@@ -481,3 +481,54 @@ if (formEditar) {
         editarProducto();
     });
 }
+
+function safeGet(id) {
+  return document.getElementById(id);
+}
+
+function safeQuery(sel) {
+  return document.querySelector(sel);
+}
+
+function safeQueryAll(sel) {
+  return document.querySelectorAll(sel);
+}
+
+async function verificarSesion() {
+  try {
+    const res = await fetch("/auth/session");
+    if (!res.ok) return;
+
+    const data = await res.json();
+    if (!data.logged) return;
+
+    mostrarUsuario(data.usuario);
+  } catch (e) {
+    console.error("Error verificando sesión:", e);
+  }
+}
+
+function mostrarUsuario(usuario) {
+  const navUsuario = safeGet("nav-usuario");
+  const navNombre = safeGet("nav-usuario-nombre");
+  const loginBtn = safeGet("nav-login-btn");
+  const regBtn = safeGet("nav-registro-btn");
+  const logoutBtn = safeGet("nav-logout");
+
+  if (navUsuario && navNombre) {
+    navUsuario.classList.remove("d-none");
+    navNombre.textContent = usuario.nombre;
+  }
+  if (logoutBtn) logoutBtn.classList.remove("d-none");
+  if (loginBtn) loginBtn.classList.add("d-none");
+  if (regBtn) regBtn.classList.add("d-none");
+
+  // mostrar opciones de admin
+  if (usuario.rol === "admin") {
+    const adminOnly = document.querySelectorAll(".admin-only");
+    adminOnly.forEach(el => el.classList.remove("d-none"));
+  }
+}
+
+// Ejecutar en cualquier página
+verificarSesion();

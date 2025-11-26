@@ -281,3 +281,14 @@ app.use((req, res) => {
 app.listen(port, () => {
   console.log("Servidor corriendo en http://localhost:" + port);
 });
+
+app.get("/auth/session", (req, res) => {
+  if (req.session.user) {
+    res.json({
+      logged: true,
+      usuario: req.session.user
+    });
+  } else {
+    res.json({ logged: false });
+  }
+});
