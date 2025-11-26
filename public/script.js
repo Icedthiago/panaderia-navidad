@@ -293,8 +293,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (usuarioLocal) mostrarUsuario(usuarioLocal);
 
     verificarSesion();
-    cargarProductos();
+    cargarProductos();               // admin
+    cargarProductosParaComprar();    // compras
 });
+
 
 // -----------------------------------------
 // FUNCIÓN REAL DE LOGIN
@@ -468,3 +470,44 @@ document.getElementById("btnPagar")?.addEventListener("click", async () => {
         alert("Error al realizar la compra");
     }
 });
+
+// -----------------------------------------
+// CARGAR PRODUCTOS PARA LA PÁGINA DE COMPRAS
+// -----------------------------------------
+async function cargarProductosParaComprar() {
+    try {
+        const res = await fetch(`${API_URL}/api/productos`);
+        const data = await res.json();
+
+        const tbody = document.getElementById("tbodyCompras");
+        if (!tbody) return;
+
+        tbody.innerHTML = data.map(p => `
+            <tr>
+                <td>${p.id_producto}</td>
+                <td><img src="${p.imagen 
+                    ? `data:image/jpeg;base64,${p.imagen}` 
+                    : `${API_URL}/img/default-producto.jpg`
+                }" width="60"></td>
+                <td>${p.nombre}</td>
+                <td>${p.descripcion}</td>
+                <td>$${p.precio}</td>
+                <td>${p.stock}</td>
+                <td>
+                    <button 
+                        class="btn btn-primary btn-comprar"
+                        data-id="${p.id_producto}"
+                        data-precio="${p.precio}"
+                        data-nombre="${p.nombre}"
+                        data-imagen="${p.imagen ? `data:image/jpeg;base64,${p.imagen}` : `${API_URL}/img/default-producto.jpg`}"
+                    >
+                        🛒 Comprar
+                    </button>
+                </td>
+            </tr>
+        `).join("");
+
+    } catch (err) {
+        console.error("Error cargando productos para comprar:", err);
+    }
+}
