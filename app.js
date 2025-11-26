@@ -139,13 +139,27 @@ app.post("/api/login", async (req, res) => {
 // --------------------------------------
 app.get("/api/productos", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM producto ORDER BY id_producto ASC");
+    const result = await pool.query(`
+      SELECT 
+        id_producto,
+        nombre,
+        descripcion,
+        precio,
+        stock,
+        temporada,
+        encode(imagen, 'base64') AS imagen
+      FROM producto
+      ORDER BY id_producto ASC
+    `);
+
     res.json(result.rows);
+
   } catch (err) {
     console.error("Error al obtener productos:", err);
     res.status(500).json({ error: "Error al obtener productos" });
   }
 });
+
 
 // --------------------------------------
 // OBTENER PRODUCTO POR ID (PARA EDITAR)
