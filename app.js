@@ -306,3 +306,45 @@ app.get("/auth/session", (req, res) => {
     res.json({ logged: false });
   }
 });
+
+app.post("/api/ventas", async (req, res) => {
+    const { id_usuario, carrito } = req.body;
+
+    if (!id_usuario || !carrito?.length) {
+        return res.status(400).json({ success: false, message: "Carrito vacío" });
+    }
+
+    try {
+        // 1. Crear la venta
+        const venta = await db.query(
+            "INSERT INTO venta (id_usuario) VALUES ($1) RETURNING id_venta",
+            [id_usuario]
+        );
+
+        const id_venta = venta.rows[0].id_venta;
+
+        // 2. Insertar detalles
+        for (const item of carrito) {
+            await db.query(
+                `INSERT INTO detalle_venta (id_venta, id_producto, cantidad, precio)
+                 VALUES ($1, $2, $3, $4)`,
+                [
+                    id_venta,
+                    item.id_producto,
+                    item.cantidad,
+                    item.precio
+                ]
+            );
+        }
+
+        res.json({
+            success: true,
+            id_venta,
+            message: "Venta registrada correctamente"
+        });
+
+    } catch (error) {
+        console.error("Error en venta:", error);
+        res.status(500).json({ success: false, message: "Error registrando venta" });
+    }
+});

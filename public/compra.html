@@ -131,12 +131,63 @@
 		<li class="nav-item"><a class="nav-link active" href="#" role="button" data-bs-toggle="dropdown">🎅</a></li>
 		<li class="nav-item"><a class="nav-link active" href="#" role="button" data-bs-toggle="dropdown">🎄</a></li>
 		<li class="nav-item"><a class="nav-link active" href="#" role="button" data-bs-toggle="dropdown">❄️</a></li>
+    <li class="nav-item d-none" id="nav-carrito-btn">
+      <button class="btn btn-warning" data-open="modal-carrito">
+        🛒 Carrito (<span id="carrito-cantidad">0</span>)
+      </button>
+    </li>
+
 
       </ul>
 
     </div>
   </div>
+
+  <dialog id="modal-carrito" class="modal-carrito">
+  <h2>🛒 Tu Carrito</h2>
+
+  <table class="table table-bordered text-center">
+    <thead class="table-success">
+      <tr>
+        <th>ID</th>
+        <th>Imagen</th>
+        <th>Producto</th>
+        <th>Precio</th>
+        <th>Cantidad</th>
+        <th>Subtotal</th>
+        <th>Eliminar</th>
+      </tr>
+    </thead>
+    <tbody id="tbodyCarrito"></tbody>
+  </table>
+
+  <h3>Total: $<span id="totalCarrito">0.00</span></h3>
+
+  <button id="btnPagar" class="btn btn-success">Confirmar Compra</button>
+  <button class="btn btn-danger" data-close="modal-carrito">Cerrar</button>
+</dialog>
+
 </nav>
+
+<div class="container mt-4">
+  <h2 class="text-center">Productos Disponibles</h2>
+
+  <table class="table table-striped table-hover text-center">
+    <thead class="table-success">
+      <tr>
+        <th>ID</th>
+        <th>Imagen</th>
+        <th>Nombre</th>
+        <th>Descripción</th>
+        <th>Precio</th>
+        <th>Temporada</th>
+        <th>Acción</th>
+      </tr>
+    </thead>
+    <tbody id="tbodyCompras"></tbody>
+  </table>
+</div>
+
     <div class="container">
 	<div class="snowflakes" aria-hidden="true">
 		<div class="snowflake">

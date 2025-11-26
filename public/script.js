@@ -115,6 +115,10 @@ function mostrarUsuario(usuario) {
     if (rol === "admin") {
         document.querySelectorAll(".admin-only").forEach(el => el.classList.remove("d-none"));
     }
+
+    document.getElementById("nav-carrito-btn").classList.remove("d-none");
+actualizarCarritoNav();
+
 }
 
 
@@ -331,3 +335,136 @@ async function realizarLogin(email, password) {
         return false;
     }
 }
+
+// -----------------------------------------
+// BOTÓN DE CARRITO EN NAV
+// -----------------------------------------
+document.addEventListener("DOMContentLoaded", () => {
+    const carritoBtn = document.querySelector("[data-open='modal-carrito']");
+    if (carritoBtn) {
+        carritoBtn.addEventListener("click", () => {
+            cargarCarritoEnModal();
+            document.getElementById("modal-carrito").showModal();
+        });
+    }
+});
+
+// -----------------------------------------
+// AGREGAR PRODUCTO AL CARRITO
+// -----------------------------------------
+document.addEventListener("click", (e) => {
+    if (!e.target.classList.contains("btn-comprar")) return;
+
+    const id_producto = parseInt(e.target.dataset.id);
+    const precio = parseFloat(e.target.dataset.precio);
+    const nombre = e.target.dataset.nombre;
+    const imagen = e.target.dataset.imagen || `${API_URL}/img/default-producto.jpg`;
+
+    let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+
+    const existe = carrito.find(item => item.id_producto === id_producto);
+
+    if (existe) {
+        existe.cantidad++;
+    } else {
+        carrito.push({
+            id_producto,
+            precio,
+            cantidad: 1,
+            nombre,
+            imagen
+        });
+    }
+
+    localStorage.setItem("carrito", JSON.stringify(carrito));
+    actualizarCarritoNav();
+    alert("Producto añadido al carrito 🛒");
+});
+
+// -----------------------------------------
+// ACTUALIZAR ICONO CANTIDAD EN NAV
+// -----------------------------------------
+function actualizarCarritoNav() {
+    const carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+    const span = document.getElementById("carrito-cantidad");
+    if (span) span.textContent = carrito.length;
+}
+
+// -----------------------------------------
+// CARGAR CARRITO EN MODAL
+// -----------------------------------------
+function cargarCarritoEnModal() {
+    const carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+    const tbody = document.getElementById("tbodyCarrito");
+    const totalSpan = document.getElementById("totalCarrito");
+
+    tbody.innerHTML = "";
+    let total = 0;
+
+    carrito.forEach(item => {
+        const subtotal = item.precio * item.cantidad;
+        total += subtotal;
+
+        tbody.innerHTML += `
+            <tr>
+                <td>${item.id_producto}</td>
+                <td><img src="${item.imagen}" width="60"></td>
+                <td>${item.nombre}</td>
+                <td>$${item.precio}</td>
+                <td>${item.cantidad}</td>
+                <td>$${subtotal.toFixed(2)}</td>
+                <td><button class="btn btn-danger eliminar-carrito" data-id="${item.id_producto}">X</button></td>
+            </tr>
+        `;
+    });
+
+    totalSpan.textContent = total.toFixed(2);
+}
+
+// -----------------------------------------
+// ELIMINAR PRODUCTO DEL CARRITO
+// -----------------------------------------
+document.addEventListener("click", e => {
+    if (!e.target.classList.contains("eliminar-carrito")) return;
+
+    const id = parseInt(e.target.dataset.id);
+    let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+
+    carrito = carrito.filter(p => p.id_producto !== id);
+
+    localStorage.setItem("carrito", JSON.stringify(carrito));
+
+    cargarCarritoEnModal();
+    actualizarCarritoNav();
+});
+
+// -----------------------------------------
+// CONFIRMAR COMPRA
+// -----------------------------------------
+document.getElementById("btnPagar")?.addEventListener("click", async () => {
+    const carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+    const usuario = JSON.parse(localStorage.getItem("usuario"));
+
+    if (!usuario) return alert("Debes iniciar sesión.");
+    if (carrito.length === 0) return alert("Tu carrito está vacío.");
+
+    const res = await fetch(`${API_URL}/api/ventas`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            id_usuario: usuario.id_usuario,
+            carrito
+        })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+        alert("Compra realizada exitosamente 🎉");
+        localStorage.removeItem("carrito");
+        cargarCarritoEnModal();
+        actualizarCarritoNav();
+    } else {
+        alert("Error al realizar la compra");
+    }
+});
