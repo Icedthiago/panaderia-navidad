@@ -9,32 +9,25 @@ const API_URL = "https://panaderia-navidad.onrender.com";
 // -----------------------------------------
 function activarCerrarModalFuera(modal) {
     modal.addEventListener("click", (e) => {
-        const dialog = e.target.closest("dialog");
-        if (e.target === dialog) dialog.close();
+        if (e.target === modal) modal.close();
     });
 }
 
 
 // -----------------------------------------
-// ABRIR MODALES
+// ABRIR Y CERRAR MODALES
 // -----------------------------------------
 document.querySelectorAll("[data-open]").forEach(btn => {
     btn.addEventListener("click", () => {
-        const id = btn.getAttribute("data-open");
-        const modal = document.getElementById(id);
-        modal.showModal();
+        const modal = document.getElementById(btn.dataset.open);
+        modal?.showModal();
     });
 });
 
-
-// -----------------------------------------
-// CERRAR MODALES
-// -----------------------------------------
 document.querySelectorAll("[data-close]").forEach(btn => {
     btn.addEventListener("click", () => {
-        const id = btn.getAttribute("data-close");
-        const modal = document.getElementById(id);
-        modal.close();
+        const modal = document.getElementById(btn.dataset.close);
+        modal?.close();
     });
 });
 
@@ -43,6 +36,7 @@ document.querySelectorAll("[data-close]").forEach(btn => {
 // REGISTRO
 // -----------------------------------------
 const registroForm = document.getElementById("registroForm");
+
 if (registroForm) {
     registroForm.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -59,36 +53,34 @@ if (registroForm) {
         if (!email.includes("@")) return errorMsg.textContent = "Correo inválido";
         if (password.length < 6) return errorMsg.textContent = "La contraseña debe tener mínimo 6 caracteres";
 
-        const datos = { nombre, email, password, rol };
-
         try {
             const res = await fetch(`${API_URL}/api/usuarios`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(datos)
+                body: JSON.stringify({ nombre, email, password, rol })
             });
 
             const data = await res.json();
-
-            if (!res.ok) return (errorMsg.textContent = data.message);
+            if (!res.ok) return errorMsg.textContent = data.message;
 
             alert("✔ Registro exitoso");
-
             await realizarLogin(email, password);
 
             registroForm.reset();
             document.getElementById("modal-registro").close();
 
-        } catch (err) {
+        } catch {
             errorMsg.textContent = "Error conectando con el servidor";
         }
     });
 }
 
+
 // -----------------------------------------
 // LOGIN MANUAL
 // -----------------------------------------
 const loginForm = document.getElementById("loginForm");
+
 if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -99,7 +91,6 @@ if (loginForm) {
 
         error.textContent = "";
 
-        if (!email) return error.textContent = "Ingresa tu correo";
         if (!email.includes("@")) return error.textContent = "Correo inválido";
         if (password.length < 6) return error.textContent = "Contraseña muy corta";
 
@@ -111,27 +102,18 @@ if (loginForm) {
 // -----------------------------------------
 // MOSTRAR USUARIO EN NAVBAR
 // -----------------------------------------
-function mostrarUsuarioNav(nombre) {
-    document.getElementById("nav-login-btn").classList.add("d-none");
-    document.getElementById("nav-registro-btn").classList.add("d-none");
+function mostrarUsuario(usuario) {
+    const { nombre, rol } = usuario;
+
+    document.getElementById("nav-login-btn")?.classList.add("d-none");
+    document.getElementById("nav-registro-btn")?.classList.add("d-none");
 
     document.getElementById("nav-usuario-nombre").textContent = nombre;
     document.getElementById("nav-usuario").classList.remove("d-none");
     document.getElementById("nav-logout").classList.remove("d-none");
-}
 
-
-// -----------------------------------------
-// ACTUALIZAR UI POR ROL
-// -----------------------------------------
-function actualizarOpcionesPorRol() {
-    const usuario = JSON.parse(localStorage.getItem("usuario"));
-    const adminElements = document.querySelectorAll(".admin-only");
-
-    if (usuario?.rol === "admin") {
-        adminElements.forEach(el => el.classList.remove("d-none"));
-    } else {
-        adminElements.forEach(el => el.classList.add("d-none"));
+    if (rol === "admin") {
+        document.querySelectorAll(".admin-only").forEach(el => el.classList.remove("d-none"));
     }
 }
 
@@ -141,14 +123,7 @@ function actualizarOpcionesPorRol() {
 // -----------------------------------------
 document.getElementById("logoutBtn")?.addEventListener("click", () => {
     localStorage.removeItem("usuario");
-
-    document.getElementById("nav-login-btn").classList.remove("d-none");
-    document.getElementById("nav-registro-btn").classList.remove("d-none");
-
-    document.getElementById("nav-usuario").classList.add("d-none");
-    document.getElementById("nav-logout").classList.add("d-none");
-
-    alert("Sesión cerrada");
+    location.reload();
 });
 
 
@@ -161,30 +136,23 @@ async function cargarProductos() {
         const data = await res.json();
 
         const tbody = document.getElementById("tbodyProductos");
-        tbody.innerHTML = "";
+        if (!tbody) return;
 
-        data.forEach(p => {
-            let img = p.imagen
-                ? `data:image/jpeg;base64,${p.imagen}`
-                : "https://via.placeholder.com/60";
-
-            tbody.innerHTML += `
-                <tr>
-                    <td>${p.id_producto}</td>
-                    <td><img src="${img}" width="60"></td>
-                    <td>${p.nombre}</td>
-                    <td>${p.descripcion}</td>
-                    <td>$${p.precio}</td>
-                    <td>${p.stock}</td>
-                    <td>${p.temporada}</td>
-                    <td>
-    <button class="editar" data-id="${p.id_producto}">✏ Editar</button>
-    <button class="eliminar" data-id="${p.id_producto}">🗑 Eliminar</button>
-                    </td>
-
-                </tr>
-            `;
-        });
+        tbody.innerHTML = data.map(p => `
+            <tr>
+                <td>${p.id_producto}</td>
+                <td><img src="${p.imagen ? `data:image/jpeg;base64,${p.imagen}` : "https://via.placeholder.com/60"}" width="60"></td>
+                <td>${p.nombre}</td>
+                <td>${p.descripcion}</td>
+                <td>$${p.precio}</td>
+                <td>${p.stock}</td>
+                <td>${p.temporada}</td>
+                <td>
+                    <button class="editar" data-id="${p.id_producto}">✏ Editar</button>
+                    <button class="eliminar" data-id="${p.id_producto}">🗑 Eliminar</button>
+                </td>
+            </tr>
+        `).join("");
 
     } catch (err) {
         console.error("Error cargando productos:", err);
@@ -195,11 +163,13 @@ async function cargarProductos() {
 // -----------------------------------------
 // AGREGAR PRODUCTO
 // -----------------------------------------
-const formAgregarProducto = document.getElementById("formAgregarProducto");
-if (formAgregarProducto) {
-    formAgregarProducto.addEventListener("submit", async (e) => {
+const formAgregar = document.getElementById("formAgregarProducto");
+
+if (formAgregar) {
+    formAgregar.addEventListener("submit", async (e) => {
         e.preventDefault();
-        const formData = new FormData(formAgregarProducto);
+
+        const formData = new FormData(formAgregar);
 
         try {
             const res = await fetch(`${API_URL}/api/producto`, {
@@ -211,7 +181,7 @@ if (formAgregarProducto) {
 
             if (data.success) {
                 alert("Producto agregado correctamente");
-                formAgregarProducto.reset();
+                formAgregar.reset();
                 document.getElementById("add-producto").close();
                 cargarProductos();
             } else {
@@ -224,6 +194,7 @@ if (formAgregarProducto) {
     });
 }
 
+
 // -----------------------------------------
 // ELIMINAR PRODUCTO
 // -----------------------------------------
@@ -231,57 +202,36 @@ document.addEventListener("click", async (e) => {
     if (!e.target.classList.contains("eliminar")) return;
 
     const id = e.target.dataset.id;
-
     if (!confirm("¿Seguro que deseas eliminar este producto?")) return;
 
     try {
-        const res = await fetch(`${API_URL}/api/producto/${id}`, {
-            method: "DELETE"
-        });
-
+        const res = await fetch(`${API_URL}/api/producto/${id}`, { method: "DELETE" });
         const data = await res.json();
 
-        if (data.success || res.ok) {
+        if (res.ok) {
             alert("Producto eliminado");
             cargarProductos();
         } else {
             alert("Error al eliminar: " + (data.message || data.error || "Error desconocido"));
         }
+
     } catch (err) {
         console.error("Error eliminando:", err);
-        alert("Error de conexión al eliminar");
     }
 });
 
 
 // -----------------------------------------
-// AL INICIAR LA PÁGINA
+// EDITAR PRODUCTO
 // -----------------------------------------
-document.addEventListener("DOMContentLoaded", () => {
-    const registrarModales = ["modal-login", "modal-registro", "add-producto"];
+const formEditar = document.getElementById("formEditarProducto");
 
-    registrarModales.forEach(id => {
-        const modal = document.getElementById(id);
-        if (modal) activarCerrarModalFuera(modal);
-    });
-
-    const usuario = JSON.parse(localStorage.getItem("usuario"));
-    if (usuario) mostrarUsuarioNav(usuario.nombre);
-
-    actualizarOpcionesPorRol();
-    cargarProductos();
-});
-
-// -----------------------------------------
-// EDITAR PRODUCTO – ABRIR MODAL CON DATOS
-// -----------------------------------------
-const formEditarProducto = document.getElementById("formEditarProducto");
-if (formEditarProducto) {
-    formEditarProducto.addEventListener("submit", async (e) => {
+if (formEditar) {
+    formEditar.addEventListener("submit", async (e) => {
         e.preventDefault();
 
         const id = document.getElementById("edit-id").value;
-        const formData = new FormData(formEditarProducto);
+        const formData = new FormData(formEditar);
 
         try {
             const res = await fetch(`${API_URL}/api/producto/${id}`, {
@@ -293,7 +243,7 @@ if (formEditarProducto) {
 
             if (data.success) {
                 alert("✔ Producto actualizado");
-                formEditarProducto.reset();
+                formEditar.reset();
                 document.getElementById("edit-producto").close();
                 cargarProductos();
             } else {
@@ -304,231 +254,40 @@ if (formEditarProducto) {
             console.error("Error:", err);
         }
     });
-}
+};
+
 
 // -----------------------------------------
-// GUARDAR CAMBIOS DEL PRODUCTO
+// VERIFICAR SESIÓN (UNA SOLA VEZ)
 // -----------------------------------------
-document.getElementById("formEditarProducto").addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const form = document.getElementById("formEditarProducto");
-    const formData = new FormData(form);
-
-    const id = document.getElementById("edit-id").value;
-
+async function verificarSesion() {
     try {
-        const res = await fetch(`${API_URL}/api/producto/${id}`, {
-            method: "PUT",
-            body: formData
-        });
+        const res = await fetch(`${API_URL}/auth/session`, { credentials: "include" });
+        if (!res.ok) return;
 
         const data = await res.json();
+        if (!data.logged) return;
 
-        if (data.success) {
-            alert("✔ Producto actualizado");
-            form.reset();
-            document.getElementById("edit-producto").close();
-            cargarProductos();
-        } else {
-            alert("Error: " + data.error);
-        }
+        mostrarUsuario(data.usuario);
 
-    } catch (err) {
-        console.error("Error:", err);
+    } catch (e) {
+        console.error("Error verificando sesión:", e);
     }
-});
+}
 
+
+// -----------------------------------------
+// INICIO DE LA PÁGINA
+// -----------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
-  const user = JSON.parse(localStorage.getItem("usuario"));
+    ["modal-login", "modal-registro", "add-producto", "edit-producto"].forEach(id => {
+        const modal = document.getElementById(id);
+        if (modal) activarCerrarModalFuera(modal);
+    });
 
-  if (!user) {
-    window.location.href = "index.html";
-    return;
-  }
+    const usuarioLocal = JSON.parse(localStorage.getItem("usuario"));
+    if (usuarioLocal) mostrarUsuario(usuarioLocal);
 
-  // Rellenar la tarjeta con los datos del usuario
-  document.querySelector(".front__text-header").textContent = user.nombre;
-  document.querySelector(".front__text-para").innerHTML =
-      `<i class="fas fa-envelope front-icons"></i> ${user.email}`;
-
-  // Foto de perfil genérica (tu diseño original es una imagen por CSS)
-  // Si quieres poner personalizada, aquí se coloca:
-  // document.querySelector(".front__face-photo").style.backgroundImage = `url(${RUTA})`;
-
-  // Opcional: si quieres mostrar el rol en la parte trasera:
-  const back = document.querySelector(".back");
-  const rolTag = document.createElement("p");
-  rolTag.style.color = "white";
-  rolTag.style.marginTop = "10px";
-  rolTag.innerHTML = `<b>Rol:</b> ${user.rol}`;
-  back.appendChild(rolTag);
+    verificarSesion();
+    cargarProductos();
 });
-
-document.addEventListener("DOMContentLoaded", () => {
-    const user = JSON.parse(localStorage.getItem("usuario"));
-
-    const navLoginBtn = document.getElementById("nav-login-btn");
-    const navRegistroBtn = document.getElementById("nav-registro-btn");
-    const navUsuario = document.getElementById("nav-usuario");
-    const navUsuarioNombre = document.getElementById("nav-usuario-nombre");
-    const navLogout = document.getElementById("nav-logout");
-
-    if (user) {
-        // Ocultar botones login / register
-        if (navLoginBtn) navLoginBtn.classList.add("d-none");
-        if (navRegistroBtn) navRegistroBtn.classList.add("d-none");
-
-        // Mostrar usuario
-        if (navUsuario) navUsuario.classList.remove("d-none");
-        if (navLogout) navLogout.classList.remove("d-none");
-        if (navUsuarioNombre) navUsuarioNombre.textContent = user.nombre;
-
-        // Mostrar opciones de admin si corresponde
-        document.querySelectorAll(".admin-only").forEach(el => {
-            if (user.rol === "admin") {
-                el.classList.remove("d-none");
-            } else {
-                el.classList.add("d-none");
-            }
-        });
-    }
-});
-
-// ===============================
-// VERIFICAR SESIÓN AL CARGAR PÁGINA
-// ===============================
-async function verificarSesion() {
-  try {
-    const res = await fetch("/api/session", {
-      method: "GET",
-      credentials: "include"
-    });
-
-    const data = await res.json();
-
-    if (data.loggedIn) {
-      // ocultar botones login/registro
-      document.getElementById("nav-login-btn").classList.add("d-none");
-      document.getElementById("nav-registro-btn").classList.add("d-none");
-
-      // mostrar saludo
-      document.getElementById("nav-usuario").classList.remove("d-none");
-      document.getElementById("nav-logout").classList.remove("d-none");
-      document.getElementById("nav-usuario-nombre").textContent = data.user.nombre;
-
-      // si es admin mostrar botones admin
-      if (data.user.rol === "admin") {
-        document.querySelectorAll(".admin-only").forEach(el => el.classList.remove("d-none"));
-      }
-
-    } else {
-      // sin sesión
-      document.getElementById("nav-login-btn").classList.remove("d-none");
-      document.getElementById("nav-registro-btn").classList.remove("d-none");
-      document.getElementById("nav-usuario").classList.add("d-none");
-      document.getElementById("nav-logout").classList.add("d-none");
-    }
-  } catch (err) {
-    console.error("Error al verificar sesión:", err);
-  }
-}
-
-// Ejecutar al cargar la página
-document.addEventListener("DOMContentLoaded", verificarSesion);
-
-document.getElementById("logoutBtn")?.addEventListener("click", () => {
-    localStorage.removeItem("usuario");
-    location.reload();
-});
-
-const loginModal = document.getElementById("modal-login");
-const registroModal = document.getElementById("modal-registro");
-
-const linkAbrirRegistro = document.getElementById("link-abrir-registro");
-const linkAbrirLogin = document.getElementById("link-abrir-login");
-
-if (linkAbrirRegistro && loginModal && registroModal) {
-    linkAbrirRegistro.addEventListener("click", e => {
-        e.preventDefault();
-        loginModal.close();
-        registroModal.showModal();
-    });
-}
-
-if (linkAbrirLogin && loginModal && registroModal) {
-    linkAbrirLogin.addEventListener("click", e => {
-        e.preventDefault();
-        registroModal.close();
-        loginModal.showModal();
-    });
-}
-
-const formAgregar = document.getElementById("formAgregarProducto");
-
-if (formAgregar) {
-    formAgregar.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        subirProducto();
-    });
-}
-
-const formEditar = document.getElementById("formEditarProducto");
-
-if (formEditar) {
-    formEditar.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        editarProducto();
-    });
-}
-
-function safeGet(id) {
-  return document.getElementById(id);
-}
-
-function safeQuery(sel) {
-  return document.querySelector(sel);
-}
-
-function safeQueryAll(sel) {
-  return document.querySelectorAll(sel);
-}
-
-async function verificarSesion() {
-  try {
-    const res = await fetch("/auth/session");
-    if (!res.ok) return;
-
-    const data = await res.json();
-    if (!data.logged) return;
-
-    mostrarUsuario(data.usuario);
-  } catch (e) {
-    console.error("Error verificando sesión:", e);
-  }
-}
-
-function mostrarUsuario(usuario) {
-  const navUsuario = safeGet("nav-usuario");
-  const navNombre = safeGet("nav-usuario-nombre");
-  const loginBtn = safeGet("nav-login-btn");
-  const regBtn = safeGet("nav-registro-btn");
-  const logoutBtn = safeGet("nav-logout");
-
-  if (navUsuario && navNombre) {
-    navUsuario.classList.remove("d-none");
-    navNombre.textContent = usuario.nombre;
-  }
-  if (logoutBtn) logoutBtn.classList.remove("d-none");
-  if (loginBtn) loginBtn.classList.add("d-none");
-  if (regBtn) regBtn.classList.add("d-none");
-
-  // mostrar opciones de admin
-  if (usuario.rol === "admin") {
-    const adminOnly = document.querySelectorAll(".admin-only");
-    adminOnly.forEach(el => el.classList.remove("d-none"));
-  }
-}
-
-// Ejecutar en cualquier página
-verificarSesion();
