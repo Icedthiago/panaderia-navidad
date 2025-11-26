@@ -254,7 +254,7 @@ if (formEditar) {
             console.error("Error:", err);
         }
     });
-};
+}
 
 
 // -----------------------------------------
@@ -291,3 +291,43 @@ document.addEventListener("DOMContentLoaded", () => {
     verificarSesion();
     cargarProductos();
 });
+
+// -----------------------------------------
+// FUNCIÓN REAL DE LOGIN
+// -----------------------------------------
+async function realizarLogin(email, password) {
+    try {
+        const res = await fetch(`${API_URL}/api/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (!data.success) {
+            document.getElementById("login-error").textContent =
+                data.message || "Correo o contraseña incorrectos";
+            return false;
+        }
+
+        // Guardar usuario en localStorage
+        localStorage.setItem("usuario", JSON.stringify(data.usuario));
+
+        // Mostrar en navbar
+        mostrarUsuario(data.usuario);
+
+        // Cerrar modal
+        const modal = document.getElementById("modal-login");
+        if (modal) modal.close();
+
+        return true;
+
+    } catch (err) {
+        console.error("Error en login:", err);
+        document.getElementById("login-error").textContent =
+            "Error de conexión con el servidor";
+        return false;
+    }
+}
