@@ -622,3 +622,59 @@ document.getElementById("edit-imagen")?.addEventListener("change", function () {
         preview.style.display = "none";
     }
 });
+
+document.getElementById("btn-editar")?.addEventListener("click", () => {
+    const modal = document.getElementById("modal-editar");
+    if (modal) modal.showModal();
+});
+
+document.querySelectorAll("[data-close='modal-editar']").forEach(btn => {
+    btn.addEventListener("click", () => {
+        document.getElementById("modal-editar").close();
+    });
+});
+
+document.getElementById("editarForm")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData();
+
+    formData.append("nombre", document.getElementById("edit-nombre").value);
+    formData.append("email", document.getElementById("edit-email").value);
+
+    const pass = document.getElementById("edit-password").value;
+    if (pass.trim() !== "") {
+        formData.append("password", pass);
+    }
+
+    const img = document.getElementById("edit-imagen").files[0];
+    if (img) {
+        formData.append("imagen", img);
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/usuario/editar`, {
+            method: "PUT",
+            body: formData,
+            credentials: "include"
+        });
+
+        if (!res.ok) {
+            alert("Error al actualizar el perfil");
+            return;
+        }
+
+        alert("Perfil actualizado correctamente ✔");
+
+        // Actualiza localStorage
+        const user = JSON.parse(localStorage.getItem("usuario"));
+        user.nombre = document.getElementById("edit-nombre").value;
+        user.email = document.getElementById("edit-email").value;
+        localStorage.setItem("usuario", JSON.stringify(user));
+
+        location.reload();
+
+    } catch (err) {
+        console.error("Error actualizando perfil:", err);
+    }
+});
