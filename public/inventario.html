@@ -127,6 +127,10 @@
           </ul>
         </li>
 
+        <li class="nav-item">
+          <a class="nav-link" href="index.html">Regresar</a>
+        </li>
+
 		<li class="nav-item"><a class="nav-link active" href="#" role="button" data-bs-toggle="dropdown">🎅</a></li>
 		<li class="nav-item"><a class="nav-link active" href="#" role="button" data-bs-toggle="dropdown">🎄</a></li>
 		<li class="nav-item"><a class="nav-link active" href="#" role="button" data-bs-toggle="dropdown">❄️</a></li>
@@ -240,6 +244,47 @@
     </section>
 </div>
 
+<div class="container">
+	<div class="snowflakes" aria-hidden="true">
+		<div class="snowflake">
+			❅
+		</div>
+		<div class="snowflake">
+			❆
+		</div>
+		<div class="snowflake">
+			❅
+		</div>
+		<div class="snowflake">
+			❆
+		</div>
+		<div class="snowflake">
+			❅
+		</div>
+		<div class="snowflake">
+			❆
+		</div>
+		<div class="snowflake">
+			❅
+		</div>
+		<div class="snowflake">
+			❆
+		</div>
+		<div class="snowflake">
+			❅
+		</div>
+		<div class="snowflake">
+			❆
+		</div>
+		<div class="snowflake">
+			❅
+		</div>
+		<div class="snowflake">
+			❆
+		</div>
+	</div>
+    </div>
+
 <footer class="footer">
   
   <div class="wrapper">
@@ -278,88 +323,5 @@
 </footer>
 <script src="script.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-/* ----- configuración: tiempo de la animación (ms) ----- */
-const ANIM_MS = 300;
-
-/* ----- helpers de animación ----- */
-function abrirModal(modal) {
-  modal.classList.remove("cerrando");
-  // showModal puede tirar en navegadores que no soportan dialog nativo,
-  // pero asumimos compatibilidad moderna
-  modal.showModal();
-}
-
-function cerrarModalConAnimacion(modal, callback) {
-  modal.classList.add("cerrando");
-  setTimeout(() => {
-    try { modal.close(); } catch(e) {}
-    modal.classList.remove("cerrando");
-    if (typeof callback === "function") callback();
-  }, ANIM_MS);
-}
-
-/* ----- elementos ----- */
-const botonesAbrir = document.querySelectorAll("[data-open]");
-const botonesCerrar = document.querySelectorAll(".cerrar-btn");
-const loginModal = document.getElementById("modal-login");
-const registroModal = document.getElementById("modal-registro");
-const linkAbrirRegistro = document.getElementById("link-abrir-registro");
-const linkAbrirLogin = document.getElementById("link-abrir-login");
-
-/* ----- abrir por botones del nav (data-open="id-del-modal") ----- */
-botonesAbrir.forEach(btn => {
-  btn.addEventListener("click", (e) => {
-    const id = btn.getAttribute("data-open");
-    const m = document.getElementById(id);
-    if (!m) return;
-    abrirModal(m);
-  });
-});
-
-/* ----- cerrar por botones con data-close (o clase .cerrar-btn) ----- */
-botonesCerrar.forEach(btn => {
-  btn.addEventListener("click", (e) => {
-    const id = btn.getAttribute("data-close");
-    const m = id ? document.getElementById(id) : btn.closest("dialog");
-    if (!m) return;
-    cerrarModalConAnimacion(m);
-  });
-});
-
-/* ----- cambiar entre modales desde enlaces internos (con animación) ----- */
-linkAbrirRegistro.addEventListener("click", (e) => {
-  e.preventDefault();
-  cerrarModalConAnimacion(loginModal, () => abrirModal(registroModal));
-});
-
-linkAbrirLogin.addEventListener("click", (e) => {
-  e.preventDefault();
-  cerrarModalConAnimacion(registroModal, () => abrirModal(loginModal));
-});
-
-/* ----- cerrar con clic fuera del diálogo ----- */
-function onClickFuera(e, modal) {
-  const rect = modal.getBoundingClientRect();
-  const dentro = e.clientX >= rect.left && e.clientX <= rect.right &&
-                 e.clientY >= rect.top && e.clientY <= rect.bottom;
-  if (!dentro) cerrarModalConAnimacion(modal);
-}
-loginModal.addEventListener("click", (e) => onClickFuera(e, loginModal));
-registroModal.addEventListener("click", (e) => onClickFuera(e, registroModal));
-
-/* ----- prevenir que submit de formularios recargue página durante pruebas ----- */
-document.getElementById("loginForm").addEventListener("submit", (e) => {
-  e.preventDefault();
-  // aquí puedes hacer fetch() para autenticar o mostrar mensaje
-  cerrarModalConAnimacion(loginModal);
-});
-
-document.getElementById("registroForm").addEventListener("submit", (e) => {
-  e.preventDefault();
-  // aquí puedes enviar datos al backend
-  cerrarModalConAnimacion(registroModal);
-});
-</script>
 </body>
 </html>
