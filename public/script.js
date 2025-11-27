@@ -564,46 +564,18 @@ async function cargarDatosPerfil() {
 
         const user = await res.json();
 
-        document.getElementById("perfil-nombre").value = user.nombre;
-        document.getElementById("perfil-email").value = user.email;
+        document.getElementById("edit-nombre").value = user.nombre;
+        document.getElementById("edit-email").value = user.email;
 
         const img = document.getElementById("perfil-img");
-        if (img) img.src = `${API_URL}/usuario/imagen`;
-    } catch (err) {
-        console.error("Error cargando perfil:", err);
-    }
-}
-
-document.getElementById("formEditarPerfil")?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const formData = new FormData(e.target);
-
-    try {
-        const res = await fetch(`${API_URL}/usuario/editar`, {
-            method: "PUT",
-            body: formData,
-            credentials: "include"
-        });
-
-        if (res.ok) {
-            alert("Perfil actualizado correctamente ✔");
-
-            // Actualizar el localStorage
-            const userLS = JSON.parse(localStorage.getItem("usuario"));
-            userLS.nombre = formData.get("nombre");
-            userLS.email = formData.get("email");
-            localStorage.setItem("usuario", JSON.stringify(userLS));
-
-            location.reload();
-        } else {
-            alert("Error al actualizar el perfil");
+        if (img && user.imagenBase64) {
+            img.src = `data:image/png;base64,${user.imagenBase64}`;
         }
 
     } catch (err) {
-        console.error("Error guardando perfil:", err);
+        console.error("Error cargando perfil:", err);
     }
-});
+};
 
 document.addEventListener("DOMContentLoaded", () => {
     if (window.location.pathname.includes("perfil.html")) {
@@ -637,20 +609,7 @@ document.querySelectorAll("[data-close='modal-editar']").forEach(btn => {
 document.getElementById("editarForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const formData = new FormData();
-
-    formData.append("nombre", document.getElementById("edit-nombre").value);
-    formData.append("email", document.getElementById("edit-email").value);
-
-    const pass = document.getElementById("edit-password").value;
-    if (pass.trim() !== "") {
-        formData.append("password", pass);
-    }
-
-    const img = document.getElementById("edit-imagen").files[0];
-    if (img) {
-        formData.append("imagen", img);
-    }
+    const formData = new FormData(e.target);
 
     try {
         const res = await fetch(`${API_URL}/usuario/editar`, {
@@ -660,16 +619,16 @@ document.getElementById("editarForm")?.addEventListener("submit", async (e) => {
         });
 
         if (!res.ok) {
-            alert("Error al actualizar el perfil");
+            alert("Error actualizando perfil");
             return;
         }
 
         alert("Perfil actualizado correctamente ✔");
 
-        // Actualiza localStorage
+        // Actualizar localStorage
         const user = JSON.parse(localStorage.getItem("usuario"));
-        user.nombre = document.getElementById("edit-nombre").value;
-        user.email = document.getElementById("edit-email").value;
+        user.nombre = formData.get("nombre");
+        user.email = formData.get("email");
         localStorage.setItem("usuario", JSON.stringify(user));
 
         location.reload();
@@ -678,3 +637,4 @@ document.getElementById("editarForm")?.addEventListener("submit", async (e) => {
         console.error("Error actualizando perfil:", err);
     }
 });
+
