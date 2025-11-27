@@ -58,36 +58,55 @@
 		<li class="nav-item"><a class="nav-link active" href="#" role="button" data-bs-toggle="dropdown">🎄</a></li>
 		<li class="nav-item"><a class="nav-link active" href="#" role="button" data-bs-toggle="dropdown">❄️</a></li>
 
-    
+
         </ul>
       </div>
     </div>
   </nav>
 
-  <div class="background"></div>
-  <div class="outer-div">
-  <div class="inner-div">
-    <div class="front">
-      <div class="front__bkg-photo"></div>
-      <div class="front__face-photo"></div>
-      <div class="front__text">
-        <h3 class="front__text-header">Bobby Korec</h3>
-        <p class="front__text-para"><i class="fas fa-map-marker-alt front-icons"></i>Seattle</p>
-        
-        <span class="front__text-hover">Hover to Find Me</span>
-      </div>
+<div class="perfil-container">
+  <div class="perfil-card">
+    <div class="perfil-header">
+      <img id="perfil-foto" class="perfil-foto" src="default.png" alt="Foto de perfil">
+      <h2 id="perfil-nombre">Usuario</h2>
+      <p id="perfil-email">correo@example.com</p>
     </div>
-    <div class="back">
-      <div class="social-media-wrapper">
-        <a href="#" class="social-icon"><i class="fab fa-codepen" aria-hidden="true"></i></a> 
-        <a href="#" class="social-icon"><i class="fab fa-github-square" aria-hidden="true"></i></a>
-        <a href="#" class="social-icon"><i class="fab fa-linkedin-square" aria-hidden="true"></i></a>
-         <a href="#" class="social-icon"><i class="fab fa-instagram" aria-hidden="true"></i></a>
-      </div>
+
+    <div class="perfil-info">
+      <p><b>Rol:</b> <span id="perfil-rol">Invitado</span></p>
     </div>
+
+    <button class="btn btn-primary mt-3" id="btn-editar">Editar perfil</button>
 
   </div>
 </div>
+
+<!-- Modal Editar Perfil -->
+<dialog id="modal-editar" class="modal-editar">
+  <h2>Editar Perfil</h2>
+
+  <form id="editarForm" enctype="multipart/form-data">
+
+    <label>Nombre:</label>
+    <input type="text" id="edit-nombre" name="nombre" required>
+
+    <label>Correo:</label>
+    <input type="email" id="edit-email" name="email" required>
+
+    <label>Nueva Contraseña (opcional):</label>
+    <input type="password" id="edit-password" name="password">
+
+    <label>Foto de Perfil:</label>
+    <input type="file" id="edit-imagen" accept="image/*">
+
+    <img id="preview-img" class="preview-img" style="margin-top:10px; display:none;">
+
+    <button type="submit" class="btn btn-success mt-3">Guardar Cambios</button>
+  </form>
+
+  <button class="btn-modal cerrar-btn btn-x" data-close="modal-editar" type="button">X</button>
+</dialog>
+
 
   <!-- Modales -->
   <dialog id="modal-login">
@@ -188,26 +207,21 @@
 
   <script src="script.js"></script>
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-    if (!window.location.pathname.includes("perfil.html")) return;
+document.addEventListener("DOMContentLoaded", () => {
 
     const user = JSON.parse(localStorage.getItem("usuario"));
 
+    // Si no hay usuario, regresa al index
     if (!user) {
         window.location.href = "index.html";
         return;
     }
 
-    document.querySelector(".front__text-header").textContent = user.nombre;
-    document.querySelector(".front__text-para").innerHTML =
-        `<i class="fas fa-envelope front-icons"></i> ${user.email}`;
+    // Rellenar datos
+    document.getElementById("perfil-nombre").textContent = user.nombre;
+    document.getElementById("perfil-email").textContent = user.email;
+    document.getElementById("perfil-rol").textContent = user.rol;
 
-    const back = document.querySelector(".back");
-    const rolTag = document.createElement("p");
-    rolTag.style.color = "white";
-    rolTag.style.marginTop = "10px";
-    rolTag.innerHTML = `<b>Rol:</b> ${user.rol}`;
-    back.appendChild(rolTag);
 });
 
   </script>

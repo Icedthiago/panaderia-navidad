@@ -134,11 +134,12 @@ document.getElementById("logoutBtn")?.addEventListener("click", () => {
 // -----------------------------------------
 // CARGAR PRODUCTOS
 // -----------------------------------------
-async function cargarProductos() {
+async function cargarProductos(reintento = 0) {
     try {
         const res = await fetch(`${API_URL}/api/productos`);
-        const data = await res.json();
+        if (!res.ok) throw new Error("API dormida");
 
+        const data = await res.json();
         const tbody = document.getElementById("tbodyProductos");
         if (!tbody) return;
 
@@ -152,17 +153,39 @@ async function cargarProductos() {
                 <td>${p.stock}</td>
                 <td>${p.temporada}</td>
                 <td>
-                    <button class="editar" data-id="${p.id_producto}">✏ Editar</button>
-                    <button class="eliminar" data-id="${p.id_producto}">🗑 Eliminar</button>
+                    <button class="editar btn btn-warning" data-id="${p.id_producto}">✏ Editar</button>
+                    <button class="eliminar btn btn-danger" data-id="${p.id_producto}">🗑 Eliminar</button>
                 </td>
             </tr>
         `).join("");
 
+        // 👉 EVENTOS DE EDITAR: AQUÍ DEBE IR
+        tbody.querySelectorAll(".editar").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const id = btn.dataset.id;
+
+                const res = await fetch(`${API_URL}/api/producto/${id}`);
+                const data = await res.json();
+
+                document.getElementById("edit-id").value = data.id_producto;
+                document.getElementById("edit-nombre").value = data.nombre;
+                document.getElementById("edit-descripcion").value = data.descripcion;
+                document.getElementById("edit-precio").value = data.precio;
+                document.getElementById("edit-stock").value = data.stock;
+                document.getElementById("edit-temporada").value = data.temporada;
+
+                document.getElementById("edit-producto").showModal();
+            });
+        });
+
     } catch (err) {
+        if (reintento < 2) {
+            console.log("Reintentando cargar productos...");
+            return setTimeout(() => cargarProductos(reintento + 1), 1500);
+        }
         console.error("Error cargando productos:", err);
     }
 }
-
 
 // -----------------------------------------
 // AGREGAR PRODUCTO
@@ -259,7 +282,6 @@ if (formEditar) {
         }
     });
 }
-
 
 // -----------------------------------------
 // VERIFICAR SESIÓN (UNA SOLA VEZ)
@@ -511,3 +533,92 @@ async function cargarProductosParaComprar() {
         console.error("Error cargando productos para comprar:", err);
     }
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+    if (!window.location.pathname.includes("perfil.html")) return;
+
+    const user = JSON.parse(localStorage.getItem("usuario"));
+
+    if (!user) {
+        window.location.href = "index.html";
+        return;
+    }
+
+    // Poner datos
+    document.getElementById("perfil-nombre").textContent = user.nombre;
+    document.getElementById("perfil-email").innerHTML =
+        `<i class="fas fa-envelope front-icons"></i> ${user.email}`;
+    document.getElementById("perfil-rol").innerHTML =
+        `<b>Rol:</b> ${user.rol}`;
+
+    // Abrir modal automáticamente
+    const modal = new bootstrap.Modal(document.getElementById("perfilModal"));
+    modal.show();
+});
+
+async function cargarDatosPerfil() {
+    try {
+        const res = await fetch(`${API_URL}/usuario/perfil`, {
+            credentials: "include"
+        });
+
+        const user = await res.json();
+
+        document.getElementById("perfil-nombre").value = user.nombre;
+        document.getElementById("perfil-email").value = user.email;
+
+        const img = document.getElementById("perfil-img");
+        if (img) img.src = `${API_URL}/usuario/imagen`;
+    } catch (err) {
+        console.error("Error cargando perfil:", err);
+    }
+}
+
+document.getElementById("formEditarPerfil")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+
+    try {
+        const res = await fetch(`${API_URL}/usuario/editar`, {
+            method: "PUT",
+            body: formData,
+            credentials: "include"
+        });
+
+        if (res.ok) {
+            alert("Perfil actualizado correctamente ✔");
+
+            // Actualizar el localStorage
+            const userLS = JSON.parse(localStorage.getItem("usuario"));
+            userLS.nombre = formData.get("nombre");
+            userLS.email = formData.get("email");
+            localStorage.setItem("usuario", JSON.stringify(userLS));
+
+            location.reload();
+        } else {
+            alert("Error al actualizar el perfil");
+        }
+
+    } catch (err) {
+        console.error("Error guardando perfil:", err);
+    }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    if (window.location.pathname.includes("perfil.html")) {
+        cargarDatosPerfil();
+    }
+});
+
+document.getElementById("edit-imagen")?.addEventListener("change", function () {
+    const file = this.files[0];
+    const preview = document.getElementById("preview-img");
+
+    if (file) {
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = "block";
+    } else {
+        preview.style.display = "none";
+    }
+});

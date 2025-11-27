@@ -382,3 +382,71 @@ dialog.cerrando {
 .back {
   transform: rotateY(180deg);
 }
+
+.perfil-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
+}
+
+.perfil-card {
+  width: 350px;
+  background: #ffffffdd;
+  border-radius: 20px;
+  padding: 25px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+  text-align: center;
+  backdrop-filter: blur(6px);
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+.perfil-header {
+  margin-bottom: 20px;
+}
+
+.perfil-foto {
+  width: 120px;
+  height: 120px;
+  background-image: url('https://i.imgur.com/1Q9Z1Zm.png');
+  background-size: cover;
+  background-position: center;
+  border-radius: 50%;
+  margin: 0 auto 15px;
+  border: 5px solid #198754;
+}
+
+.perfil-info p {
+  font-size: 18px;
+}
+
+.perfil-social a {
+  margin: 0 10px;
+  color: #198754;
+  font-size: 24px;
+}
+
+.perfil-social a:hover {
+  color: #145c38;
+}
+
+/* Animación */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.perfil-foto {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #fff;
+}
+
+.preview-img {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #28a745;
+}

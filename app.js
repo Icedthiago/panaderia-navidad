@@ -348,3 +348,45 @@ app.post("/api/ventas", async (req, res) => {
         res.status(500).json({ success: false, message: "Error registrando venta" });
     }
 });
+
+app.put("/api/usuario/update", upload.single("imagen"), async (req, res) => {
+    try {
+        const { id_usuario, nombre, email, password } = req.body;
+
+        let campos = [];
+        let valores = [];
+
+        if (nombre) {
+            campos.push("nombre = ?");
+            valores.push(nombre);
+        }
+        if (email) {
+            campos.push("email = ?");
+            valores.push(email);
+        }
+        if (password) {
+            campos.push("password = crypt(?, gen_salt('bf'))");
+            valores.push(password);
+        }
+        if (req.file) {
+            campos.push("imagen = ?");
+            valores.push(req.file.buffer);
+        }
+
+        valores.push(id_usuario);
+
+        const sql = `
+          UPDATE usuario 
+          SET ${campos.join(", ")}
+          WHERE id_usuario = ?
+          RETURNING id_usuario, nombre, email, rol, encode(imagen, 'base64') AS imagen
+        `;
+
+        const [rows] = await db.execute(sql, valores);
+
+        res.json({ usuario: rows[0] });
+
+    } catch (err) {
+        res.json({ error: err.message });
+    }
+});
