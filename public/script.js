@@ -472,7 +472,10 @@ async function cargarProductosParaComprar() {
                         data-id="${p.id_producto}"
                         data-precio="${p.precio}"
                         data-nombre="${p.nombre}"
-                        data-imagen="${p.imagen ? `data:image/jpeg;base64,${p.imagen}` : `${API_URL}/img/default-producto.jpg`}"
+                        data-imagen="${p.imagen && p.imagen.length > 10 
+    ? `data:image/jpeg;base64,${p.imagen}` 
+    : `${API_URL}/img/default-producto.jpg`}"
+
                     >
                         🛒 Comprar
                     </button>
@@ -512,6 +515,10 @@ async function cargarDatosPerfil() {
 
         document.getElementById("edit-nombre").value = user.nombre;
         document.getElementById("edit-email").value = user.email;
+        // Foto de perfil
+        document.getElementById("perfil-foto").src =
+    user.imagen ? `data:image/jpeg;base64,${user.imagen}` : "default.png";
+
 
         const img = document.getElementById("perfil-img");
         if (img && user.imagenBase64) {
