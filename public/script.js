@@ -611,8 +611,12 @@ document.getElementById("editarForm")?.addEventListener("submit", async (e) => {
 
     const formData = new FormData(e.target);
 
+    // Añadir ID del usuario
+    const user = JSON.parse(localStorage.getItem("usuario"));
+    formData.append("id_usuario", user.id_usuario);
+
     try {
-        const res = await fetch(`${API_URL}/usuario/editar`, {
+        const res = await fetch(`${API_URL}/api/usuario/editar`, {
             method: "PUT",
             body: formData,
             credentials: "include"
@@ -623,12 +627,12 @@ document.getElementById("editarForm")?.addEventListener("submit", async (e) => {
             return;
         }
 
-        alert("Perfil actualizado correctamente ✔");
+        alert("✔ Perfil actualizado correctamente");
 
         // Actualizar localStorage
-        const user = JSON.parse(localStorage.getItem("usuario"));
         user.nombre = formData.get("nombre");
         user.email = formData.get("email");
+
         localStorage.setItem("usuario", JSON.stringify(user));
 
         location.reload();
@@ -637,4 +641,3 @@ document.getElementById("editarForm")?.addEventListener("submit", async (e) => {
         console.error("Error actualizando perfil:", err);
     }
 });
-
