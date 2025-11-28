@@ -117,8 +117,7 @@ function mostrarUsuario(usuario) {
     }
 
     document.getElementById("nav-carrito-btn").classList.remove("d-none");
-actualizarCarritoNav();
-
+    actualizarCarritoNav();
 }
 
 
@@ -132,7 +131,7 @@ document.getElementById("logoutBtn")?.addEventListener("click", () => {
 
 
 // -----------------------------------------
-// CARGAR PRODUCTOS
+// CARGAR PRODUCTOS (ADMIN)
 // -----------------------------------------
 async function cargarProductos(reintento = 0) {
     try {
@@ -159,7 +158,7 @@ async function cargarProductos(reintento = 0) {
             </tr>
         `).join("");
 
-        // 👉 EVENTOS DE EDITAR: AQUÍ DEBE IR
+        // Evento EDITAR
         tbody.querySelectorAll(".editar").forEach(btn => {
             btn.addEventListener("click", async () => {
                 const id = btn.dataset.id;
@@ -186,6 +185,7 @@ async function cargarProductos(reintento = 0) {
         console.error("Error cargando productos:", err);
     }
 }
+
 
 // -----------------------------------------
 // AGREGAR PRODUCTO
@@ -283,6 +283,7 @@ if (formEditar) {
     });
 }
 
+
 // -----------------------------------------
 // VERIFICAR SESIÓN (UNA SOLA VEZ)
 // -----------------------------------------
@@ -300,24 +301,6 @@ async function verificarSesion() {
         console.error("Error verificando sesión:", e);
     }
 }
-
-
-// -----------------------------------------
-// INICIO DE LA PÁGINA
-// -----------------------------------------
-document.addEventListener("DOMContentLoaded", () => {
-    ["modal-login", "modal-registro", "add-producto", "edit-producto"].forEach(id => {
-        const modal = document.getElementById(id);
-        if (modal) activarCerrarModalFuera(modal);
-    });
-
-    const usuarioLocal = JSON.parse(localStorage.getItem("usuario"));
-    if (usuarioLocal) mostrarUsuario(usuarioLocal);
-
-    verificarSesion();
-    cargarProductos();               // admin
-    cargarProductosParaComprar();    // compras
-});
 
 
 // -----------------------------------------
@@ -340,13 +323,10 @@ async function realizarLogin(email, password) {
             return false;
         }
 
-        // Guardar usuario en localStorage
         localStorage.setItem("usuario", JSON.stringify(data.usuario));
 
-        // Mostrar en navbar
         mostrarUsuario(data.usuario);
 
-        // Cerrar modal
         const modal = document.getElementById("modal-login");
         if (modal) modal.close();
 
@@ -360,113 +340,82 @@ async function realizarLogin(email, password) {
     }
 }
 
-// -----------------------------------------
-// BOTÓN DE CARRITO EN NAV
-// -----------------------------------------
-document.addEventListener("DOMContentLoaded", () => {
-    const carritoBtn = document.querySelector("[data-open='modal-carrito']");
-    if (carritoBtn) {
-        carritoBtn.addEventListener("click", () => {
-            cargarCarritoEnModal();
-            document.getElementById("modal-carrito").showModal();
-        });
-    }
-});
 
 // -----------------------------------------
-// AGREGAR PRODUCTO AL CARRITO
+// CARRITO
 // -----------------------------------------
-document.addEventListener("click", (e) => {
-    if (!e.target.classList.contains("btn-comprar")) return;
+let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
 
-    const id_producto = parseInt(e.target.dataset.id);
-    const precio = parseFloat(e.target.dataset.precio);
-    const nombre = e.target.dataset.nombre;
-    const imagen = e.target.dataset.imagen || `${API_URL}/img/default-producto.jpg`;
-
-    let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
-
-    const existe = carrito.find(item => item.id_producto === id_producto);
-
-    if (existe) {
-        existe.cantidad++;
-    } else {
-        carrito.push({
-            id_producto,
-            precio,
-            cantidad: 1,
-            nombre,
-            imagen
-        });
-    }
-
+function guardarCarrito() {
     localStorage.setItem("carrito", JSON.stringify(carrito));
-    actualizarCarritoNav();
-    alert("Producto añadido al carrito 🛒");
-});
-
-// -----------------------------------------
-// ACTUALIZAR ICONO CANTIDAD EN NAV
-// -----------------------------------------
-function actualizarCarritoNav() {
-    const carrito = JSON.parse(localStorage.getItem("carrito")) || [];
-    const span = document.getElementById("carrito-cantidad");
-    if (span) span.textContent = carrito.length;
+    actualizarCantidadCarrito();
+    mostrarCarrito();
 }
 
-// -----------------------------------------
-// CARGAR CARRITO EN MODAL
-// -----------------------------------------
-function cargarCarritoEnModal() {
-    const carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+function actualizarCantidadCarrito() {
+    const total = carrito.reduce((sum, item) => sum + item.cantidad, 0);
+    document.getElementById("carrito-cantidad").textContent = total;
+}
+
+function actualizarCarritoNav() {
+    actualizarCantidadCarrito();
+}
+
+function mostrarCarrito() {
     const tbody = document.getElementById("tbodyCarrito");
-    const totalSpan = document.getElementById("totalCarrito");
+    if (!tbody) return;
 
     tbody.innerHTML = "";
     let total = 0;
 
-    carrito.forEach(item => {
+    carrito.forEach((item, index) => {
         const subtotal = item.precio * item.cantidad;
         total += subtotal;
 
         tbody.innerHTML += `
             <tr>
                 <td>${item.id_producto}</td>
-                <td><img src="${item.imagen}" width="60"></td>
+                <td><img src="img/default.jpg" width="60"></td>
                 <td>${item.nombre}</td>
-                <td>$${item.precio}</td>
-                <td>${item.cantidad}</td>
+                <td>$${item.precio.toFixed(2)}</td>
+                <td>
+                    <button class="btn btn-warning btn-sm" onclick="cambiarCantidad(${index}, -1)">−</button>
+                    <b style="padding: 0 10px;">${item.cantidad}</b>
+                    <button class="btn btn-success btn-sm" onclick="cambiarCantidad(${index}, 1)">+</button>
+                </td>
                 <td>$${subtotal.toFixed(2)}</td>
-                <td><button class="btn btn-danger eliminar-carrito" data-id="${item.id_producto}">X</button></td>
+                <td><button class="btn btn-danger btn-sm" onclick="eliminarDelCarrito(${index})">🗑️</button></td>
             </tr>
         `;
     });
 
-    totalSpan.textContent = total.toFixed(2);
+    document.getElementById("totalCarrito").textContent = total.toFixed(2);
 }
 
-// -----------------------------------------
-// ELIMINAR PRODUCTO DEL CARRITO
-// -----------------------------------------
-document.addEventListener("click", e => {
-    if (!e.target.classList.contains("eliminar-carrito")) return;
+function cambiarCantidad(index, cambio) {
+    carrito[index].cantidad += cambio;
 
-    const id = parseInt(e.target.dataset.id);
-    let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+    if (carrito[index].cantidad <= 0) {
+        carrito.splice(index, 1);
+    }
 
-    carrito = carrito.filter(p => p.id_producto !== id);
+    guardarCarrito();
+}
 
-    localStorage.setItem("carrito", JSON.stringify(carrito));
+function eliminarDelCarrito(index) {
+    carrito.splice(index, 1);
+    guardarCarrito();
+}
 
-    cargarCarritoEnModal();
-    actualizarCarritoNav();
-});
+function cargarCarritoEnModal() {
+    mostrarCarrito();
+}
+
 
 // -----------------------------------------
 // CONFIRMAR COMPRA
 // -----------------------------------------
 document.getElementById("btnPagar")?.addEventListener("click", async () => {
-    const carrito = JSON.parse(localStorage.getItem("carrito")) || [];
     const usuario = JSON.parse(localStorage.getItem("usuario"));
 
     if (!usuario) return alert("Debes iniciar sesión.");
@@ -486,12 +435,14 @@ document.getElementById("btnPagar")?.addEventListener("click", async () => {
     if (data.success) {
         alert("Compra realizada exitosamente 🎉");
         localStorage.removeItem("carrito");
-        cargarCarritoEnModal();
+        carrito = [];
+        mostrarCarrito();
         actualizarCarritoNav();
     } else {
         alert("Error al realizar la compra");
     }
 });
+
 
 // -----------------------------------------
 // CARGAR PRODUCTOS PARA LA PÁGINA DE COMPRAS
@@ -529,33 +480,28 @@ async function cargarProductosParaComprar() {
             </tr>
         `).join("");
 
+        document.querySelectorAll(".btn-comprar").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const producto = {
+                    id_producto: Number(btn.dataset.id),
+                    nombre: btn.dataset.nombre,
+                    precio: Number(btn.dataset.precio),
+                    imagen: btn.dataset.imagen,
+                    cantidad: 1
+                };
+                agregarAlCarrito(producto);
+            });
+        });
+
     } catch (err) {
         console.error("Error cargando productos para comprar:", err);
     }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    if (!window.location.pathname.includes("perfil.html")) return;
 
-    const user = JSON.parse(localStorage.getItem("usuario"));
-
-    if (!user) {
-        window.location.href = "index.html";
-        return;
-    }
-
-    // Poner datos
-    document.getElementById("perfil-nombre").textContent = user.nombre;
-    document.getElementById("perfil-email").innerHTML =
-        `<i class="fas fa-envelope front-icons"></i> ${user.email}`;
-    document.getElementById("perfil-rol").innerHTML =
-        `<b>Rol:</b> ${user.rol}`;
-
-    // Abrir modal automáticamente
-    const modal = new bootstrap.Modal(document.getElementById("perfilModal"));
-    modal.show();
-});
-
+// -----------------------------------------
+// PERFIL
+// -----------------------------------------
 async function cargarDatosPerfil() {
     try {
         const res = await fetch(`${API_URL}/usuario/perfil`, {
@@ -575,13 +521,7 @@ async function cargarDatosPerfil() {
     } catch (err) {
         console.error("Error cargando perfil:", err);
     }
-};
-
-document.addEventListener("DOMContentLoaded", () => {
-    if (window.location.pathname.includes("perfil.html")) {
-        cargarDatosPerfil();
-    }
-});
+}
 
 document.getElementById("edit-imagen")?.addEventListener("change", function () {
     const file = this.files[0];
@@ -597,7 +537,7 @@ document.getElementById("edit-imagen")?.addEventListener("change", function () {
 
 document.getElementById("btn-editar")?.addEventListener("click", () => {
     const modal = document.getElementById("modal-editar");
-    if (modal) modal.showModal();
+    modal?.showModal();
 });
 
 document.querySelectorAll("[data-close='modal-editar']").forEach(btn => {
@@ -611,7 +551,6 @@ document.getElementById("editarForm")?.addEventListener("submit", async (e) => {
 
     const formData = new FormData(e.target);
 
-    // Añadir ID del usuario
     const user = JSON.parse(localStorage.getItem("usuario"));
     formData.append("id_usuario", user.id_usuario);
 
@@ -629,7 +568,6 @@ document.getElementById("editarForm")?.addEventListener("submit", async (e) => {
 
         alert("✔ Perfil actualizado correctamente");
 
-        // Actualizar localStorage
         user.nombre = formData.get("nombre");
         user.email = formData.get("email");
 
@@ -639,5 +577,153 @@ document.getElementById("editarForm")?.addEventListener("submit", async (e) => {
 
     } catch (err) {
         console.error("Error actualizando perfil:", err);
+    }
+});
+
+
+// -----------------------------------------
+// INICIO GLOBAL (UN SOLO DOMContentLoaded)
+// -----------------------------------------
+document.addEventListener("DOMContentLoaded", () => {
+
+    ["modal-login", "modal-registro", "add-producto", "edit-producto", "modal-editar", "modal-carrito"]
+        .forEach(id => {
+            const modal = document.getElementById(id);
+            if (modal) activarCerrarModalFuera(modal);
+        });
+
+    const usuarioLocal = JSON.parse(localStorage.getItem("usuario"));
+    if (usuarioLocal) mostrarUsuario(usuarioLocal);
+
+    verificarSesion();
+
+    cargarProductos();
+    cargarProductosParaComprar();
+
+    actualizarCantidadCarrito();
+    mostrarCarrito();
+
+    // botón carrito
+    const carritoBtn = document.querySelector("[data-open='modal-carrito']");
+    carritoBtn?.addEventListener("click", () => {
+        mostrarCarrito();
+        document.getElementById("modal-carrito").showModal();
+    });
+
+    // Perfil
+    if (window.location.pathname.includes("perfil.html")) {
+        const user = JSON.parse(localStorage.getItem("usuario"));
+
+        if (!user) return window.location.href = "index.html";
+
+        document.getElementById("perfil-nombre").textContent = user.nombre;
+        document.getElementById("perfil-email").innerHTML =
+            `<i class="fas fa-envelope front-icons"></i> ${user.email}`;
+        document.getElementById("perfil-rol").innerHTML =
+            `<b>Rol:</b> ${user.rol}`;
+
+        cargarDatosPerfil();
+
+        const modal = document.getElementById("perfilModal");
+        modal && new bootstrap.Modal(modal).show();
+    }
+});
+
+function agregarAlCarrito(id, nombre, precio, imagen) {
+    const existe = carrito.find(p => p.id === id);
+
+    if (existe) {
+        existe.cantidad++;
+    } else {
+        carrito.push({
+            id,
+            nombre,
+            precio,
+            imagen,
+            cantidad: 1
+        });
+    }
+
+    actualizarCarritoUI();
+}
+
+function actualizarCarritoUI() {
+    tbodyCarrito.innerHTML = "";
+    let total = 0;
+
+    carrito.forEach(item => {
+        const subtotal = item.precio * item.cantidad;
+        total += subtotal;
+
+        const fila = document.createElement("tr");
+        fila.innerHTML = `
+            <td>${item.id}</td>
+            <td><img src="data:image/jpeg;base64,${item.imagen}" width="60"></td>
+            <td>${item.nombre}</td>
+            <td>$${item.precio}</td>
+            <td>
+                <button onclick="cambiarCantidad(${item.id}, -1)" class="btn btn-warning">-</button>
+                ${item.cantidad}
+                <button onclick="cambiarCantidad(${item.id}, 1)" class="btn btn-success">+</button>
+            </td>
+            <td>$${subtotal.toFixed(2)}</td>
+            <td><button class="btn btn-danger" onclick="eliminarDelCarrito(${item.id})">X</button></td>
+        `;
+        tbodyCarrito.appendChild(fila);
+    });
+
+    carritoCantidad.textContent = carrito.reduce((sum, item) => sum + item.cantidad, 0);
+    totalCarritoSpan.textContent = total.toFixed(2);
+}
+
+function cambiarCantidad(id, delta) {
+    const producto = carrito.find(p => p.id === id);
+
+    if (producto) {
+        producto.cantidad += delta;
+
+        if (producto.cantidad <= 0) {
+            carrito = carrito.filter(p => p.id !== id);
+        }
+
+        actualizarCarritoUI();
+    }
+}
+
+function eliminarDelCarrito(id) {
+    carrito = carrito.filter(p => p.id !== id);
+    actualizarCarritoUI();
+}
+
+document.getElementById("btnPagar").addEventListener("click", async () => {
+    if (carrito.length === 0) {
+        alert("Tu carrito está vacío");
+        return;
+    }
+
+    const venta = {
+        productos: carrito.map(item => ({
+            id_producto: item.id,
+            cantidad: item.cantidad
+        }))
+    };
+
+    try {
+        const res = await fetch("https://panaderia-navidad.onrender.com/api/ventas", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(venta)
+        });
+
+        if (!res.ok) {
+            throw new Error("Error en servidor");
+        }
+
+        alert("Compra realizada con éxito 🎉");
+        carrito = [];
+        actualizarCarritoUI();
+    } catch (err) {
+        console.error("Error al pagar:", err);
+        alert("Error procesando la compra");
     }
 });
