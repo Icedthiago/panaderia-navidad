@@ -349,44 +349,75 @@ app.post("/api/ventas", async (req, res) => {
     }
 });
 
-app.put("/api/usuario/update", upload.single("imagen"), async (req, res) => {
+app.put("/api/usuario/editar", upload.single("imagen"), async (req, res) => {
     try {
         const { id_usuario, nombre, email, password } = req.body;
 
-        let campos = [];
+        if (!id_usuario) {
+            return res.status(400).json({ error: "Falta id_usuario" });
+        }
+
+        let sql = "UPDATE usuario SET ";
+        let updates = [];
         let valores = [];
+        let index = 1;
 
         if (nombre) {
-            campos.push("nombre = ?");
+            updates.push(`nombre = $${index++}`);
             valores.push(nombre);
         }
+
         if (email) {
-            campos.push("email = ?");
+            updates.push(`email = $${index++}`);
             valores.push(email);
         }
+
         if (password) {
-            campos.push("password = crypt(?, gen_salt('bf'))");
-            valores.push(password);
+            const hashed = await bcrypt.hash(password, 10);
+            updates.push(`password = $${index++}`);
+            valores.push(hashed);
         }
+
         if (req.file) {
-            campos.push("imagen = ?");
+            updates.push(`imagen = $${index++}`);
             valores.push(req.file.buffer);
         }
 
+        if (updates.length === 0) {
+            return res.json({ message: "Nada para actualizar" });
+        }
+
+        sql += updates.join(", ") + ` WHERE id_usuario = $${index} RETURNING id_usuario, nombre, email, rol, encode(imagen,'base64') AS imagen`;
+
         valores.push(id_usuario);
 
-        const sql = `
-          UPDATE usuario 
-          SET ${campos.join(", ")}
-          WHERE id_usuario = ?
-          RETURNING id_usuario, nombre, email, rol, encode(imagen, 'base64') AS imagen
-        `;
+        const result = await pool.query(sql, valores);
 
-        const [rows] = await db.execute(sql, valores);
-
-        res.json({ usuario: rows[0] });
+        res.json({
+            success: true,
+            usuario: result.rows[0]
+        });
 
     } catch (err) {
-        res.json({ error: err.message });
+        console.error("Error actualizando usuario:", err);
+        res.status(500).json({ error: "Error al actualizar usuario" });
     }
+}); 
+
+app.get("/api/usuario/todos", async (req, res) => {
+    const q = "SELECT id_usuario, nombre, email, rol FROM usuario ORDER BY id_usuario ASC";
+    db.query(q, (err, result) => {
+        if (err) return res.status(500).json({ error: err });
+        res.json(result.rows);
+    });
+});
+
+app.delete("/api/usuario/eliminar/:id", (req, res) => {
+    const { id } = req.params;
+    const q = "DELETE FROM usuario WHERE id_usuario = $1";
+
+    db.query(q, [id], (err) => {
+        if (err) return res.status(500).json({ error: err });
+        res.json({ mensaje: "Usuario eliminado" });
+    });
 });

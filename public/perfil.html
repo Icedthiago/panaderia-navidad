@@ -75,11 +75,34 @@
     <div class="perfil-info">
       <p><b>Rol:</b> <span id="perfil-rol">Invitado</span></p>
     </div>
+    <br>
+    <button class="btn btn-warning" data-open="modal-usuario">administrar usuarios</button>
 
     <button class="btn btn-primary mt-3" id="btn-editar">Editar perfil</button>
 
   </div>
 </div>
+
+<!-- Modal Administrar Usuarios -->
+<dialog id="modal-usuarios" class="modal-usuarios">
+  <h2>Usuarios Registrados</h2>
+
+  <table class="table table-bordered mt-3">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Email</th>
+        <th>Rol</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody id="tablaUsuarios"></tbody>
+  </table>
+
+  <button class="btn-modal cerrar-btn btn-x" data-close="modal-usuarios" type="button">X</button>
+</dialog>
+
 
 <!-- Modal Editar Perfil -->
 <dialog id="modal-editar" class="modal-editar">

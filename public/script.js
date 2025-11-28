@@ -635,3 +635,59 @@ document.addEventListener("DOMContentLoaded", () => {
         modal && new bootstrap.Modal(modal).show();
     }
 });
+
+// ===============================
+// ADMIN: Cargar todos los usuarios
+// ===============================
+async function cargarUsuariosAdmin() {
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/todos`);
+        const data = await res.json();
+
+        const tbody = document.getElementById("tablaUsuarios");
+        tbody.innerHTML = "";
+
+        data.forEach(u => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${u.id_usuario}</td>
+                    <td>${u.nombre}</td>
+                    <td>${u.email}</td>
+                    <td>${u.rol}</td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" onclick="eliminarUsuario(${u.id_usuario})">
+                            Eliminar
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+
+    } catch (err) {
+        console.error("Error cargando usuarios:", err);
+    }
+}
+
+// ===============================
+// ADMIN: Eliminar usuario
+// ===============================
+async function eliminarUsuario(id) {
+    if (!confirm("¿Seguro que quieres eliminar este usuario?")) return;
+
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/eliminar/${id}`, {
+            method: "DELETE"
+        });
+
+        if (!res.ok) {
+            alert("Error eliminando usuario");
+            return;
+        }
+
+        alert("Usuario eliminado");
+        cargarUsuariosAdmin(); // Recargar la tabla
+
+    } catch (err) {
+        console.error("Error eliminando usuario:", err);
+    }
+}
