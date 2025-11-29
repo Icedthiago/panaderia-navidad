@@ -788,3 +788,240 @@ function eliminarDelCarrito(index) {
 window.cambiarCantidad = cambiarCantidad;
 window.eliminarDelCarrito = eliminarDelCarrito;
 window.eliminarUsuario = eliminarUsuario;
+
+// -----------------------------------------
+// CARGAR DATOS DEL PERFIL AL CARGAR PÁGINA
+// -----------------------------------------
+document.addEventListener("DOMContentLoaded", async () => {
+    
+    // 1. Verificar si hay usuario logueado
+    const user = JSON.parse(localStorage.getItem("usuario"));
+
+    if (!user) {
+        alert("⚠️ Debes iniciar sesión primero");
+        window.location.href = "index.html";
+        return;
+    }
+
+    // 2. Mostrar datos básicos desde localStorage
+    document.getElementById("perfil-nombre").textContent = user.nombre;
+    document.getElementById("perfil-email").textContent = user.email;
+    document.getElementById("perfil-rol").textContent = user.rol;
+
+    // 3. Cargar datos completos del servidor (incluyendo imagen)
+    await cargarDatosCompletos(user.id_usuario);
+
+    // 4. Configurar botón "Administrar usuarios" (solo admin)
+    const btnAdminUsuarios = document.querySelector('[data-open="modal-usuario"]');
+    if (user.rol === "admin" && btnAdminUsuarios) {
+        btnAdminUsuarios.classList.remove("d-none");
+        btnAdminUsuarios.addEventListener("click", () => {
+            cargarUsuariosAdmin();
+            document.getElementById("modal-usuarios")?.showModal();
+        });
+    } else if (btnAdminUsuarios) {
+        btnAdminUsuarios.style.display = "none";
+    }
+
+    // 5. Configurar botón "Editar perfil"
+    document.getElementById("btn-editar")?.addEventListener("click", () => {
+        prepararFormularioEdicion(user);
+        document.getElementById("modal-editar")?.showModal();
+    });
+
+    // 6. Preview de imagen al seleccionar archivo
+    document.getElementById("edit-imagen")?.addEventListener("change", function() {
+        const file = this.files[0];
+        const preview = document.getElementById("preview-img");
+
+        if (file && preview) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                preview.src = e.target.result;
+                preview.style.display = "block";
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // 7. Enviar formulario de edición
+    document.getElementById("editarForm")?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        await actualizarPerfil(e.target, user);
+    });
+});
+
+// -----------------------------------------
+// FUNCIÓN: Cargar datos completos del servidor
+// -----------------------------------------
+async function cargarDatosCompletos(id_usuario) {
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/perfil/${id_usuario}`);
+        
+        if (!res.ok) {
+            console.error("Error cargando perfil completo");
+            return;
+        }
+
+        const data = await res.json();
+        
+        if (data.success && data.usuario) {
+            const usuario = data.usuario;
+
+            // Actualizar foto de perfil
+            const perfilFoto = document.getElementById("perfil-foto");
+            if (perfilFoto) {
+                if (usuario.imagen) {
+                    perfilFoto.src = `data:image/jpeg;base64,${usuario.imagen}`;
+                    perfilFoto.onerror = () => {
+                        console.error("Error cargando imagen");
+                        perfilFoto.src = "https://via.placeholder.com/120?text=Sin+Foto";
+                    };
+                } else {
+                    perfilFoto.src = "https://via.placeholder.com/120?text=Sin+Foto";
+                }
+            }
+        }
+
+    } catch (err) {
+        console.error("Error al cargar datos completos:", err);
+    }
+}
+
+// -----------------------------------------
+// FUNCIÓN: Preparar formulario de edición
+// -----------------------------------------
+function prepararFormularioEdicion(user) {
+    document.getElementById("edit-nombre").value = user.nombre;
+    document.getElementById("edit-email").value = user.email;
+    document.getElementById("edit-password").value = "";
+    
+    const preview = document.getElementById("preview-img");
+    if (preview) {
+        preview.style.display = "none";
+    }
+}
+
+// -----------------------------------------
+// FUNCIÓN: Actualizar perfil
+// -----------------------------------------
+async function actualizarPerfil(form, user) {
+    const formData = new FormData(form);
+    formData.append("id_usuario", user.id_usuario);
+
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/editar`, {
+            method: "PUT",
+            body: formData
+        });
+
+        if (!res.ok) {
+            alert("❌ Error actualizando perfil");
+            return;
+        }
+
+        const data = await res.json();
+
+        if (data.success) {
+            alert("✅ Perfil actualizado correctamente");
+
+            // Actualizar localStorage
+            const usuarioActualizado = {
+                id_usuario: user.id_usuario,
+                nombre: formData.get("nombre"),
+                email: formData.get("email"),
+                rol: user.rol
+            };
+
+            localStorage.setItem("usuario", JSON.stringify(usuarioActualizado));
+
+            // Recargar página
+            location.reload();
+        } else {
+            alert("❌ Error: " + (data.message || "Error desconocido"));
+        }
+
+    } catch (err) {
+        console.error("Error actualizando perfil:", err);
+        alert("❌ Error de conexión");
+    }
+}
+
+// -----------------------------------------
+// FUNCIÓN: Cargar usuarios (ADMIN)
+// -----------------------------------------
+async function cargarUsuariosAdmin() {
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/todos`);
+        
+        if (!res.ok) {
+            console.error("Error cargando usuarios");
+            return;
+        }
+
+        const usuarios = await res.json();
+        const tbody = document.getElementById("tablaUsuarios");
+        
+        if (!tbody) return;
+
+        tbody.innerHTML = "";
+
+        usuarios.forEach(u => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${u.id_usuario}</td>
+                    <td>${u.nombre}</td>
+                    <td>${u.email}</td>
+                    <td><span class="badge bg-${u.rol === 'admin' ? 'danger' : 'primary'}">${u.rol}</span></td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" onclick="eliminarUsuario(${u.id_usuario})">
+                            🗑️ Eliminar
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+
+    } catch (err) {
+        console.error("Error cargando usuarios:", err);
+    }
+}
+
+// -----------------------------------------
+// FUNCIÓN: Eliminar usuario (ADMIN)
+// -----------------------------------------
+async function eliminarUsuario(id) {
+    if (!confirm("⚠️ ¿Seguro que quieres eliminar este usuario?")) return;
+
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/eliminar/${id}`, {
+            method: "DELETE"
+        });
+
+        if (!res.ok) {
+            alert("❌ Error eliminando usuario");
+            return;
+        }
+
+        alert("✅ Usuario eliminado correctamente");
+        cargarUsuariosAdmin();
+
+    } catch (err) {
+        console.error("Error eliminando usuario:", err);
+        alert("❌ Error de conexión");
+    }
+}
+
+// -----------------------------------------
+// CERRAR MODALES AL HACER CLIC FUERA
+// -----------------------------------------
+document.getElementById("modal-editar")?.addEventListener("click", function(e) {
+    if (e.target === this) this.close();
+});
+
+document.getElementById("modal-usuarios")?.addEventListener("click", function(e) {
+    if (e.target === this) this.close();
+});
+
+// Exportar funciones globales
+window.eliminarUsuario = eliminarUsuario;
