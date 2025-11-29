@@ -21,125 +21,88 @@
 
     <a class="navbar-brand" href="index.html">Panadería</a>
 
-    <!-- botón hamburguesa -->
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-            data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-            aria-expanded="false" aria-label="Toggle navigation">
+            data-bs-target="#navbarSupportedContent">
       <span class="navbar-toggler-icon"></span>
     </button>
 
-    <!-- CONTENIDO DEL NAV -->
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
 
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
 
-<!-- BOTONES EN NAV (abre directamente cada modal) -->
-<li class="nav-item" id="nav-login-btn">
-  <button class="btn-modal" data-open="modal-login" type="button">Inicio de sesión</button>
-</li>
-<li class="nav-item" id="nav-registro-btn">
-  <button class="btn-modal" data-open="modal-registro" type="button">Registrar</button>
-</li>
+        <!-- Botones para NO logueados -->
+        <li class="nav-item" id="nav-login-btn">
+          <button class="btn-modal" data-open="modal-login" type="button">
+            Inicio de sesión
+          </button>
+        </li>
 
-<!-- Texto visible cuando el usuario está logueado -->
-<li class="nav-item d-none" id="nav-usuario">
-  <span class="nav-link">Hola, <b id="nav-usuario-nombre"></b> 👋</span>
-</li>
+        <li class="nav-item" id="nav-registro-btn">
+          <button class="btn-modal" data-open="modal-registro" type="button">
+            Registrar
+          </button>
+        </li>
 
-<!-- Botón de cerrar sesión (se muestra cuando hay sesión) -->
-<li class="nav-item d-none" id="nav-logout">
-  <button class="btn btn-danger" id="logoutBtn">Cerrar sesión</button>
-</li>
+        <!-- ✅ USUARIO LOGUEADO CON SALDO -->
+        <li class="nav-item d-none" id="nav-usuario">
+          <span class="nav-link">
+            👤 <b id="nav-usuario-nombre"></b> 
+            | 💰 <span id="nav-usuario-saldo" class="badge bg-warning text-dark">$0.00</span>
+          </span>
+        </li>
 
-<!-- MODAL LOGIN (NO anidar) -->
-<dialog id="modal-login">
-  <h2>Inicio de Sesión</h2>
-
-  <form id="loginForm">
-    <label for="login-email">Correo electrónico:</label>
-    <input type="email" id="login-email" name="email" required><br><br>
-
-    <label for="login-password">Contraseña:</label>
-    <input type="password" id="login-password" name="password" required><br><br>
-
-    <button type="submit">Ingresar</button>
-
-    <p id="login-error" style="color: #ffcccc; margin-top: 10px;"></p>
-  </form>
-
-  <p style="margin-top: 10px;">
-    ¿No tienes cuenta?
-    <a href="#" id="link-abrir-registro">Regístrate aquí</a>
-  </p>
-
-  <button class="btn-modal cerrar-btn btn-x" data-close="modal-login" type="button">X</button>
-</dialog>
-
-<!-- MODAL REGISTRO (NO anidar) -->
-<dialog id="modal-registro">
-  <h2>Registro de Usuario</h2>
-
-  <form id="registroForm">
-    <label for="reg-nombre">Nombre:</label>
-    <input type="text" id="reg-nombre" name="nombre" required><br><br>
-
-    <label for="reg-email">Correo electrónico:</label>
-    <input type="email" id="reg-email" name="email" required><br><br>
-
-    <label for="reg-password">Contraseña:</label>
-    <input type="password" id="reg-password" name="password" required><br><br>
-
-    <label for="reg-rol">Rol:</label>
-    <select id="reg-rol" name="rol">
-      <option value="cliente">Cliente</option>
-      <option value="admin">Admin</option>
-    </select><br><br>
-
-    <button type="submit">Registrar</button>
-
-    <p id="msg-error" style="color: #ffcccc; margin-top: 10px;"></p>
-  </form>
-
-  <p style="margin-top: 10px;">
-    ¿Ya tienes cuenta?
-    <a href="#" id="link-abrir-login">Inicia sesión</a>
-  </p>
-
-  <button class="btn-modal cerrar-btn btn-x" data-close="modal-registro" type="button">X</button>
-</dialog>
-
+        <!-- Botón logout -->
+        <li class="nav-item d-none" id="nav-logout">
+          <button class="btn btn-danger btn-sm" id="logoutBtn">
+            Cerrar sesión
+          </button>
         </li>
 
         <li class="nav-item">
           <a class="nav-link" href="#acerca">Nosotros</a>
         </li>
 
-        <!-- Dropdown integrado en el navbar -->
+        <!-- Menú dropdown -->
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" 
+             data-bs-toggle="dropdown">
             Menú
           </a>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="perfil.html">Perfil</a></li>
             <li><a class="dropdown-item" href="compra.html">Compra</a></li>
-            <li><a class="dropdown-item admin-only" href="inventario.html">Inventario</a></li>
-            <li><a class="dropdown-item admin-only" href="ventas.html">Ventas</a></li>
+            <li><a class="dropdown-item admin-only d-none" href="inventario.html">
+              Inventario
+            </a></li>
+            <li><a class="dropdown-item admin-only d-none" href="ventas.html">
+              Ventas
+            </a></li>
           </ul>
         </li>
 
-        <li class="nav-item">
-          <a class="nav-link" href="index.html">Regresar</a>
+        <!-- ✅ Carrito -->
+        <li class="nav-item d-none" id="nav-carrito-btn">
+          <button class="btn btn-warning btn-sm" data-open="modal-carrito">
+            🛒 <span id="carrito-cantidad">0</span>
+          </button>
         </li>
 
-		<li class="nav-item"><a class="nav-link active" href="#" role="button" data-bs-toggle="dropdown">🎅</a></li>
-		<li class="nav-item"><a class="nav-link active" href="#" role="button" data-bs-toggle="dropdown">🎄</a></li>
-		<li class="nav-item"><a class="nav-link active" href="#" role="button" data-bs-toggle="dropdown">❄️</a></li>
+        <li class="nav-item">
+          <a class="nav-link">🎅</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link">🎄</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link">❄️</a>
+        </li>
 
       </ul>
 
     </div>
   </div>
 </nav>
+
 <br>  
 <button class="btn-modal  btn btn-success" data-open="add-producto" type="button">Agregar Producto</button>
 

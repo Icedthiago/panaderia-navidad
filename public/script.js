@@ -1096,3 +1096,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnPagar = document.getElementById("btnPagar");
     btnPagar?.addEventListener("click", confirmarCompra);
 });
+
+document.getElementById("formRecargarSaldo")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const id_usuario = document.getElementById("recargar-id").value;
+  const monto = document.getElementById("recargar-monto").value;
+
+  const nuevoSaldo = await recargarSaldo(id_usuario, monto);
+
+  if (nuevoSaldo) {
+    e.target.reset();
+    document.getElementById("modal-recargar-saldo")?.close();
+  }
+});

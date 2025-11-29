@@ -17,52 +17,92 @@
   <div class="header">
     <h1 class="header h1">panaderia desesperanza</h1>
   </div>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-success px-3">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="#">Panadería</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item" id="nav-login-btn">
-            <button class="btn-modal" data-open="modal-login" type="button">Inicio de sesión</button>
-          </li>
-          <li class="nav-item" id="nav-registro-btn">
-            <button class="btn-modal" data-open="modal-registro" type="button">Registrar</button>
-          </li>
-          <li class="nav-item d-none" id="nav-usuario">
-            <span class="nav-link">Hola, <b id="nav-usuario-nombre"></b> 👋</span>
-          </li>
-          <li class="nav-item d-none" id="nav-logout">
-            <button class="btn btn-danger" id="logoutBtn">Cerrar sesión</button>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#acerca">Nosotros</a>
-          </li>
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Menú</a>
+<nav class="navbar navbar-expand-lg navbar-dark bg-success px-3">
+  <div class="container-fluid">
+
+    <a class="navbar-brand" href="index.html">Panadería</a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#navbarSupportedContent">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+        <!-- Botones para NO logueados -->
+        <li class="nav-item" id="nav-login-btn">
+          <button class="btn-modal" data-open="modal-login" type="button">
+            Inicio de sesión
+          </button>
+        </li>
+
+        <li class="nav-item" id="nav-registro-btn">
+          <button class="btn-modal" data-open="modal-registro" type="button">
+            Registrar
+          </button>
+        </li>
+
+        <!-- ✅ USUARIO LOGUEADO CON SALDO -->
+        <li class="nav-item d-none" id="nav-usuario">
+          <span class="nav-link">
+            👤 <b id="nav-usuario-nombre"></b> 
+            | 💰 <span id="nav-usuario-saldo" class="badge bg-warning text-dark">$0.00</span>
+          </span>
+        </li>
+
+        <!-- Botón logout -->
+        <li class="nav-item d-none" id="nav-logout">
+          <button class="btn btn-danger btn-sm" id="logoutBtn">
+            Cerrar sesión
+          </button>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="#acerca">Nosotros</a>
+        </li>
+
+        <!-- Menú dropdown -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" 
+             data-bs-toggle="dropdown">
+            Menú
+          </a>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="perfil.html">Perfil</a></li>
             <li><a class="dropdown-item" href="compra.html">Compra</a></li>
-            <li><a class="dropdown-item admin-only" href="inventario.html">Inventario</a></li>
-            <li><a class="dropdown-item admin-only" href="ventas.html">Ventas</a></li>
+            <li><a class="dropdown-item admin-only d-none" href="inventario.html">
+              Inventario
+            </a></li>
+            <li><a class="dropdown-item admin-only d-none" href="ventas.html">
+              Ventas
+            </a></li>
           </ul>
-          </li>
-
-                  <li class="nav-item">
-          <a class="nav-link" href="index.html">Regresar</a>
         </li>
 
-        		<li class="nav-item"><a class="nav-link active" href="#" role="button" data-bs-toggle="dropdown">🎅</a></li>
-		<li class="nav-item"><a class="nav-link active" href="#" role="button" data-bs-toggle="dropdown">🎄</a></li>
-		<li class="nav-item"><a class="nav-link active" href="#" role="button" data-bs-toggle="dropdown">❄️</a></li>
+        <!-- ✅ Carrito -->
+        <li class="nav-item d-none" id="nav-carrito-btn">
+          <button class="btn btn-warning btn-sm" data-open="modal-carrito">
+            🛒 <span id="carrito-cantidad">0</span>
+          </button>
+        </li>
 
+        <li class="nav-item">
+          <a class="nav-link">🎅</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link">🎄</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link">❄️</a>
+        </li>
 
-        </ul>
-      </div>
+      </ul>
+
     </div>
-  </nav>
+  </div>
+</nav>
 
 <div class="perfil-container">
   <div class="perfil-card">
@@ -76,8 +116,10 @@
       <p><b>Rol:</b> <span id="perfil-rol">Invitado</span></p>
     </div>
     <br>
-    <button class="btn btn-warning" data-open="modal-usuario">administrar usuarios</button>
-
+    <button class="btn btn-warning admin-only" data-open="modal-usuario">administrar usuarios</button>
+    <br>
+    <button class="btn btn-success" data-open="modal-recargar-saldo">Recargar Saldo</button>
+    <br>
     <button class="btn btn-primary mt-3" id="btn-editar">Editar perfil</button>
 
   </div>
@@ -130,6 +172,21 @@
   <button class="btn-modal cerrar-btn btn-x" data-close="modal-editar" type="button">X</button>
 </dialog>
 
+<dialog id="modal-recargar-saldo" class="admin-only">
+  <h2>💰 Recargar Saldo</h2>
+
+  <form id="formRecargarSaldo">
+    <label>Usuario ID:</label>
+    <input type="number" id="recargar-id" name="id_usuario" required>
+    
+    <label>Monto a recargar:</label>
+    <input type="number" id="recargar-monto" name="monto" step="0.01" min="0.01" required>
+    
+    <button type="submit" class="btn btn-success">Recargar</button>
+  </form>
+
+  <button class="btn-modal cerrar-btn btn-x" data-close="modal-recargar-saldo">X</button>
+</dialog>
 
   <!-- Modales -->
   <dialog id="modal-login">
