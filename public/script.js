@@ -354,7 +354,8 @@ function guardarCarrito() {
 
 function actualizarCantidadCarrito() {
     const total = carrito.reduce((sum, item) => sum + item.cantidad, 0);
-    document.getElementById("carrito-cantidad").textContent = total;
+    const elem = document.getElementById("carrito-cantidad");
+    if (elem) elem.textContent = total;
 }
 
 function actualizarCarritoNav() {
@@ -413,94 +414,124 @@ function cargarCarritoEnModal() {
 
 
 // -----------------------------------------
-// CONFIRMAR COMPRA
+// ✅ CONFIRMAR COMPRA (SIN ENVIAR IMÁGENES)
 // -----------------------------------------
-document.getElementById("btnPagar")?.addEventListener("click", async () => {
+async function confirmarCompra() {
     const usuario = JSON.parse(localStorage.getItem("usuario"));
 
-    if (!usuario) return alert("Debes iniciar sesión.");
-    if (carrito.length === 0) return alert("Tu carrito está vacío.");
-
-    const res = await fetch(`${API_URL}/api/ventas`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            id_usuario: usuario.id_usuario,
-            carrito
-        })
-    });
-
-    const data = await res.json();
-
-    if (data.success) {
-        alert("Compra realizada exitosamente 🎉");
-        localStorage.removeItem("carrito");
-        carrito = [];
-        mostrarCarrito();
-        actualizarCarritoNav();
-    } else {
-        alert("Error al realizar la compra");
+    if (!usuario) {
+        alert("⚠️ Debes iniciar sesión para comprar");
+        return;
     }
-});
 
+    if (carrito.length === 0) {
+        alert("⚠️ Tu carrito está vacío");
+        return;
+    }
+
+    // ✅ Enviamos solo los datos necesarios (SIN imagen)
+    const carritoParaEnviar = carrito.map(item => ({
+        id_producto: item.id_producto,
+        cantidad: item.cantidad,
+        precio: item.precio
+        // ❌ NO enviamos 'imagen' ni 'nombre'
+    }));
+
+    console.log("📦 Enviando al servidor:", carritoParaEnviar);
+
+    try {
+        const res = await fetch(`${API_URL}/api/ventas`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                id_usuario: usuario.id_usuario,
+                carrito: carritoParaEnviar
+            })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+            alert("🎉 ¡Compra realizada exitosamente!");
+            
+            // Limpiar carrito
+            localStorage.removeItem("carrito");
+            carrito = [];
+            guardarCarrito();
+            
+            // Cerrar modal
+            document.getElementById("modal-carrito")?.close();
+            
+        } else {
+            alert("❌ Error: " + (data.message || "No se pudo completar la compra"));
+        }
+
+    } catch (err) {
+        console.error("Error en la compra:", err);
+        alert("❌ Error de conexión con el servidor");
+    }
+}
 
 // -----------------------------------------
-// CARGAR PRODUCTOS PARA LA PÁGINA DE COMPRAS
+// Cargar productos para comprar
 // -----------------------------------------
 async function cargarProductosParaComprar() {
     try {
         const res = await fetch(`${API_URL}/api/productos`);
-        const data = await res.json();
+        const productos = await res.json();
 
         const tbody = document.getElementById("tbodyCompras");
         if (!tbody) return;
 
-        tbody.innerHTML = data.map(p => `
+        tbody.innerHTML = productos.map(p => `
             <tr>
                 <td>${p.id_producto}</td>
-                <td><img src="${p.imagen 
-                    ? `data:image/jpeg;base64,${p.imagen}` 
-                    : `${API_URL}/img/default-producto.jpg`
-                }" width="60"></td>
+                <td>
+                    <img src="${p.imagen 
+                        ? `data:image/jpeg;base64,${p.imagen}` 
+                        : 'https://via.placeholder.com/60?text=Sin+Imagen'
+                    }" 
+                    width="60"
+                    onerror="this.src='https://via.placeholder.com/60?text=Error'">
+                </td>
                 <td>${p.nombre}</td>
                 <td>${p.descripcion}</td>
                 <td>$${p.precio}</td>
-                <td>${p.stock}</td>
+                <td>${p.temporada}</td>
                 <td>
                     <button 
                         class="btn btn-primary btn-comprar"
                         data-id="${p.id_producto}"
                         data-precio="${p.precio}"
                         data-nombre="${p.nombre}"
-                        data-imagen="${p.imagen && p.imagen.length > 10 
-    ? `data:image/jpeg;base64,${p.imagen}` 
-    : `${API_URL}/img/default-producto.jpg`}"
-
+                        data-imagen="${p.imagen 
+                            ? `data:image/jpeg;base64,${p.imagen}` 
+                            : 'https://via.placeholder.com/60?text=Sin+Imagen'
+                        }"
                     >
-                        🛒 Comprar
+                        🛒 Agregar
                     </button>
                 </td>
             </tr>
         `).join("");
 
+        // Agregar event listeners
         document.querySelectorAll(".btn-comprar").forEach(btn => {
             btn.addEventListener("click", () => {
                 const producto = {
                     id_producto: Number(btn.dataset.id),
                     nombre: btn.dataset.nombre,
                     precio: Number(btn.dataset.precio),
-                    imagen: btn.dataset.imagen,
-                    cantidad: 1
+                    imagen: btn.dataset.imagen
                 };
                 agregarAlCarrito(producto);
             });
         });
 
     } catch (err) {
-        console.error("Error cargando productos para comprar:", err);
+        console.error("Error cargando productos:", err);
     }
 }
-
 
 // -----------------------------------------
 // PERFIL
@@ -730,7 +761,14 @@ function agregarAlCarrito(producto) {
     if (existe) {
         existe.cantidad++;
     } else {
-        carrito.push({...producto, cantidad: 1});
+        // ✅ Solo guardamos lo necesario + imagen para MOSTRAR
+        carrito.push({
+            id_producto: producto.id_producto,
+            nombre: producto.nombre,
+            precio: producto.precio,
+            cantidad: 1,
+            imagen: producto.imagen // Solo para mostrar en el carrito
+        });
     }
 
     guardarCarrito();
@@ -751,7 +789,9 @@ function mostrarCarrito() {
         tbody.innerHTML += `
             <tr>
                 <td>${item.id_producto}</td>
-                <td><img src="${item.imagen || 'img/default.jpg'}" width="60"></td>
+                <td><img src="${item.imagen || 'https://via.placeholder.com/60?text=Sin+Imagen'}" 
+                         width="60" 
+                         onerror="this.src='https://via.placeholder.com/60?text=Error'"></td>
                 <td>${item.nombre}</td>
                 <td>$${item.precio.toFixed(2)}</td>
                 <td>
@@ -760,7 +800,9 @@ function mostrarCarrito() {
                     <button class="btn btn-success btn-sm" onclick="cambiarCantidad(${index}, 1)">+</button>
                 </td>
                 <td>$${subtotal.toFixed(2)}</td>
-                <td><button class="btn btn-danger btn-sm" onclick="eliminarDelCarrito(${index})">🗑️</button></td>
+                <td>
+                    <button class="btn btn-danger btn-sm" onclick="eliminarDelCarrito(${index})">🗑️</button>
+                </td>
             </tr>
         `;
     });
@@ -768,7 +810,9 @@ function mostrarCarrito() {
     const totalElem = document.getElementById("totalCarrito");
     if (totalElem) totalElem.textContent = total.toFixed(2);
 }
-
+// -----------------------------------------
+// Cambiar cantidad
+// -----------------------------------------
 function cambiarCantidad(index, cambio) {
     carrito[index].cantidad += cambio;
 
@@ -780,8 +824,10 @@ function cambiarCantidad(index, cambio) {
 }
 
 function eliminarDelCarrito(index) {
-    carrito.splice(index, 1);
-    guardarCarrito();
+    if (confirm("¿Eliminar este producto del carrito?")) {
+        carrito.splice(index, 1);
+        guardarCarrito();
+    }
 }
 
 // Exportar funciones globales para onclick
@@ -1025,3 +1071,28 @@ document.getElementById("modal-usuarios")?.addEventListener("click", function(e)
 
 // Exportar funciones globales
 window.eliminarUsuario = eliminarUsuario;
+
+// -----------------------------------------
+// INICIALIZACIÓN
+// -----------------------------------------
+document.addEventListener("DOMContentLoaded", () => {
+    
+    // Cargar productos si estamos en compra.html
+    if (window.location.pathname.includes("compra.html")) {
+        cargarProductosParaComprar();
+    }
+    
+    // Actualizar badge del carrito
+    actualizarCantidadCarrito();
+    
+    // Botón para abrir carrito
+    const btnCarrito = document.querySelector('[data-open="modal-carrito"]');
+    btnCarrito?.addEventListener("click", () => {
+        mostrarCarrito();
+        document.getElementById("modal-carrito")?.showModal();
+    });
+    
+    // Botón para confirmar compra
+    const btnPagar = document.getElementById("btnPagar");
+    btnPagar?.addEventListener("click", confirmarCompra);
+});
