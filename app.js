@@ -390,13 +390,6 @@ app.delete("/api/usuario/eliminar/:id", async (req, res) => {
 });
 
 // --------------------------------------
-// SESIÓN (SIMULADA)
-// --------------------------------------
-app.get("/auth/session", (req, res) => {
-  res.json({ logged: false });
-});
-
-// --------------------------------------
 // ✅ OBTENER PERFIL DE USUARIO POR ID
 // --------------------------------------
 app.get("/api/usuario/perfil/:id", async (req, res) => {
@@ -451,43 +444,10 @@ app.use((req, res) => {
 });
 
 // --------------------------------------
-// ✅ OBTENER DATOS DEL PERFIL
+// SESIÓN (SIMULADA)
 // --------------------------------------
-app.get("/api/usuario/perfil/:id", async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        const result = await pool.query(
-            `SELECT 
-                id_usuario, 
-                nombre, 
-                email, 
-                rol,
-                encode(imagen, 'base64') AS imagen
-             FROM usuario 
-             WHERE id_usuario = $1`,
-            [id]
-        );
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ 
-                success: false, 
-                message: "Usuario no encontrado" 
-            });
-        }
-
-        res.json({
-            success: true,
-            usuario: result.rows[0]
-        });
-
-    } catch (err) {
-        console.error("Error obteniendo perfil:", err);
-        res.status(500).json({ 
-            success: false, 
-            message: "Error al obtener perfil" 
-        });
-    }
+app.get("/auth/session", (req, res) => {
+  res.json({ logged: false });
 });
 
 // --------------------------------------
