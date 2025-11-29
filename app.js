@@ -1,5 +1,4 @@
-// app.js unificado para Render
-// Servidor Express + archivos estáticos + PostgreSQL
+// app.js CORREGIDO - Servidor Express + PostgreSQL
 
 import express from "express";
 import path from "path";
@@ -65,12 +64,7 @@ app.post("/api/usuarios", async (req, res) => {
       RETURNING id_usuario, nombre, email, rol;
     `;
 
-    const result = await pool.query(query, [
-      nombre,
-      email,
-      hashedPassword,
-      rolFinal
-    ]);
+    const result = await pool.query(query, [nombre, email, hashedPassword, rolFinal]);
 
     res.json({
       success: true,
@@ -160,9 +154,8 @@ app.get("/api/productos", async (req, res) => {
   }
 });
 
-
 // --------------------------------------
-// OBTENER PRODUCTO POR ID (PARA EDITAR)
+// OBTENER PRODUCTO POR ID
 // --------------------------------------
 app.get("/api/producto/:id", async (req, res) => {
   try {
@@ -205,14 +198,7 @@ app.post("/api/producto", upload.single("imagen"), async (req, res) => {
             VALUES ($1, $2, $3, $4, $5, $6)
         `;
 
-        await pool.query(sql, [
-            nombre,
-            descripcion,
-            precio,
-            stock,
-            imagen,
-            temporada
-        ]);
+        await pool.query(sql, [nombre, descripcion, precio, stock, imagen, temporada]);
 
         res.json({ success: true });
 
@@ -277,36 +263,9 @@ app.delete("/api/producto/:id", async (req, res) => {
   }
 });
 
-// FALLBACK SEGURO PARA TODAS LAS RUTAS
-app.use((req, res) => {
-  if (req.originalUrl.startsWith("/api")) {
-    return res.status(404).json({
-      success: false,
-      message: "Ruta no encontrada"
-    });
-  }
-
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
-
 // --------------------------------------
-// INICIAR SERVIDOR ✔ (solo una vez)
+// ✅ REGISTRAR VENTA (CORREGIDO)
 // --------------------------------------
-app.listen(port, () => {
-  console.log("Servidor corriendo en http://localhost:" + port);
-});
-
-app.get("/auth/session", (req, res) => {
-  if (req.session.user) {
-    res.json({
-      logged: true,
-      usuario: req.session.user
-    });
-  } else {
-    res.json({ logged: false });
-  }
-});
-
 app.post("/api/ventas", async (req, res) => {
     const { id_usuario, carrito } = req.body;
 
@@ -315,25 +274,19 @@ app.post("/api/ventas", async (req, res) => {
     }
 
     try {
-        // 1. Crear la venta
-        const venta = await db.query(
+        // ✅ CAMBIO: pool en lugar de db
+        const venta = await pool.query(
             "INSERT INTO venta (id_usuario) VALUES ($1) RETURNING id_venta",
             [id_usuario]
         );
 
         const id_venta = venta.rows[0].id_venta;
 
-        // 2. Insertar detalles
         for (const item of carrito) {
-            await db.query(
+            await pool.query(
                 `INSERT INTO detalle_venta (id_venta, id_producto, cantidad, precio)
                  VALUES ($1, $2, $3, $4)`,
-                [
-                    id_venta,
-                    item.id_producto,
-                    item.cantidad,
-                    item.precio
-                ]
+                [id_venta, item.id_producto, item.cantidad, item.precio]
             );
         }
 
@@ -349,6 +302,9 @@ app.post("/api/ventas", async (req, res) => {
     }
 });
 
+// --------------------------------------
+// ✅ EDITAR USUARIO (CORREGIDO)
+// --------------------------------------
 app.put("/api/usuario/editar", upload.single("imagen"), async (req, res) => {
     try {
         const { id_usuario, nombre, email, password } = req.body;
@@ -404,20 +360,59 @@ app.put("/api/usuario/editar", upload.single("imagen"), async (req, res) => {
     }
 }); 
 
+// --------------------------------------
+// ✅ OBTENER TODOS LOS USUARIOS (CORREGIDO)
+// --------------------------------------
 app.get("/api/usuario/todos", async (req, res) => {
-    const q = "SELECT id_usuario, nombre, email, rol FROM usuario ORDER BY id_usuario ASC";
-    db.query(q, (err, result) => {
-        if (err) return res.status(500).json({ error: err });
+    try {
+        const result = await pool.query(
+            "SELECT id_usuario, nombre, email, rol FROM usuario ORDER BY id_usuario ASC"
+        );
         res.json(result.rows);
-    });
+    } catch (err) {
+        console.error("Error obteniendo usuarios:", err);
+        res.status(500).json({ error: "Error al obtener usuarios" });
+    }
 });
 
-app.delete("/api/usuario/eliminar/:id", (req, res) => {
-    const { id } = req.params;
-    const q = "DELETE FROM usuario WHERE id_usuario = $1";
-
-    db.query(q, [id], (err) => {
-        if (err) return res.status(500).json({ error: err });
+// --------------------------------------
+// ✅ ELIMINAR USUARIO (CORREGIDO)
+// --------------------------------------
+app.delete("/api/usuario/eliminar/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        await pool.query("DELETE FROM usuario WHERE id_usuario = $1", [id]);
         res.json({ mensaje: "Usuario eliminado" });
+    } catch (err) {
+        console.error("Error eliminando usuario:", err);
+        res.status(500).json({ error: "Error al eliminar usuario" });
+    }
+});
+
+// --------------------------------------
+// SESIÓN (SIMULADA)
+// --------------------------------------
+app.get("/auth/session", (req, res) => {
+  res.json({ logged: false });
+});
+
+// --------------------------------------
+// FALLBACK
+// --------------------------------------
+app.use((req, res) => {
+  if (req.originalUrl.startsWith("/api")) {
+    return res.status(404).json({
+      success: false,
+      message: "Ruta no encontrada"
     });
+  }
+
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// --------------------------------------
+// INICIAR SERVIDOR
+// --------------------------------------
+app.listen(port, () => {
+  console.log("✅ Servidor corriendo en http://localhost:" + port);
 });

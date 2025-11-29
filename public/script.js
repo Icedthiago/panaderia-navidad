@@ -634,17 +634,26 @@ document.addEventListener("DOMContentLoaded", () => {
         const modal = document.getElementById("perfilModal");
         modal && new bootstrap.Modal(modal).show();
     }
-});
 
-// ===============================
-// ADMIN: Cargar todos los usuarios
-// ===============================
+
+});
+// -----------------------------------------
+// ✅ ADMIN: Cargar usuarios (CORREGIDO)
+// -----------------------------------------
 async function cargarUsuariosAdmin() {
     try {
         const res = await fetch(`${API_URL}/api/usuario/todos`);
-        const data = await res.json();
+        
+        if (!res.ok) {
+            console.error("Error en la respuesta:", res.status);
+            return;
+        }
 
+        const data = await res.json();
         const tbody = document.getElementById("tablaUsuarios");
+        
+        if (!tbody) return;
+
         tbody.innerHTML = "";
 
         data.forEach(u => {
@@ -668,9 +677,7 @@ async function cargarUsuariosAdmin() {
     }
 }
 
-// ===============================
-// ADMIN: Eliminar usuario
-// ===============================
+// ✅ Eliminar usuario (CORREGIDO)
 async function eliminarUsuario(id) {
     if (!confirm("¿Seguro que quieres eliminar este usuario?")) return;
 
@@ -684,10 +691,100 @@ async function eliminarUsuario(id) {
             return;
         }
 
-        alert("Usuario eliminado");
-        cargarUsuariosAdmin(); // Recargar la tabla
+        alert("✅ Usuario eliminado");
+        cargarUsuariosAdmin();
 
     } catch (err) {
         console.error("Error eliminando usuario:", err);
     }
 }
+
+// -----------------------------------------
+// BOTÓN ADMINISTRAR USUARIOS
+// -----------------------------------------
+document.querySelector('[data-open="modal-usuario"]')?.addEventListener("click", () => {
+    cargarUsuariosAdmin();
+    document.getElementById("modal-usuarios")?.showModal();
+});
+
+// -----------------------------------------
+// CARRITO - FUNCIONES FALTANTES
+// -----------------------------------------
+
+function guardarCarrito() {
+    localStorage.setItem("carrito", JSON.stringify(carrito));
+    actualizarCantidadCarrito();
+    mostrarCarrito();
+}
+
+function actualizarCantidadCarrito() {
+    const total = carrito.reduce((sum, item) => sum + item.cantidad, 0);
+    const elem = document.getElementById("carrito-cantidad");
+    if (elem) elem.textContent = total;
+}
+
+// ✅ FUNCIÓN FALTANTE: agregarAlCarrito
+function agregarAlCarrito(producto) {
+    const existe = carrito.find(item => item.id_producto === producto.id_producto);
+
+    if (existe) {
+        existe.cantidad++;
+    } else {
+        carrito.push({...producto, cantidad: 1});
+    }
+
+    guardarCarrito();
+    alert(`✅ ${producto.nombre} agregado al carrito`);
+}
+
+function mostrarCarrito() {
+    const tbody = document.getElementById("tbodyCarrito");
+    if (!tbody) return;
+
+    tbody.innerHTML = "";
+    let total = 0;
+
+    carrito.forEach((item, index) => {
+        const subtotal = item.precio * item.cantidad;
+        total += subtotal;
+
+        tbody.innerHTML += `
+            <tr>
+                <td>${item.id_producto}</td>
+                <td><img src="${item.imagen || 'img/default.jpg'}" width="60"></td>
+                <td>${item.nombre}</td>
+                <td>$${item.precio.toFixed(2)}</td>
+                <td>
+                    <button class="btn btn-warning btn-sm" onclick="cambiarCantidad(${index}, -1)">−</button>
+                    <b style="padding: 0 10px;">${item.cantidad}</b>
+                    <button class="btn btn-success btn-sm" onclick="cambiarCantidad(${index}, 1)">+</button>
+                </td>
+                <td>$${subtotal.toFixed(2)}</td>
+                <td><button class="btn btn-danger btn-sm" onclick="eliminarDelCarrito(${index})">🗑️</button></td>
+            </tr>
+        `;
+    });
+
+    const totalElem = document.getElementById("totalCarrito");
+    if (totalElem) totalElem.textContent = total.toFixed(2);
+}
+
+function cambiarCantidad(index, cambio) {
+    carrito[index].cantidad += cambio;
+
+    if (carrito[index].cantidad <= 0) {
+        carrito.splice(index, 1);
+    }
+
+    guardarCarrito();
+}
+
+function eliminarDelCarrito(index) {
+    carrito.splice(index, 1);
+    guardarCarrito();
+}
+
+// Exportar funciones globales para onclick
+window.cambiarCantidad = cambiarCantidad;
+window.eliminarDelCarrito = eliminarDelCarrito;
+window.eliminarUsuario = eliminarUsuario;
