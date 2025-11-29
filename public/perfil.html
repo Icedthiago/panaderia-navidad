@@ -107,21 +107,42 @@
 <div class="perfil-container">
   <div class="perfil-card">
     <div class="perfil-header">
-      <img id="perfil-foto" class="perfil-foto" src="default.png" alt="Foto de perfil">
+      <img id="perfil-foto" class="perfil-foto" 
+           src="https://via.placeholder.com/120?text=Sin+Foto" 
+           alt="Foto de perfil">
       <h2 id="perfil-nombre">Usuario</h2>
       <p id="perfil-email">correo@example.com</p>
     </div>
 
     <div class="perfil-info">
       <p><b>Rol:</b> <span id="perfil-rol">Invitado</span></p>
+      
+      <!-- ✅ MOSTRAR SALDO PARA TODOS -->
+      <p class="perfil-saldo-container">
+        <b>💰 Saldo:</b> 
+        <span id="perfil-saldo" class="badge bg-success" style="font-size: 1.2em;">
+          $0.00
+        </span>
+        <button class="btn btn-sm btn-primary" onclick="actualizarSaldoUsuario()">
+          🔄 Actualizar
+        </button>
+      </p>
     </div>
-    <br>
-    <button class="btn btn-warning admin-only" data-open="modal-usuario">administrar usuarios</button>
-    <br>
-    <button class="btn btn-success" data-open="modal-recargar-saldo">Recargar Saldo</button>
-    <br>
-    <button class="btn btn-primary mt-3" id="btn-editar">Editar perfil</button>
 
+    <div class="perfil-actions">
+      <button class="btn btn-primary" id="btn-editar">
+        ✏️ Editar perfil
+      </button>
+      
+      <!-- ✅ Solo admin ve este botón -->
+      <button class="btn btn-warning admin-only d-none" data-open="modal-recargar-saldo">
+        💰 Recargar Saldo Usuario
+      </button>
+      
+      <button class="btn btn-info admin-only d-none" data-open="modal-usuarios">
+        👥 Administrar Usuarios
+      </button>
+    </div>
   </div>
 </div>
 
@@ -172,17 +193,62 @@
   <button class="btn-modal cerrar-btn btn-x" data-close="modal-editar" type="button">X</button>
 </dialog>
 
-<dialog id="modal-recargar-saldo" class="admin-only">
-  <h2>💰 Recargar Saldo</h2>
+<dialog id="modal-recargar-saldo" class="modal-recargar">
+  <h2>💰 Recargar Saldo de Usuario</h2>
 
-  <form id="formRecargarSaldo">
-    <label>Usuario ID:</label>
-    <input type="number" id="recargar-id" name="id_usuario" required>
+  <!-- ✅ Tabla de usuarios para seleccionar -->
+  <div class="usuarios-lista" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px;">
+    <table class="table table-striped table-hover">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Email</th>
+          <th>Saldo Actual</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody id="tablaUsuariosRecarga"></tbody>
+    </table>
+  </div>
+
+  <!-- ✅ Formulario de recarga -->
+  <form id="formRecargarSaldo" style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
+    <h4>Usuario Seleccionado:</h4>
     
-    <label>Monto a recargar:</label>
-    <input type="number" id="recargar-monto" name="monto" step="0.01" min="0.01" required>
-    
-    <button type="submit" class="btn btn-success">Recargar</button>
+    <div style="margin: 15px 0;">
+      <label><b>ID Usuario:</b></label>
+      <input type="number" id="recargar-id" name="id_usuario" readonly 
+             style="background: #e9ecef; cursor: not-allowed;" required>
+    </div>
+
+    <div style="margin: 15px 0;">
+      <label><b>Nombre:</b></label>
+      <input type="text" id="recargar-nombre" readonly 
+             style="background: #e9ecef; cursor: not-allowed;">
+    </div>
+
+    <div style="margin: 15px 0;">
+      <label><b>Saldo Actual:</b></label>
+      <input type="text" id="recargar-saldo-actual" readonly 
+             style="background: #e9ecef; cursor: not-allowed;">
+    </div>
+
+    <div style="margin: 15px 0;">
+      <label><b>💵 Monto a Recargar:</b></label>
+      <input type="number" id="recargar-monto" name="monto" 
+             step="0.01" min="0.01" placeholder="Ej: 500.00" required>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+      <button type="submit" class="btn btn-success" style="flex: 1;">
+        ✅ Confirmar Recarga
+      </button>
+      <button type="button" class="btn btn-secondary" 
+              onclick="document.getElementById('formRecargarSaldo').reset();" style="flex: 1;">
+        🔄 Limpiar
+      </button>
+    </div>
   </form>
 
   <button class="btn-modal cerrar-btn btn-x" data-close="modal-recargar-saldo">X</button>

@@ -59,16 +59,23 @@ app.post("/api/usuarios", async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const query = `
-      INSERT INTO usuario (nombre, email, password, rol)
-      VALUES ($1, $2, $3, $4)
-      RETURNING id_usuario, nombre, email, rol;
+      INSERT INTO usuario (nombre, email, password, rol, saldo)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING id_usuario, nombre, email, rol, saldo;
     `;
 
-    const result = await pool.query(query, [nombre, email, hashedPassword, rolFinal]);
+    // ✅ Saldo inicial de $1000 para nuevos usuarios
+    const result = await pool.query(query, [
+      nombre, 
+      email, 
+      hashedPassword, 
+      rolFinal,
+      1000.00 // Saldo inicial
+    ]);
 
     res.json({
       success: true,
-      message: "Usuario registrado correctamente",
+      message: "Usuario registrado correctamente con $1000 de saldo inicial",
       usuario: result.rows[0]
     });
 
@@ -112,6 +119,7 @@ app.post("/api/login", async (req, res) => {
       return res.json({ success: false, message: "Contraseña incorrecta" });
     }
 
+    // ✅ Incluimos el saldo en la respuesta
     res.json({
       success: true,
       message: "Inicio de sesión exitoso",
@@ -119,11 +127,13 @@ app.post("/api/login", async (req, res) => {
         id_usuario: usuario.id_usuario,
         nombre: usuario.nombre,
         email: usuario.email,
-        rol: usuario.rol
+        rol: usuario.rol,
+        saldo: parseFloat(usuario.saldo) // ✅ Convertir a número
       }
     });
 
   } catch (err) {
+    console.error("Error en login:", err);
     res.status(500).json({ success: false, message: "Error en servidor" });
   }
 });
@@ -270,35 +280,105 @@ app.post("/api/ventas", async (req, res) => {
     const { id_usuario, carrito } = req.body;
 
     if (!id_usuario || !carrito?.length) {
-        return res.status(400).json({ success: false, message: "Carrito vacío" });
+        return res.status(400).json({ 
+            success: false, 
+            message: "Carrito vacío" 
+        });
     }
 
+    const client = await pool.connect(); // ✅ Usar transacción
+
     try {
-        // ✅ CAMBIO: pool en lugar de db
-        const venta = await pool.query(
-            "INSERT INTO venta (id_usuario) VALUES ($1) RETURNING id_venta",
+        await client.query('BEGIN'); // Iniciar transacción
+
+        // 1️⃣ Obtener saldo actual del usuario
+        const usuarioRes = await client.query(
+            "SELECT saldo FROM usuario WHERE id_usuario = $1",
             [id_usuario]
+        );
+
+        if (usuarioRes.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({
+                success: false,
+                message: "Usuario no encontrado"
+            });
+        }
+
+        const saldoActual = parseFloat(usuarioRes.rows[0].saldo);
+
+        // 2️⃣ Calcular total de la compra
+        const totalCompra = carrito.reduce((sum, item) => {
+            return sum + (item.precio * item.cantidad);
+        }, 0);
+
+        console.log(`💰 Saldo actual: $${saldoActual}`);
+        console.log(`🛒 Total compra: $${totalCompra}`);
+
+        // 3️⃣ Validar saldo suficiente
+        if (saldoActual < totalCompra) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({
+                success: false,
+                message: `Saldo insuficiente. Tienes $${saldoActual.toFixed(2)} y necesitas $${totalCompra.toFixed(2)}`,
+                saldoActual: saldoActual,
+                totalCompra: totalCompra,
+                faltante: totalCompra - saldoActual
+            });
+        }
+
+        // 4️⃣ Crear la venta
+        const venta = await client.query(
+            "INSERT INTO venta (id_usuario, total, fecha) VALUES ($1, $2, NOW()) RETURNING id_venta",
+            [id_usuario, totalCompra]
         );
 
         const id_venta = venta.rows[0].id_venta;
 
+        // 5️⃣ Insertar detalles de la venta
         for (const item of carrito) {
-            await pool.query(
+            await client.query(
                 `INSERT INTO detalle_venta (id_venta, id_producto, cantidad, precio)
                  VALUES ($1, $2, $3, $4)`,
                 [id_venta, item.id_producto, item.cantidad, item.precio]
             );
+
+            // ✅ Opcional: Descontar stock del producto
+            await client.query(
+                `UPDATE producto 
+                 SET stock = stock - $1 
+                 WHERE id_producto = $2`,
+                [item.cantidad, item.id_producto]
+            );
         }
+
+        // 6️⃣ Descontar saldo del usuario
+        const nuevoSaldo = saldoActual - totalCompra;
+        await client.query(
+            "UPDATE usuario SET saldo = $1 WHERE id_usuario = $2",
+            [nuevoSaldo, id_usuario]
+        );
+
+        await client.query('COMMIT'); // ✅ Confirmar transacción
 
         res.json({
             success: true,
             id_venta,
-            message: "Venta registrada correctamente"
+            message: "¡Compra realizada exitosamente!",
+            totalCompra: totalCompra,
+            saldoAnterior: saldoActual,
+            nuevoSaldo: nuevoSaldo
         });
 
     } catch (error) {
+        await client.query('ROLLBACK');
         console.error("Error en venta:", error);
-        res.status(500).json({ success: false, message: "Error registrando venta" });
+        res.status(500).json({ 
+            success: false, 
+            message: "Error registrando venta" 
+        });
+    } finally {
+        client.release();
     }
 });
 
@@ -363,15 +443,44 @@ app.put("/api/usuario/editar", upload.single("imagen"), async (req, res) => {
 // --------------------------------------
 // ✅ OBTENER TODOS LOS USUARIOS (CORREGIDO)
 // --------------------------------------
-app.get("/api/usuario/todos", async (req, res) => {
+app.get("/api/usuario/perfil/:id", async (req, res) => {
     try {
+        const { id } = req.params;
+
         const result = await pool.query(
-            "SELECT id_usuario, nombre, email, rol FROM usuario ORDER BY id_usuario ASC"
+            `SELECT 
+                id_usuario, 
+                nombre, 
+                email, 
+                rol,
+                saldo,
+                encode(imagen, 'base64') AS imagen
+             FROM usuario 
+             WHERE id_usuario = $1`,
+            [id]
         );
-        res.json(result.rows);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: "Usuario no encontrado" 
+            });
+        }
+
+        res.json({
+            success: true,
+            usuario: {
+                ...result.rows[0],
+                saldo: parseFloat(result.rows[0].saldo)
+            }
+        });
+
     } catch (err) {
-        console.error("Error obteniendo usuarios:", err);
-        res.status(500).json({ error: "Error al obtener usuarios" });
+        console.error("Error obteniendo perfil:", err);
+        res.status(500).json({ 
+            success: false, 
+            message: "Error al obtener perfil" 
+        });
     }
 });
 
@@ -448,6 +557,80 @@ app.use((req, res) => {
 // --------------------------------------
 app.get("/auth/session", (req, res) => {
   res.json({ logged: false });
+});
+
+// --------------------------------------
+// ✅ RECARGAR SALDO (cualquier rol)
+// --------------------------------------
+app.post("/api/usuario/recargar-saldo", async (req, res) => {
+    const { id_usuario, monto, id_admin } = req.body;
+
+    try {
+        // Verificar que quien recarga es admin
+        const adminRes = await pool.query(
+            "SELECT rol FROM usuario WHERE id_usuario = $1",
+            [id_admin]
+        );
+
+        if (adminRes.rows.length === 0 || adminRes.rows[0].rol !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: "No tienes permisos para recargar saldo"
+            });
+        }
+
+        // Recargar saldo
+        const result = await pool.query(
+            `UPDATE usuario 
+             SET saldo = saldo + $1 
+             WHERE id_usuario = $2
+             RETURNING saldo`,
+            [monto, id_usuario]
+        );
+
+        res.json({
+            success: true,
+            message: `Se recargaron $${monto} correctamente`,
+            nuevoSaldo: parseFloat(result.rows[0].saldo)
+        });
+
+    } catch (err) {
+        console.error("Error recargando saldo:", err);
+        res.status(500).json({ 
+            success: false, 
+            message: "Error al recargar saldo" 
+        });
+    }
+});
+
+app.get("/api/usuario/saldo/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await pool.query(
+            "SELECT saldo FROM usuario WHERE id_usuario = $1",
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Usuario no encontrado"
+            });
+        }
+
+        res.json({
+            success: true,
+            saldo: parseFloat(result.rows[0].saldo)
+        });
+
+    } catch (err) {
+        console.error("Error obteniendo saldo:", err);
+        res.status(500).json({
+            success: false,
+            message: "Error al obtener saldo"
+        });
+    }
 });
 
 // --------------------------------------

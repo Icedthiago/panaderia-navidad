@@ -450,3 +450,72 @@ dialog.cerrando {
   object-fit: cover;
   border: 2px solid #28a745;
 }
+
+#nav-usuario-saldo {
+  font-size: 1.1em;
+  padding: 5px 10px;
+  border-radius: 15px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.perfil-saldo-container {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 15px;
+  border-radius: 10px;
+  color: white;
+  margin: 15px 0;
+  text-align: center;
+}
+
+#perfil-saldo {
+  font-size: 1.5em !important;
+  padding: 8px 15px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+.perfil-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.perfil-actions button {
+  width: 100%;
+}
+
+.modal-recargar {
+    width: 90%;
+    max-width: 800px;
+}
+
+.modal-recargar table {
+    font-size: 0.9em;
+}
+
+.modal-recargar input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.modal-recargar input[readonly] {
+    cursor: not-allowed;
+}
+
+.modal-recargar label {
+    display: block;
+    margin-bottom: 5px;
+    color: #333;
+}

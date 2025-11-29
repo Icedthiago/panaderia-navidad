@@ -1110,3 +1110,259 @@ document.getElementById("formRecargarSaldo")?.addEventListener("submit", async (
     document.getElementById("modal-recargar-saldo")?.close();
   }
 });
+
+document.addEventListener("DOMContentLoaded", async () => {
+    
+    const user = JSON.parse(localStorage.getItem("usuario"));
+
+    if (!user) {
+        alert("⚠️ Debes iniciar sesión primero");
+        window.location.href = "index.html";
+        return;
+    }
+
+    // Mostrar datos básicos
+    document.getElementById("perfil-nombre").textContent = user.nombre;
+    document.getElementById("perfil-email").textContent = user.email;
+    document.getElementById("perfil-rol").textContent = user.rol;
+    
+    // ✅ Mostrar saldo (para todos)
+    document.getElementById("perfil-saldo").textContent = 
+        `$${parseFloat(user.saldo || 0).toFixed(2)}`;
+
+    // Cargar datos completos del servidor
+    await cargarDatosCompletos(user.id_usuario);
+
+    // Mostrar botones de admin si aplica
+    if (user.rol === "admin") {
+        document.querySelectorAll(".admin-only").forEach(el => {
+            el.classList.remove("d-none");
+        });
+    }
+
+    // Configurar botones
+    document.getElementById("btn-editar")?.addEventListener("click", () => {
+        prepararFormularioEdicion(user);
+        document.getElementById("modal-editar")?.showModal();
+    });
+
+    // Preview de imagen
+    document.getElementById("edit-imagen")?.addEventListener("change", function() {
+        const file = this.files[0];
+        const preview = document.getElementById("preview-img");
+
+        if (file && preview) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                preview.src = e.target.result;
+                preview.style.display = "block";
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Form de edición
+    document.getElementById("editarForm")?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        await actualizarPerfil(e.target, user);
+    });
+});
+
+// ✅ Cargar datos completos (incluye saldo actualizado)
+async function cargarDatosCompletos(id_usuario) {
+    
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/perfil/${id_usuario}`);
+        
+        if (!res.ok) {
+            console.error("Error cargando perfil completo");
+            return;
+        }
+
+        const data = await res.json();
+        
+        if (data.success && data.usuario) {
+            const usuario = data.usuario;
+
+            // Actualizar foto
+            const perfilFoto = document.getElementById("perfil-foto");
+            if (perfilFoto) {
+                if (usuario.imagen) {
+                    perfilFoto.src = `data:image/jpeg;base64,${usuario.imagen}`;
+                    perfilFoto.onerror = () => {
+                        perfilFoto.src = "https://via.placeholder.com/120?text=Sin+Foto";
+                    };
+                } else {
+                    perfilFoto.src = "https://via.placeholder.com/120?text=Sin+Foto";
+                }
+            }
+
+            // ✅ Actualizar saldo desde el servidor
+            const saldoActualizado = parseFloat(usuario.saldo || 0);
+            document.getElementById("perfil-saldo").textContent = 
+                `$${saldoActualizado.toFixed(2)}`;
+
+            // Actualizar localStorage
+            const userLocal = JSON.parse(localStorage.getItem("usuario"));
+            if (userLocal) {
+                userLocal.saldo = saldoActualizado;
+                localStorage.setItem("usuario", JSON.stringify(userLocal));
+            }
+        }
+
+    } catch (err) {
+        console.error("Error al cargar datos completos:", err);
+    }
+}
+
+function prepararFormularioEdicion(user) {
+    document.getElementById("edit-nombre").value = user.nombre;
+    document.getElementById("edit-email").value = user.email;
+    document.getElementById("edit-password").value = "";
+    
+    const preview = document.getElementById("preview-img");
+    if (preview) {
+        preview.style.display = "none";
+    }
+}
+
+async function actualizarPerfil(form, user) {
+    const API_URL = "https://panaderia-navidad.onrender.com";
+    const formData = new FormData(form);
+    formData.append("id_usuario", user.id_usuario);
+
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/editar`, {
+            method: "PUT",
+            body: formData
+        });
+
+        if (!res.ok) {
+            alert("❌ Error actualizando perfil");
+            return;
+        }
+
+        const data = await res.json();
+
+        if (data.success) {
+            alert("✅ Perfil actualizado correctamente");
+
+            const usuarioActualizado = {
+                id_usuario: user.id_usuario,
+                nombre: formData.get("nombre"),
+                email: formData.get("email"),
+                rol: user.rol,
+                saldo: user.saldo // Mantener el saldo
+            };
+
+            localStorage.setItem("usuario", JSON.stringify(usuarioActualizado));
+            location.reload();
+        }
+
+    } catch (err) {
+        console.error("Error actualizando perfil:", err);
+        alert("❌ Error de conexión");
+    }
+}
+
+document.querySelector('[data-open="modal-recargar-saldo"]')?.addEventListener("click", async () => {
+    await cargarUsuariosParaRecarga();
+});
+
+// ✅ Cargar lista de usuarios
+async function cargarUsuariosParaRecarga() {
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/todos`);
+        const usuarios = await res.json();
+
+        const tbody = document.getElementById("tablaUsuariosRecarga");
+        if (!tbody) return;
+
+        tbody.innerHTML = usuarios.map(u => `
+            <tr>
+                <td>${u.id_usuario}</td>
+                <td>${u.nombre}</td>
+                <td>${u.email}</td>
+                <td>
+                    <span class="badge bg-${u.saldo > 100 ? 'success' : 'warning'}">
+                        $${parseFloat(u.saldo || 0).toFixed(2)}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-primary" 
+                            onclick="seleccionarUsuario(${u.id_usuario}, '${u.nombre}', ${u.saldo || 0})">
+                        Seleccionar
+                    </button>
+                </td>
+            </tr>
+        `).join("");
+
+    } catch (err) {
+        console.error("Error cargando usuarios:", err);
+    }
+}
+
+// ✅ Seleccionar usuario para recarga
+function seleccionarUsuario(id, nombre, saldo) {
+    document.getElementById("recargar-id").value = id;
+    document.getElementById("recargar-nombre").value = nombre;
+    document.getElementById("recargar-saldo-actual").value = `$${parseFloat(saldo).toFixed(2)}`;
+    document.getElementById("recargar-monto").focus();
+}
+
+// ✅ Procesar recarga
+document.getElementById("formRecargarSaldo")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const admin = JSON.parse(localStorage.getItem("usuario"));
+    
+    if (!admin || admin.rol !== 'admin') {
+        alert("❌ No tienes permisos para recargar saldo");
+        return;
+    }
+
+    const id_usuario = document.getElementById("recargar-id").value;
+    const monto = parseFloat(document.getElementById("recargar-monto").value);
+    const nombre = document.getElementById("recargar-nombre").value;
+    const saldoActual = document.getElementById("recargar-saldo-actual").value;
+
+    const confirmar = confirm(
+        `¿Confirmar recarga?\n\n` +
+        `Usuario: ${nombre}\n` +
+        `Saldo actual: ${saldoActual}\n` +
+        `Monto a recargar: $${monto.toFixed(2)}\n` +
+        `Nuevo saldo: $${(parseFloat(saldoActual.replace('$', '')) + monto).toFixed(2)}`
+    );
+
+    if (!confirmar) return;
+
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/recargar-saldo`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                id_usuario: parseInt(id_usuario),
+                monto: monto,
+                id_admin: admin.id_usuario
+            })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            alert(`✅ Recarga exitosa\n\nNuevo saldo de ${nombre}: $${data.nuevoSaldo.toFixed(2)}`);
+            
+            // Recargar tabla de usuarios
+            await cargarUsuariosParaRecarga();
+            
+            // Limpiar formulario
+            e.target.reset();
+        } else {
+            alert("❌ " + data.message);
+        }
+
+    } catch (err) {
+        console.error("Error recargando saldo:", err);
+        alert("❌ Error de conexión");
+    }
+});
