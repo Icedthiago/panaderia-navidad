@@ -366,7 +366,6 @@ document.addEventListener("DOMContentLoaded", () => {
             `$${parseFloat(user.saldo || 0).toFixed(2)}`;
 
         cargarDatosCompletos(user.id_usuario);
-
         // Mostrar opciones de admin
         if (user.rol === "admin") {
             document.querySelectorAll(".admin-only").forEach(el => {
@@ -488,11 +487,6 @@ function cargarCarritoEnModal() {
 }
 
 function agregarAlCarrito(producto) {
-    // ✅ Verificar login solo al intentar agregar
-    if (!requiereLogin("⚠️ Debes iniciar sesión para agregar productos al carrito")) {
-        return;
-    }
-
     const existe = carrito.find(item => item.id_producto === producto.id_producto);
 
     if (existe) {
@@ -515,11 +509,6 @@ function agregarAlCarrito(producto) {
 // ✅ CONFIRMAR COMPRA (SIN ENVIAR IMÁGENES)
 // -----------------------------------------
 async function confirmarCompra() {
-    // ✅ Verificar login solo al intentar comprar
-    if (!requiereLogin("⚠️ Debes iniciar sesión para realizar una compra")) {
-        return;
-    }
-
     const usuario = JSON.parse(localStorage.getItem("usuario"));
 
     if (carrito.length === 0) {
@@ -1551,10 +1540,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // Botón abrir carrito
     const carritoBtn = document.querySelector('[data-open="modal-carrito"]');
     carritoBtn?.addEventListener("click", () => {
-        // ✅ Verificar login solo al abrir carrito
-        if (!requiereLogin("⚠️ Debes iniciar sesión para ver tu carrito")) {
-            return;
-        }
         mostrarCarrito();
         document.getElementById("modal-carrito")?.showModal();
     });
