@@ -322,7 +322,7 @@ function verificarSesionSilenciosa() {
     return user !== null;
 }
 
-function requiereLogin(mensajePersonalizado = "⚠️ Debes iniciar sesión para realizar esta acción") {
+/*function requiereLogin(mensajePersonalizado = "⚠️ Debes iniciar sesión para realizar esta acción") {
     const user = JSON.parse(localStorage.getItem("usuario"));
     
     if (!user) {
@@ -338,7 +338,7 @@ function requiereLogin(mensajePersonalizado = "⚠️ Debes iniciar sesión para
     }
     
     return true;
-}
+} */
 
 document.addEventListener("DOMContentLoaded", () => {
     
