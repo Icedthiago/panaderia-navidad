@@ -103,23 +103,38 @@ if (loginForm) {
 // MOSTRAR USUARIO EN NAVBAR
 // -----------------------------------------
 function mostrarUsuario(usuario) {
-    const { nombre, rol } = usuario;
+    const { nombre, rol, saldo } = usuario;
 
+    // Ocultar botones de login/registro
     document.getElementById("nav-login-btn")?.classList.add("d-none");
     document.getElementById("nav-registro-btn")?.classList.add("d-none");
 
-    document.getElementById("nav-usuario-nombre").textContent = nombre;
-    document.getElementById("nav-usuario").classList.remove("d-none");
-    document.getElementById("nav-logout").classList.remove("d-none");
-
-    if (rol === "admin") {
-        document.querySelectorAll(".admin-only").forEach(el => el.classList.remove("d-none"));
+    // Mostrar info del usuario
+    const nombreElem = document.getElementById("nav-usuario-nombre");
+    if (nombreElem) {
+        nombreElem.textContent = nombre;
     }
 
-    document.getElementById("nav-carrito-btn").classList.remove("d-none");
-    actualizarCarritoNav();
-}
+    // Mostrar saldo
+    const saldoElem = document.getElementById("nav-usuario-saldo");
+    if (saldoElem) {
+        saldoElem.textContent = `$${parseFloat(saldo || 0).toFixed(2)}`;
+    }
 
+    document.getElementById("nav-usuario")?.classList.remove("d-none");
+    document.getElementById("nav-logout")?.classList.remove("d-none");
+
+    // Mostrar opciones de admin
+    if (rol === "admin") {
+        document.querySelectorAll(".admin-only").forEach(el => {
+            el.classList.remove("d-none");
+        });
+    }
+
+    // Mostrar carrito
+    document.getElementById("nav-carrito-btn")?.classList.remove("d-none");
+    actualizarCantidadCarrito();
+}
 
 // -----------------------------------------
 // LOGOUT
@@ -302,6 +317,64 @@ async function verificarSesion() {
     }
 }
 
+function verificarSesionSilenciosa() {
+    const user = JSON.parse(localStorage.getItem("usuario"));
+    return user !== null;
+}
+
+function requiereLogin(mensajePersonalizado = "⚠️ Debes iniciar sesión para realizar esta acción") {
+    const user = JSON.parse(localStorage.getItem("usuario"));
+    
+    if (!user) {
+        // Mostrar mensaje personalizado
+        if (confirm(mensajePersonalizado + "\n\n¿Deseas iniciar sesión ahora?")) {
+            // Abrir modal de login
+            const loginModal = document.getElementById("modal-login");
+            if (loginModal) {
+                loginModal.showModal();
+            }
+        }
+        return false;
+    }
+    
+    return true;
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    
+    // Solo verificar sesión si estamos en perfil.html
+    if (window.location.pathname.includes("perfil.html")) {
+        const user = JSON.parse(localStorage.getItem("usuario"));
+
+        if (!user) {
+            // ✅ Preguntar si quiere iniciar sesión
+            if (confirm("⚠️ Necesitas iniciar sesión para ver tu perfil.\n\n¿Deseas iniciar sesión ahora?")) {
+                window.location.href = "index.html";
+            } else {
+                window.location.href = "index.html";
+            }
+            return;
+        }
+
+        // Resto del código de perfil...
+        document.getElementById("perfil-nombre").textContent = user.nombre;
+        document.getElementById("perfil-email").textContent = user.email;
+        document.getElementById("perfil-rol").textContent = user.rol;
+        
+        // Mostrar saldo
+        document.getElementById("perfil-saldo").textContent = 
+            `$${parseFloat(user.saldo || 0).toFixed(2)}`;
+
+        cargarDatosCompletos(user.id_usuario);
+
+        // Mostrar opciones de admin
+        if (user.rol === "admin") {
+            document.querySelectorAll(".admin-only").forEach(el => {
+                el.classList.remove("d-none");
+            });
+        }
+    }
+});
 
 // -----------------------------------------
 // FUNCIÓN REAL DE LOGIN
@@ -330,6 +403,9 @@ async function realizarLogin(email, password) {
         const modal = document.getElementById("modal-login");
         if (modal) modal.close();
 
+        // ✅ Mensaje mejorado con saldo
+        alert(`¡Bienvenido ${data.usuario.nombre}! 💰\n\nTu saldo actual: $${data.usuario.saldo.toFixed(2)}`);
+
         return true;
 
     } catch (err) {
@@ -339,7 +415,6 @@ async function realizarLogin(email, password) {
         return false;
     }
 }
-
 
 // -----------------------------------------
 // CARRITO
@@ -412,32 +487,75 @@ function cargarCarritoEnModal() {
     mostrarCarrito();
 }
 
+function agregarAlCarrito(producto) {
+    // ✅ Verificar login solo al intentar agregar
+    if (!requiereLogin("⚠️ Debes iniciar sesión para agregar productos al carrito")) {
+        return;
+    }
+
+    const existe = carrito.find(item => item.id_producto === producto.id_producto);
+
+    if (existe) {
+        existe.cantidad++;
+    } else {
+        carrito.push({
+            id_producto: producto.id_producto,
+            nombre: producto.nombre,
+            precio: producto.precio,
+            cantidad: 1,
+            imagen: producto.imagen
+        });
+    }
+
+    guardarCarrito();
+    alert(`✅ ${producto.nombre} agregado al carrito`);
+}
 
 // -----------------------------------------
 // ✅ CONFIRMAR COMPRA (SIN ENVIAR IMÁGENES)
 // -----------------------------------------
 async function confirmarCompra() {
-    const usuario = JSON.parse(localStorage.getItem("usuario"));
-
-    if (!usuario) {
-        alert("⚠️ Debes iniciar sesión para comprar");
+    // ✅ Verificar login solo al intentar comprar
+    if (!requiereLogin("⚠️ Debes iniciar sesión para realizar una compra")) {
         return;
     }
+
+    const usuario = JSON.parse(localStorage.getItem("usuario"));
 
     if (carrito.length === 0) {
         alert("⚠️ Tu carrito está vacío");
         return;
     }
 
-    // ✅ Enviamos solo los datos necesarios (SIN imagen)
+    // Calcular total
+    const totalCompra = carrito.reduce((sum, item) => {
+        return sum + (item.precio * item.cantidad);
+    }, 0);
+
+    // Verificar saldo
+    if (usuario.saldo < totalCompra) {
+        alert(`❌ Saldo insuficiente\n\n` +
+              `Tu saldo: $${usuario.saldo.toFixed(2)}\n` +
+              `Total a pagar: $${totalCompra.toFixed(2)}\n` +
+              `Te faltan: $${(totalCompra - usuario.saldo).toFixed(2)}`);
+        return;
+    }
+
+    // Confirmar compra
+    const confirmar = confirm(
+        `¿Confirmar compra?\n\n` +
+        `Total: $${totalCompra.toFixed(2)}\n` +
+        `Tu saldo actual: $${usuario.saldo.toFixed(2)}\n` +
+        `Saldo después de compra: $${(usuario.saldo - totalCompra).toFixed(2)}`
+    );
+
+    if (!confirmar) return;
+
     const carritoParaEnviar = carrito.map(item => ({
         id_producto: item.id_producto,
         cantidad: item.cantidad,
         precio: item.precio
-        // ❌ NO enviamos 'imagen' ni 'nombre'
     }));
-
-    console.log("📦 Enviando al servidor:", carritoParaEnviar);
 
     try {
         const res = await fetch(`${API_URL}/api/ventas`, {
@@ -452,18 +570,30 @@ async function confirmarCompra() {
         const data = await res.json();
 
         if (res.ok && data.success) {
-            alert("🎉 ¡Compra realizada exitosamente!");
-            
-            // Limpiar carrito
+            // Actualizar saldo
+            usuario.saldo = data.nuevoSaldo;
+            localStorage.setItem("usuario", JSON.stringify(usuario));
+
+            alert(
+                `🎉 ¡Compra realizada exitosamente!\n\n` +
+                `Total pagado: $${data.totalCompra.toFixed(2)}\n` +
+                `Nuevo saldo: $${data.nuevoSaldo.toFixed(2)}`
+            );
+
+            // Actualizar UI
+            const saldoElem = document.getElementById("nav-usuario-saldo");
+            if (saldoElem) {
+                saldoElem.textContent = `$${data.nuevoSaldo.toFixed(2)}`;
+            }
+
             localStorage.removeItem("carrito");
             carrito = [];
             guardarCarrito();
-            
-            // Cerrar modal
+
             document.getElementById("modal-carrito")?.close();
-            
+
         } else {
-            alert("❌ Error: " + (data.message || "No se pudo completar la compra"));
+            alert("❌ " + (data.message || "No se pudo completar la compra"));
         }
 
     } catch (err) {
@@ -515,7 +645,7 @@ async function cargarProductosParaComprar() {
             </tr>
         `).join("");
 
-        // Agregar event listeners
+        // ✅ Evento agregar - verificará login al hacer clic
         document.querySelectorAll(".btn-comprar").forEach(btn => {
             btn.addEventListener("click", () => {
                 const producto = {
@@ -524,7 +654,7 @@ async function cargarProductosParaComprar() {
                     precio: Number(btn.dataset.precio),
                     imagen: btn.dataset.imagen
                 };
-                agregarAlCarrito(producto);
+                agregarAlCarrito(producto); // Esta función ya verifica login
             });
         });
 
@@ -618,6 +748,26 @@ document.getElementById("editarForm")?.addEventListener("submit", async (e) => {
     }
 });
 
+document.addEventListener("DOMContentLoaded", () => {
+    if (window.location.pathname.includes("inventario.html")) {
+        const user = JSON.parse(localStorage.getItem("usuario"));
+
+        if (!user) {
+            if (confirm("⚠️ Debes iniciar sesión para acceder al inventario.\n\n¿Deseas iniciar sesión ahora?")) {
+                window.location.href = "index.html";
+            } else {
+                window.location.href = "index.html";
+            }
+            return;
+        }
+
+        if (user.rol !== "admin") {
+            alert("❌ No tienes permisos para acceder al inventario");
+            window.location.href = "index.html";
+            return;
+        }
+    }
+});
 
 // -----------------------------------------
 // INICIO GLOBAL (UN SOLO DOMContentLoaded)
@@ -1366,3 +1516,393 @@ document.getElementById("formRecargarSaldo")?.addEventListener("submit", async (
         alert("❌ Error de conexión");
     }
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    // Cerrar modales con clic fuera
+    ["modal-login", "modal-registro", "add-producto", "edit-producto", "modal-editar", "modal-carrito"]
+        .forEach(id => {
+            const modal = document.getElementById(id);
+            if (modal) {
+                modal.addEventListener("click", (e) => {
+                    if (e.target === modal) modal.close();
+                });
+            }
+        });
+
+    // ✅ Mostrar usuario SI existe (sin mensajes molestos)
+    const usuarioLocal = JSON.parse(localStorage.getItem("usuario"));
+    if (usuarioLocal) {
+        mostrarUsuario(usuarioLocal);
+    }
+
+    // Cargar productos SIEMPRE (no requiere login para ver)
+    if (window.location.pathname.includes("compra.html")) {
+        cargarProductosParaComprar();
+    }
+
+    if (window.location.pathname.includes("inventario.html")) {
+        cargarProductos();
+    }
+
+    // Actualizar carrito
+    actualizarCantidadCarrito();
+
+    // Botón abrir carrito
+    const carritoBtn = document.querySelector('[data-open="modal-carrito"]');
+    carritoBtn?.addEventListener("click", () => {
+        // ✅ Verificar login solo al abrir carrito
+        if (!requiereLogin("⚠️ Debes iniciar sesión para ver tu carrito")) {
+            return;
+        }
+        mostrarCarrito();
+        document.getElementById("modal-carrito")?.showModal();
+    });
+
+    // Botón confirmar compra
+    const btnPagar = document.getElementById("btnPagar");
+    btnPagar?.addEventListener("click", confirmarCompra);
+});
+
+// ============================================
+// PERFIL.HTML - SCRIPT MEJORADO (agregar al final de perfil.html)
+// ============================================
+
+document.addEventListener("DOMContentLoaded", async () => {
+    
+    const user = JSON.parse(localStorage.getItem("usuario"));
+
+    // ✅ Si no hay usuario, preguntar amablemente
+    if (!user) {
+        const quiereLogin = confirm(
+            "👤 Para ver tu perfil necesitas iniciar sesión.\n\n" +
+            "¿Deseas iniciar sesión ahora?"
+        );
+        
+        if (quiereLogin) {
+            // Redirigir a index y abrir modal automáticamente
+            window.location.href = "index.html#login";
+        } else {
+            window.location.href = "index.html";
+        }
+        return;
+    }
+
+    // ✅ Usuario logueado - continuar normalmente
+    document.getElementById("perfil-nombre").textContent = user.nombre;
+    document.getElementById("perfil-email").textContent = user.email;
+    document.getElementById("perfil-rol").textContent = user.rol;
+    
+    // Mostrar saldo
+    document.getElementById("perfil-saldo").textContent = 
+        `$${parseFloat(user.saldo || 0).toFixed(2)}`;
+
+    // Cargar datos completos
+    await cargarDatosCompletos(user.id_usuario);
+
+    // Mostrar botones de admin
+    if (user.rol === "admin") {
+        document.querySelectorAll(".admin-only").forEach(el => {
+            el.classList.remove("d-none");
+        });
+    }
+
+    // Configurar botones
+    configurarEventosPerfil(user);
+});
+
+function configurarEventosPerfil(user) {
+    // Botón editar
+    document.getElementById("btn-editar")?.addEventListener("click", () => {
+        prepararFormularioEdicion(user);
+        document.getElementById("modal-editar")?.showModal();
+    });
+
+    // Preview imagen
+    document.getElementById("edit-imagen")?.addEventListener("change", function() {
+        const file = this.files[0];
+        const preview = document.getElementById("preview-img");
+
+        if (file && preview) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                preview.src = e.target.result;
+                preview.style.display = "block";
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Form edición
+    document.getElementById("editarForm")?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        await actualizarPerfil(e.target, user);
+    });
+
+    // Botón administrar usuarios (admin)
+    document.querySelector('[data-open="modal-usuarios"]')?.addEventListener("click", async () => {
+        await cargarUsuariosAdmin();
+        document.getElementById("modal-usuarios")?.showModal();
+    });
+
+    // Botón recargar saldo (admin)
+    document.querySelector('[data-open="modal-recargar-saldo"]')?.addEventListener("click", async () => {
+        await cargarUsuariosParaRecarga();
+        document.getElementById("modal-recargar-saldo")?.showModal();
+    });
+}
+
+async function cargarDatosCompletos(id_usuario) {
+    const API_URL = "https://panaderia-navidad.onrender.com";
+    
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/perfil/${id_usuario}`);
+        
+        if (!res.ok) {
+            console.error("Error cargando perfil");
+            return;
+        }
+
+        const data = await res.json();
+        
+        if (data.success && data.usuario) {
+            const usuario = data.usuario;
+
+            // Actualizar foto
+            const perfilFoto = document.getElementById("perfil-foto");
+            if (perfilFoto) {
+                if (usuario.imagen) {
+                    perfilFoto.src = `data:image/jpeg;base64,${usuario.imagen}`;
+                    perfilFoto.onerror = () => {
+                        perfilFoto.src = "https://via.placeholder.com/120?text=Sin+Foto";
+                    };
+                } else {
+                    perfilFoto.src = "https://via.placeholder.com/120?text=Sin+Foto";
+                }
+            }
+
+            // Actualizar saldo
+            const saldoActualizado = parseFloat(usuario.saldo || 0);
+            document.getElementById("perfil-saldo").textContent = 
+                `$${saldoActualizado.toFixed(2)}`;
+
+            // Actualizar localStorage
+            const userLocal = JSON.parse(localStorage.getItem("usuario"));
+            if (userLocal) {
+                userLocal.saldo = saldoActualizado;
+                localStorage.setItem("usuario", JSON.stringify(userLocal));
+            }
+        }
+
+    } catch (err) {
+        console.error("Error al cargar datos:", err);
+    }
+}
+
+function prepararFormularioEdicion(user) {
+    document.getElementById("edit-nombre").value = user.nombre;
+    document.getElementById("edit-email").value = user.email;
+    document.getElementById("edit-password").value = "";
+    
+    const preview = document.getElementById("preview-img");
+    if (preview) {
+        preview.style.display = "none";
+    }
+}
+
+async function actualizarPerfil(form, user) {
+    const API_URL = "https://panaderia-navidad.onrender.com";
+    const formData = new FormData(form);
+    formData.append("id_usuario", user.id_usuario);
+
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/editar`, {
+            method: "PUT",
+            body: formData
+        });
+
+        if (!res.ok) {
+            alert("❌ Error actualizando perfil");
+            return;
+        }
+
+        const data = await res.json();
+
+        if (data.success) {
+            alert("✅ Perfil actualizado correctamente");
+
+            const usuarioActualizado = {
+                id_usuario: user.id_usuario,
+                nombre: formData.get("nombre"),
+                email: formData.get("email"),
+                rol: user.rol,
+                saldo: user.saldo
+            };
+
+            localStorage.setItem("usuario", JSON.stringify(usuarioActualizado));
+            location.reload();
+        }
+
+    } catch (err) {
+        console.error("Error actualizando perfil:", err);
+        alert("❌ Error de conexión");
+    }
+}
+
+// Funciones de admin (cargar usuarios, recargar saldo, etc.)
+async function cargarUsuariosAdmin() {
+    const API_URL = "https://panaderia-navidad.onrender.com";
+    
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/todos`);
+        const usuarios = await res.json();
+
+        const tbody = document.getElementById("tablaUsuarios");
+        if (!tbody) return;
+
+        tbody.innerHTML = usuarios.map(u => `
+            <tr>
+                <td>${u.id_usuario}</td>
+                <td>${u.nombre}</td>
+                <td>${u.email}</td>
+                <td><span class="badge bg-${u.rol === 'admin' ? 'danger' : 'primary'}">${u.rol}</span></td>
+                <td>
+                    <button class="btn btn-danger btn-sm" onclick="eliminarUsuario(${u.id_usuario})">
+                        🗑️ Eliminar
+                    </button>
+                </td>
+            </tr>
+        `).join("");
+
+    } catch (err) {
+        console.error("Error cargando usuarios:", err);
+    }
+}
+
+async function cargarUsuariosParaRecarga() {
+    const API_URL = "https://panaderia-navidad.onrender.com";
+    
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/todos`);
+        const usuarios = await res.json();
+
+        const tbody = document.getElementById("tablaUsuariosRecarga");
+        if (!tbody) return;
+
+        tbody.innerHTML = usuarios.map(u => `
+            <tr>
+                <td>${u.id_usuario}</td>
+                <td>${u.nombre}</td>
+                <td>${u.email}</td>
+                <td>
+                    <span class="badge bg-${u.saldo > 100 ? 'success' : 'warning'}">
+                        $${parseFloat(u.saldo || 0).toFixed(2)}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-primary" 
+                            onclick="seleccionarUsuario(${u.id_usuario}, '${u.nombre}', ${u.saldo || 0})">
+                        Seleccionar
+                    </button>
+                </td>
+            </tr>
+        `).join("");
+
+    } catch (err) {
+        console.error("Error cargando usuarios:", err);
+    }
+}
+
+window.seleccionarUsuario = function(id, nombre, saldo) {
+    document.getElementById("recargar-id").value = id;
+    document.getElementById("recargar-nombre").value = nombre;
+    document.getElementById("recargar-saldo-actual").value = `$${parseFloat(saldo).toFixed(2)}`;
+    document.getElementById("recargar-monto").focus();
+};
+
+window.eliminarUsuario = async function(id) {
+    if (!confirm("⚠️ ¿Seguro que quieres eliminar este usuario?")) return;
+
+    const API_URL = "https://panaderia-navidad.onrender.com";
+    
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/eliminar/${id}`, {
+            method: "DELETE"
+        });
+
+        if (!res.ok) {
+            alert("❌ Error eliminando usuario");
+            return;
+        }
+
+        alert("✅ Usuario eliminado");
+        await cargarUsuariosAdmin();
+
+    } catch (err) {
+        console.error("Error eliminando usuario:", err);
+        alert("❌ Error de conexión");
+    }
+};
+
+// Form recarga saldo
+document.getElementById("formRecargarSaldo")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const API_URL = "https://panaderia-navidad.onrender.com";
+    const admin = JSON.parse(localStorage.getItem("usuario"));
+    
+    if (!admin || admin.rol !== 'admin') {
+        alert("❌ No tienes permisos");
+        return;
+    }
+
+    const id_usuario = parseInt(document.getElementById("recargar-id").value);
+    const monto = parseFloat(document.getElementById("recargar-monto").value);
+    const nombre = document.getElementById("recargar-nombre").value;
+
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/recargar-saldo`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                id_usuario,
+                monto,
+                id_admin: admin.id_usuario
+            })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            alert(`✅ Recarga exitosa\n\nNuevo saldo de ${nombre}: $${data.nuevoSaldo.toFixed(2)}`);
+            await cargarUsuariosParaRecarga();
+            e.target.reset();
+        } else {
+            alert("❌ " + data.message);
+        }
+
+    } catch (err) {
+        console.error("Error:", err);
+        alert("❌ Error de conexión");
+    }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    // Verificar si viene con el hash #login
+    if (window.location.hash === "#login") {
+        setTimeout(() => {
+            const loginModal = document.getElementById("modal-login");
+            if (loginModal) {
+                loginModal.showModal();
+                // Limpiar el hash
+                history.replaceState(null, null, ' ');
+            }
+        }, 300);
+    }
+});
+
+// ==============================================
+// EXPORTAR FUNCIONES GLOBALES
+// ==============================================
+window.requiereLogin = requiereLogin;
+window.verificarSesionSilenciosa = verificarSesionSilenciosa;
