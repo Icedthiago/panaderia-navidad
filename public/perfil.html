@@ -146,54 +146,59 @@
   </div>
 </div>
 
-<!-- Modal Administrar Usuarios -->
-<dialog id="modal-usuarios" class="modal-usuarios">
-  <h2>Usuarios Registrados</h2>
+<!-- ============================================== -->
+<!-- MODAL EDITAR PERFIL CORREGIDO -->
+<!-- Reemplaza el modal-editar en perfil.html -->
+<!-- ============================================== -->
 
-  <table class="table table-bordered mt-3">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Nombre</th>
-        <th>Email</th>
-        <th>Rol</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody id="tablaUsuarios"></tbody>
-  </table>
-
-  <button class="btn-modal cerrar-btn btn-x" data-close="modal-usuarios" type="button">X</button>
-</dialog>
-
-
-<!-- Modal Editar Perfil -->
 <dialog id="modal-editar" class="modal-editar">
-  <h2>Editar Perfil</h2>
-
-  <form id="editarForm" enctype="multipart/form-data">
-
-    <label>Nombre:</label>
-    <input type="text" id="edit-nombre" name="nombre" required>
-<br>
-    <label>Correo:</label>
-    <input type="email" id="edit-email" name="email" required>
-<br>
-    <label>Nueva Contraseña (opcional):</label>
-    <input type="password" id="edit-password" name="password">
-<br>
-    <label>Foto de Perfil:</label>
-    <input type="file" id="edit-imagen" name="imagen" accept="image/*">
-
-    <img id="preview-img" class="preview-img" style="margin-top:10px; display:none;">
-<br>
-    <button type="submit" class="btn btn-success mt-3">Guardar Cambios</button>
-  </form>
-
   <button class="btn-modal cerrar-btn btn-x" data-close="modal-editar" type="button">X</button>
+  <h2>✏️ Editar Perfil</h2>
+
+  <div style="text-align: left; max-width: 400px; margin: 0 auto;">
+    
+    <div class="mb-3">
+      <label for="modal-edit-nombre"><b>Nombre:</b></label>
+      <input type="text" id="modal-edit-nombre" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="modal-edit-email"><b>Correo:</b></label>
+      <input type="email" id="modal-edit-email" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="modal-edit-password"><b>Nueva Contraseña (opcional):</b></label>
+      <input type="password" id="modal-edit-password" class="form-control" 
+             placeholder="Dejar vacío para no cambiar">
+      <small style="color: #ffd700;">Mínimo 6 caracteres</small>
+    </div>
+
+    <div class="mb-3">
+      <label for="modal-edit-imagen"><b>Foto de Perfil:</b></label>
+      <input type="file" id="modal-edit-imagen" class="form-control" accept="image/*">
+      <img id="preview-img" class="preview-img mt-2" style="display:none; width: 120px; height: 120px; object-fit: cover; border-radius: 50%;">
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-top: 20px;">
+      <button type="button" class="btn btn-success" id="btn-guardar-perfil" style="flex: 1;">
+        💾 Guardar Cambios
+      </button>
+      <button type="button" class="btn btn-secondary" data-close="modal-editar" style="flex: 1;">
+        ❌ Cancelar
+      </button>
+    </div>
+
+  </div>
 </dialog>
 
-<dialog id="modal-recargar-saldo" class="modal-recargar">
+<!-- ============================================== -->
+<!-- MODAL RECARGAR SALDO (ADMIN) -->
+<!-- También corregir este modal -->
+<!-- ============================================== -->
+
+<dialog id="modal-recargar-saldo" class="modal-recargar" style="width: 90%; max-width: 900px;">
+  <button class="btn-modal cerrar-btn btn-x" data-close="modal-recargar-saldo">X</button>
   <h2>💰 Recargar Saldo de Usuario</h2>
 
   <!-- ✅ Tabla de usuarios para seleccionar -->
@@ -214,30 +219,31 @@
 
   <!-- ✅ Formulario de recarga -->
   <form id="formRecargarSaldo" style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
-    <h4>Usuario Seleccionado:</h4>
+    <h4 style="color: #333;">Usuario Seleccionado:</h4>
     
     <div style="margin: 15px 0;">
-      <label><b>ID Usuario:</b></label>
+      <label style="color: #333;"><b>ID Usuario:</b></label>
       <input type="number" id="recargar-id" name="id_usuario" readonly 
-             style="background: #e9ecef; cursor: not-allowed;" required>
+             style="background: #e9ecef; cursor: not-allowed; color: #333; padding: 8px; width: 100%; border: 1px solid #ccc; border-radius: 5px;" required>
     </div>
 
     <div style="margin: 15px 0;">
-      <label><b>Nombre:</b></label>
+      <label style="color: #333;"><b>Nombre:</b></label>
       <input type="text" id="recargar-nombre" readonly 
-             style="background: #e9ecef; cursor: not-allowed;">
+             style="background: #e9ecef; cursor: not-allowed; color: #333; padding: 8px; width: 100%; border: 1px solid #ccc; border-radius: 5px;">
     </div>
 
     <div style="margin: 15px 0;">
-      <label><b>Saldo Actual:</b></label>
+      <label style="color: #333;"><b>Saldo Actual:</b></label>
       <input type="text" id="recargar-saldo-actual" readonly 
-             style="background: #e9ecef; cursor: not-allowed;">
+             style="background: #e9ecef; cursor: not-allowed; color: #333; padding: 8px; width: 100%; border: 1px solid #ccc; border-radius: 5px;">
     </div>
 
     <div style="margin: 15px 0;">
-      <label><b>💵 Monto a Recargar:</b></label>
+      <label style="color: #333;"><b>💵 Monto a Recargar:</b></label>
       <input type="number" id="recargar-monto" name="monto" 
-             step="0.01" min="0.01" placeholder="Ej: 500.00" required>
+             step="0.01" min="0.01" max="100000" placeholder="Ej: 500.00" 
+             style="color: #333; padding: 8px; width: 100%; border: 1px solid #ccc; border-radius: 5px;" required>
     </div>
 
     <div style="display: flex; gap: 10px;">
@@ -250,8 +256,29 @@
       </button>
     </div>
   </form>
+</dialog>
 
-  <button class="btn-modal cerrar-btn btn-x" data-close="modal-recargar-saldo">X</button>
+<!-- ============================================== -->
+<!-- MODAL ADMINISTRAR USUARIOS (ADMIN) -->
+<!-- ============================================== -->
+
+<dialog id="modal-usuarios" class="modal-usuarios" style="width: 90%; max-width: 900px;">
+  <button class="btn-modal cerrar-btn btn-x" data-close="modal-usuarios" type="button">X</button>
+  <h2>👥 Usuarios Registrados</h2>
+
+  <table class="table table-bordered table-striped mt-3">
+    <thead class="table-dark">
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Email</th>
+        <th>Rol</th>
+        <th>Saldo</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody id="tablaUsuarios"></tbody>
+  </table>
 </dialog>
 
   <!-- Modales -->

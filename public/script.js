@@ -1,8 +1,59 @@
 // ==============================================
 // SCRIPT.JS COMPLETO - PANADERÍA NAVIDEÑA
+// Con validaciones de seguridad XSS
 // ==============================================
 
 const API_URL = "https://panaderia-navidad.onrender.com";
+
+// ==============================================
+// 0. VALIDACIONES DE SEGURIDAD
+// ==============================================
+
+function sanitizarTexto(texto) {
+    if (!texto) return '';
+    
+    // Convertir a string
+    texto = String(texto);
+    
+    // Eliminar etiquetas HTML peligrosas
+    const tagsProhibidos = /<script|<iframe|<object|<embed|<link|<style|<meta|<marquee|<blink|javascript:|onerror=|onload=/gi;
+    
+    if (tagsProhibidos.test(texto)) {
+        alert('⚠️ Texto no válido: contiene etiquetas o código prohibido');
+        return '';
+    }
+    
+    // Reemplazar caracteres especiales HTML
+    texto = texto
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;')
+        .replace(/\//g, '&#x2F;');
+    
+    return texto.trim();
+}
+
+function validarEmail(email) {
+    const regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    return regex.test(email);
+}
+
+function validarNumero(valor, min = 0, max = Infinity) {
+    const num = parseFloat(valor);
+    if (isNaN(num)) return false;
+    if (num < min || num > max) return false;
+    return true;
+}
+
+function validarPassword(password) {
+    if (password.length < 6) {
+        alert('⚠️ La contraseña debe tener al menos 6 caracteres');
+        return false;
+    }
+    return true;
+}
 
 // ==============================================
 // 1. GESTIÓN DE SESIÓN
@@ -24,9 +75,11 @@ function guardarUsuario(usuario) {
 }
 
 function cerrarSesion() {
+    if (!confirm('¿Estás seguro de cerrar sesión?')) return;
+    
     localStorage.removeItem("usuario");
     localStorage.removeItem("carrito");
-    alert("👋 Sesión cerrada");
+    alert("👋 Sesión cerrada exitosamente");
     window.location.href = "index.html";
 }
 
@@ -43,7 +96,6 @@ function configurarNavbar(usuario) {
     const adminItems = document.querySelectorAll(".admin-only");
 
     if (!usuario) {
-        // Usuario NO logueado
         btnLogin?.classList.remove("d-none");
         btnRegistro?.classList.remove("d-none");
         navUsuario?.classList.add("d-none");
@@ -51,35 +103,30 @@ function configurarNavbar(usuario) {
         navCarrito?.classList.add("d-none");
         adminItems.forEach(el => el.classList.add("d-none"));
     } else {
-        // Usuario logueado
         btnLogin?.classList.add("d-none");
         btnRegistro?.classList.add("d-none");
         navUsuario?.classList.remove("d-none");
         navLogout?.classList.remove("d-none");
         navCarrito?.classList.remove("d-none");
 
-        // Mostrar datos
         const nombreElem = document.getElementById("nav-usuario-nombre");
         const saldoElem = document.getElementById("nav-usuario-saldo");
         
-        if (nombreElem) nombreElem.textContent = usuario.nombre;
+        if (nombreElem) nombreElem.textContent = sanitizarTexto(usuario.nombre);
         if (saldoElem) {
             saldoElem.textContent = `$${parseFloat(usuario.saldo || 0).toFixed(2)}`;
         }
 
-        // Mostrar opciones de admin
         if (usuario.rol === "admin") {
             adminItems.forEach(el => el.classList.remove("d-none"));
         }
     }
 
-    // Configurar botón logout
     const btnLogout = document.getElementById("logoutBtn");
     if (btnLogout) {
         btnLogout.onclick = cerrarSesion;
     }
 
-    // Actualizar cantidad del carrito
     actualizarCantidadCarrito();
 }
 
@@ -120,11 +167,24 @@ function protegerPagina(opciones = {}) {
 }
 
 // ==============================================
-// 4. LOGIN Y REGISTRO
+// 4. LOGIN Y REGISTRO CON VALIDACIONES
 // ==============================================
 
 async function realizarLogin(email, password) {
     try {
+        // Validaciones
+        email = sanitizarTexto(email);
+        
+        if (!validarEmail(email)) {
+            document.getElementById("login-error").textContent = "⚠️ Email no válido";
+            return false;
+        }
+
+        if (!password || password.length < 1) {
+            document.getElementById("login-error").textContent = "⚠️ Ingresa tu contraseña";
+            return false;
+        }
+
         const res = await fetch(`${API_URL}/api/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -146,7 +206,7 @@ async function realizarLogin(email, password) {
         const modal = document.getElementById("modal-login");
         if (modal) modal.close();
 
-        alert(`¡Bienvenido ${data.usuario.nombre}! 💰\n\nTu saldo actual: $${data.usuario.saldo.toFixed(2)}`);
+        alert(`¡Bienvenido ${sanitizarTexto(data.usuario.nombre)}! 💰\n\nTu saldo actual: $${data.usuario.saldo.toFixed(2)}`);
         
         location.reload();
         return true;
@@ -155,7 +215,7 @@ async function realizarLogin(email, password) {
         console.error("Error en login:", err);
         const errorElem = document.getElementById("login-error");
         if (errorElem) {
-            errorElem.textContent = "Error de conexión con el servidor";
+            errorElem.textContent = "❌ Error de conexión con el servidor";
         }
         return false;
     }
@@ -163,6 +223,29 @@ async function realizarLogin(email, password) {
 
 async function realizarRegistro(nombre, email, password, rol) {
     try {
+        // Validaciones
+        nombre = sanitizarTexto(nombre);
+        email = sanitizarTexto(email);
+        
+        if (!nombre || nombre.length < 2) {
+            document.getElementById("msg-error").textContent = "⚠️ El nombre debe tener al menos 2 caracteres";
+            return false;
+        }
+
+        if (!validarEmail(email)) {
+            document.getElementById("msg-error").textContent = "⚠️ Email no válido";
+            return false;
+        }
+
+        if (!validarPassword(password)) {
+            return false;
+        }
+
+        if (rol !== 'cliente' && rol !== 'admin') {
+            document.getElementById("msg-error").textContent = "⚠️ Rol no válido";
+            return false;
+        }
+
         const res = await fetch(`${API_URL}/api/usuarios`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -187,14 +270,14 @@ async function realizarRegistro(nombre, email, password, rol) {
         console.error("Error en registro:", err);
         const errorElem = document.getElementById("msg-error");
         if (errorElem) {
-            errorElem.textContent = "Error de conexión con el servidor";
+            errorElem.textContent = "❌ Error de conexión con el servidor";
         }
         return false;
     }
 }
 
 // ==============================================
-// 5. CARRITO
+// 5. CARRITO CON VALIDACIONES
 // ==============================================
 
 let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
@@ -214,22 +297,32 @@ function agregarAlCarrito(producto) {
         return;
     }
 
+    // Validar producto
+    if (!producto.id_producto || !producto.precio || !producto.nombre) {
+        alert('⚠️ Producto no válido');
+        return;
+    }
+
     const existe = carrito.find(item => item.id_producto === producto.id_producto);
 
     if (existe) {
+        if (existe.cantidad >= 99) {
+            alert('⚠️ Cantidad máxima alcanzada para este producto');
+            return;
+        }
         existe.cantidad++;
     } else {
         carrito.push({
             id_producto: producto.id_producto,
-            nombre: producto.nombre,
-            precio: producto.precio,
+            nombre: sanitizarTexto(producto.nombre),
+            precio: parseFloat(producto.precio),
             cantidad: 1,
             imagen: producto.imagen
         });
     }
 
     guardarCarrito();
-    alert(`✅ ${producto.nombre} agregado al carrito`);
+    alert(`✅ ${sanitizarTexto(producto.nombre)} agregado al carrito`);
 }
 
 function guardarCarrito() {
@@ -251,29 +344,36 @@ function mostrarCarrito() {
     tbody.innerHTML = "";
     let total = 0;
 
+    if (carrito.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Tu carrito está vacío 🛒</td></tr>';
+        const totalElem = document.getElementById("totalCarrito");
+        if (totalElem) totalElem.textContent = "0.00";
+        return;
+    }
+
     carrito.forEach((item, index) => {
         const subtotal = item.precio * item.cantidad;
         total += subtotal;
 
-        tbody.innerHTML += `
-            <tr>
-                <td>${item.id_producto}</td>
-                <td><img src="${item.imagen || 'https://via.placeholder.com/60?text=Sin+Imagen'}" 
-                         width="60" 
-                         onerror="this.src='https://via.placeholder.com/60?text=Error'"></td>
-                <td>${item.nombre}</td>
-                <td>$${item.precio.toFixed(2)}</td>
-                <td>
-                    <button class="btn btn-warning btn-sm" onclick="cambiarCantidad(${index}, -1)">−</button>
-                    <b style="padding: 0 10px;">${item.cantidad}</b>
-                    <button class="btn btn-success btn-sm" onclick="cambiarCantidad(${index}, 1)">+</button>
-                </td>
-                <td>$${subtotal.toFixed(2)}</td>
-                <td>
-                    <button class="btn btn-danger btn-sm" onclick="eliminarDelCarrito(${index})">🗑️</button>
-                </td>
-            </tr>
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${item.id_producto}</td>
+            <td><img src="${item.imagen || 'https://via.placeholder.com/60?text=Sin+Imagen'}" 
+                     width="60" 
+                     onerror="this.src='https://via.placeholder.com/60?text=Error'"></td>
+            <td>${sanitizarTexto(item.nombre)}</td>
+            <td>$${item.precio.toFixed(2)}</td>
+            <td>
+                <button class="btn btn-warning btn-sm" onclick="cambiarCantidad(${index}, -1)">−</button>
+                <b style="padding: 0 10px;">${item.cantidad}</b>
+                <button class="btn btn-success btn-sm" onclick="cambiarCantidad(${index}, 1)">+</button>
+            </td>
+            <td>$${subtotal.toFixed(2)}</td>
+            <td>
+                <button class="btn btn-danger btn-sm" onclick="eliminarDelCarrito(${index})">🗑️</button>
+            </td>
         `;
+        tbody.appendChild(tr);
     });
 
     const totalElem = document.getElementById("totalCarrito");
@@ -281,10 +381,15 @@ function mostrarCarrito() {
 }
 
 function cambiarCantidad(index, cambio) {
+    if (index < 0 || index >= carrito.length) return;
+
     carrito[index].cantidad += cambio;
 
     if (carrito[index].cantidad <= 0) {
         carrito.splice(index, 1);
+    } else if (carrito[index].cantidad > 99) {
+        carrito[index].cantidad = 99;
+        alert('⚠️ Cantidad máxima: 99 unidades');
     }
 
     guardarCarrito();
@@ -302,6 +407,7 @@ async function confirmarCompra() {
 
     if (!usuario) {
         alert("⚠️ Debes iniciar sesión para comprar");
+        window.location.href = "index.html#login";
         return;
     }
 
@@ -364,6 +470,12 @@ async function confirmarCompra() {
                 saldoElem.textContent = `$${data.nuevoSaldo.toFixed(2)}`;
             }
 
+            // Actualizar saldo en perfil si estamos ahí
+            const perfilSaldo = document.getElementById("perfil-saldo");
+            if (perfilSaldo) {
+                perfilSaldo.textContent = `$${data.nuevoSaldo.toFixed(2)}`;
+            }
+
             localStorage.removeItem("carrito");
             carrito = [];
             guardarCarrito();
@@ -392,37 +504,42 @@ async function cargarProductosParaComprar() {
         const tbody = document.getElementById("tbodyCompras");
         if (!tbody) return;
 
-        tbody.innerHTML = productos.map(p => `
-            <tr>
-                <td>${p.id_producto}</td>
-                <td>
-                    <img src="${p.imagen 
-                        ? `data:image/jpeg;base64,${p.imagen}` 
-                        : 'https://via.placeholder.com/60?text=Sin+Imagen'
-                    }" 
-                    width="60"
-                    onerror="this.src='https://via.placeholder.com/60?text=Error'">
-                </td>
-                <td>${p.nombre}</td>
-                <td>${p.descripcion}</td>
-                <td>$${p.precio}</td>
-                <td>${p.temporada}</td>
-                <td>
-                    <button 
-                        class="btn btn-primary btn-comprar"
-                        data-id="${p.id_producto}"
-                        data-precio="${p.precio}"
-                        data-nombre="${p.nombre}"
-                        data-imagen="${p.imagen 
+        tbody.innerHTML = productos.map(p => {
+            const nombreSeguro = sanitizarTexto(p.nombre);
+            const descSegura = sanitizarTexto(p.descripcion);
+            
+            return `
+                <tr>
+                    <td>${p.id_producto}</td>
+                    <td>
+                        <img src="${p.imagen 
                             ? `data:image/jpeg;base64,${p.imagen}` 
                             : 'https://via.placeholder.com/60?text=Sin+Imagen'
-                        }"
-                    >
-                        🛒 Agregar
-                    </button>
-                </td>
-            </tr>
-        `).join("");
+                        }" 
+                        width="60"
+                        onerror="this.src='https://via.placeholder.com/60?text=Error'">
+                    </td>
+                    <td>${nombreSeguro}</td>
+                    <td>${descSegura}</td>
+                    <td>$${parseFloat(p.precio).toFixed(2)}</td>
+                    <td>${sanitizarTexto(p.temporada)}</td>
+                    <td>
+                        <button 
+                            class="btn btn-primary btn-comprar"
+                            data-id="${p.id_producto}"
+                            data-precio="${p.precio}"
+                            data-nombre="${nombreSeguro}"
+                            data-imagen="${p.imagen 
+                                ? `data:image/jpeg;base64,${p.imagen}` 
+                                : 'https://via.placeholder.com/60?text=Sin+Imagen'
+                            }"
+                        >
+                            🛒 Agregar
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join("");
 
         document.querySelectorAll(".btn-comprar").forEach(btn => {
             btn.addEventListener("click", () => {
@@ -438,6 +555,7 @@ async function cargarProductosParaComprar() {
 
     } catch (err) {
         console.error("Error cargando productos:", err);
+        alert("❌ Error al cargar productos");
     }
 }
 
@@ -455,12 +573,12 @@ async function cargarProductos() {
         tbody.innerHTML = data.map(p => `
             <tr>
                 <td>${p.id_producto}</td>
-                <td><img src="${p.imagen ? `data:image/jpeg;base64,${p.imagen}` : "https://via.placeholder.com/60"}" width="60"></td>
-                <td>${p.nombre}</td>
-                <td>${p.descripcion}</td>
-                <td>$${p.precio}</td>
+                <td><img src="${p.imagen ? `data:image/jpeg;base64,${p.imagen}` : "https://via.placeholder.com/60"}" width="60" onerror="this.src='https://via.placeholder.com/60?text=Error'"></td>
+                <td>${sanitizarTexto(p.nombre)}</td>
+                <td>${sanitizarTexto(p.descripcion)}</td>
+                <td>$${parseFloat(p.precio).toFixed(2)}</td>
                 <td>${p.stock}</td>
-                <td>${p.temporada}</td>
+                <td>${sanitizarTexto(p.temporada)}</td>
                 <td>
                     <button class="editar btn btn-warning" data-id="${p.id_producto}">✏ Editar</button>
                     <button class="eliminar btn btn-danger" data-id="${p.id_producto}">🗑 Eliminar</button>
@@ -471,20 +589,7 @@ async function cargarProductos() {
         tbody.querySelectorAll(".editar").forEach(btn => {
             btn.addEventListener("click", async () => {
                 const id = btn.dataset.id;
-                const res = await fetch(`${API_URL}/api/producto/${id}`);
-                const data = await res.json();
-
-                if (data.success) {
-                    const producto = data.producto;
-                    document.getElementById("edit-id").value = producto.id_producto;
-                    document.getElementById("edit-nombre").value = producto.nombre;
-                    document.getElementById("edit-descripcion").value = producto.descripcion;
-                    document.getElementById("edit-precio").value = producto.precio;
-                    document.getElementById("edit-stock").value = producto.stock;
-                    document.getElementById("edit-temporada").value = producto.temporada;
-
-                    document.getElementById("edit-producto").showModal();
-                }
+                await abrirModalEditarProducto(id);
             });
         });
 
@@ -507,18 +612,41 @@ async function cargarProductos() {
 
     } catch (err) {
         console.error("Error cargando productos:", err);
+        alert("❌ Error al cargar productos");
+    }
+}
+
+async function abrirModalEditarProducto(id) {
+    try {
+        const res = await fetch(`${API_URL}/api/producto/${id}`);
+        const data = await res.json();
+
+        if (data.success) {
+            const producto = data.producto;
+            document.getElementById("edit-id").value = producto.id_producto;
+            document.getElementById("edit-nombre").value = producto.nombre;
+            document.getElementById("edit-descripcion").value = producto.descripcion;
+            document.getElementById("edit-precio").value = producto.precio;
+            document.getElementById("edit-stock").value = producto.stock;
+            document.getElementById("edit-temporada").value = producto.temporada;
+
+            document.getElementById("edit-producto")?.showModal();
+        }
+    } catch (err) {
+        console.error("Error:", err);
+        alert("❌ Error al cargar producto");
     }
 }
 
 // ==============================================
-// 8. PERFIL
+// 8. PERFIL CON VALIDACIONES
 // ==============================================
 
 async function cargarDatosPerfil(usuario) {
     try {
-        document.getElementById("perfil-nombre").textContent = usuario.nombre;
-        document.getElementById("perfil-email").textContent = usuario.email;
-        document.getElementById("perfil-rol").textContent = usuario.rol;
+        document.getElementById("perfil-nombre").textContent = sanitizarTexto(usuario.nombre);
+        document.getElementById("perfil-email").textContent = sanitizarTexto(usuario.email);
+        document.getElementById("perfil-rol").textContent = sanitizarTexto(usuario.rol);
         document.getElementById("perfil-saldo").textContent = 
             `$${parseFloat(usuario.saldo || 0).toFixed(2)}`;
 
@@ -544,8 +672,339 @@ async function cargarDatosPerfil(usuario) {
     }
 }
 
+async function abrirModalEditarPerfil() {
+    const usuario = obtenerUsuario();
+    if (!usuario) return;
+
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/perfil/${usuario.id_usuario}`);
+        const data = await res.json();
+
+        if (data.success && data.usuario) {
+            document.getElementById("modal-edit-nombre").value = data.usuario.nombre;
+            document.getElementById("modal-edit-email").value = data.usuario.email;
+            
+            document.getElementById("modal-editar")?.showModal();
+        }
+    } catch (err) {
+        console.error("Error:", err);
+        alert("❌ Error al cargar datos del perfil");
+    }
+}
+
+async function actualizarPerfil() {
+    const usuario = obtenerUsuario();
+    if (!usuario) return;
+
+    const nombre = sanitizarTexto(document.getElementById("modal-edit-nombre").value);
+    const email = sanitizarTexto(document.getElementById("modal-edit-email").value);
+    const password = document.getElementById("modal-edit-password").value;
+    const imagenInput = document.getElementById("modal-edit-imagen");
+
+    // Validaciones
+    if (!nombre || nombre.length < 2) {
+        alert("⚠️ El nombre debe tener al menos 2 caracteres");
+        return;
+    }
+
+    if (!validarEmail(email)) {
+        alert("⚠️ Email no válido");
+        return;
+    }
+
+    if (password && !validarPassword(password)) {
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("nombre", nombre);
+    formData.append("email", email);
+    if (password) formData.append("password", password);
+    if (imagenInput.files[0]) formData.append("imagen", imagenInput.files[0]);
+
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/${usuario.id_usuario}`, {
+            method: "PUT",
+            body: formData
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            alert("✅ Perfil actualizado exitosamente");
+            
+            usuario.nombre = nombre;
+            usuario.email = email;
+            guardarUsuario(usuario);
+
+            document.getElementById("modal-editar")?.close();
+            
+            // Recargar datos del perfil
+            await cargarDatosPerfil(usuario);
+        } else {
+            alert("❌ " + (data.message || "Error al actualizar perfil"));
+        }
+
+    } catch (err) {
+        console.error("Error:", err);
+        alert("❌ Error de conexión");
+    }
+}
+
+async function abrirModalRecargarSaldo() {
+    document.getElementById("modal-recargar-saldo")?.showModal();
+}
+
+async function recargarSaldo() {
+    const usuario = obtenerUsuario();
+    if (!usuario) return;
+
+    const montoInput = document.getElementById("monto-recarga").value;
+    
+    if (!validarNumero(montoInput, 1, 10000)) {
+        alert("⚠️ El monto debe estar entre $1 y $10,000");
+        return;
+    }
+
+    const monto = parseFloat(montoInput);
+
+    if (!confirm(`¿Recargar $${monto.toFixed(2)} a tu cuenta?`)) return;
+
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/recargar`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                id_usuario: usuario.id_usuario,
+                monto: monto
+            })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            usuario.saldo = data.nuevoSaldo;
+            guardarUsuario(usuario);
+
+            alert(`✅ Recarga exitosa\n\nNuevo saldo: $${data.nuevoSaldo.toFixed(2)}`);
+            
+            document.getElementById("perfil-saldo").textContent = 
+                `$${data.nuevoSaldo.toFixed(2)}`;
+            
+            document.getElementById("modal-recargar-saldo")?.close();
+            document.getElementById("monto-recarga").value = "";
+
+        } else {
+            alert("❌ " + (data.message || "Error al recargar saldo"));
+        }
+
+    } catch (err) {
+        console.error("Error:", err);
+        alert("❌ Error de conexión");
+    }
+}
+
 // ==============================================
-// 9. MODALES
+// 9. VENTAS (ADMIN)
+// ==============================================
+
+async function cargarVentas() {
+    try {
+        const res = await fetch(`${API_URL}/api/ventas`);
+        const ventas = await res.json();
+        
+        const tbody = document.getElementById("tbodyVentas");
+        if (!tbody) return;
+
+        tbody.innerHTML = ventas.map(v => `
+            <tr>
+                <td>${v.id_venta}</td>
+                <td>${sanitizarTexto(v.nombre_usuario)}</td>
+                <td>${new Date(v.fecha).toLocaleString('es-MX')}</td>
+                <td>$${parseFloat(v.total).toFixed(2)}</td>
+                <td>
+                    <button class="btn btn-info btn-sm" onclick="verDetalleVenta(${v.id_venta})">
+                        👁️ Ver Detalle
+                    </button>
+                </td>
+            </tr>
+        `).join("");
+
+    } catch (err) {
+        console.error("Error cargando ventas:", err);
+        alert("❌ Error al cargar ventas");
+    }
+}
+// ==============================================
+// 10. ADMIN - GESTIÓN DE USUARIOS
+// ==============================================
+
+async function cargarUsuariosAdmin() {
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/todos`);
+        const usuarios = await res.json();
+
+        const tbody = document.getElementById("tablaUsuarios");
+        if (!tbody) return;
+
+        tbody.innerHTML = usuarios.map(u => `
+            <tr>
+                <td>${u.id_usuario}</td>
+                <td>${sanitizarTexto(u.nombre)}</td>
+                <td>${sanitizarTexto(u.email)}</td>
+                <td><span class="badge bg-${u.rol === 'admin' ? 'danger' : 'primary'}">${sanitizarTexto(u.rol)}</span></td>
+                <td>${parseFloat(u.saldo || 0).toFixed(2)}</td>
+                <td>
+                    <button class="btn btn-danger btn-sm" onclick="eliminarUsuario(${u.id_usuario})">
+                        🗑️ Eliminar
+                    </button>
+                </td>
+            </tr>
+        `).join("");
+
+    } catch (err) {
+        console.error("Error cargando usuarios:", err);
+        alert("❌ Error al cargar usuarios");
+    }
+}
+
+async function eliminarUsuario(idUsuario) {
+    const usuarioActual = obtenerUsuario();
+    
+    if (usuarioActual.id_usuario === idUsuario) {
+        alert("❌ No puedes eliminar tu propia cuenta");
+        return;
+    }
+
+    if (!confirm("⚠️ ¿Estás seguro de eliminar este usuario?\n\nEsta acción no se puede deshacer.")) {
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/eliminar/${idUsuario}`, {
+            method: "DELETE"
+        });
+
+        if (res.ok) {
+            alert("✅ Usuario eliminado exitosamente");
+            await cargarUsuariosAdmin();
+        } else {
+            alert("❌ Error al eliminar usuario");
+        }
+
+    } catch (err) {
+        console.error("Error:", err);
+        alert("❌ Error de conexión");
+    }
+}
+
+async function cargarUsuariosParaRecarga() {
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/todos`);
+        const usuarios = await res.json();
+
+        const tbody = document.getElementById("tablaUsuariosRecarga");
+        if (!tbody) return;
+
+        tbody.innerHTML = usuarios.map(u => `
+            <tr>
+                <td>${u.id_usuario}</td>
+                <td>${sanitizarTexto(u.nombre)}</td>
+                <td>${sanitizarTexto(u.email)}</td>
+                <td>
+                    <span class="badge bg-${u.saldo > 100 ? 'success' : 'warning'}">
+                        ${parseFloat(u.saldo || 0).toFixed(2)}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-primary" 
+                            onclick="seleccionarUsuarioRecarga(${u.id_usuario}, '${sanitizarTexto(u.nombre)}', ${u.saldo || 0})">
+                        Seleccionar
+                    </button>
+                </td>
+            </tr>
+        `).join("");
+
+    } catch (err) {
+        console.error("Error:", err);
+        alert("❌ Error al cargar usuarios");
+    }
+}
+
+function seleccionarUsuarioRecarga(id, nombre, saldo) {
+    document.getElementById("recargar-id").value = id;
+    document.getElementById("recargar-nombre").value = nombre;
+    document.getElementById("recargar-saldo-actual").value = `${parseFloat(saldo).toFixed(2)}`;
+    document.getElementById("recargar-monto").focus();
+}
+
+async function procesarRecargaAdmin() {
+    const admin = obtenerUsuario();
+    
+    if (!admin || admin.rol !== 'admin') {
+        alert("❌ No tienes permisos para recargar saldo");
+        return;
+    }
+
+    const idUsuario = parseInt(document.getElementById("recargar-id").value);
+    const montoInput = document.getElementById("recargar-monto").value;
+    const nombre = document.getElementById("recargar-nombre").value;
+    const saldoActual = parseFloat(document.getElementById("recargar-saldo-actual").value.replace(',', ''));
+
+    if (!idUsuario || isNaN(idUsuario)) {
+        alert("⚠️ Selecciona un usuario primero");
+        return;
+    }
+
+    if (!validarNumero(montoInput, 0.01, 100000)) {
+        alert("⚠️ El monto debe estar entre $0.01 y $100,000");
+        return;
+    }
+
+    const monto = parseFloat(montoInput);
+    const nuevoSaldo = saldoActual + monto;
+
+    const confirmar = confirm(
+        `¿Confirmar recarga?\n\n` +
+        `Usuario: ${nombre}\n` +
+        `Saldo actual: ${saldoActual.toFixed(2)}\n` +
+        `Monto a recargar: ${monto.toFixed(2)}\n` +
+        `Nuevo saldo: ${nuevoSaldo.toFixed(2)}`
+    );
+
+    if (!confirmar) return;
+
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/recargar-saldo`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                id_usuario: idUsuario,
+                monto: monto,
+                id_admin: admin.id_usuario
+            })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            alert(`✅ Recarga exitosa\n\nNuevo saldo de ${nombre}: ${data.nuevoSaldo.toFixed(2)}`);
+            
+            await cargarUsuariosParaRecarga();
+            
+            document.getElementById("formRecargarSaldo").reset();
+        } else {
+            alert("❌ " + (data.message || "Error al recargar saldo"));
+        }
+
+    } catch (err) {
+        console.error("Error:", err);
+        alert("❌ Error de conexión");
+    }
+}
+
+// ==============================================
+// 11. MODALES
 // ==============================================
 
 function configurarModales() {
@@ -571,7 +1030,7 @@ function configurarModales() {
         });
     });
 
-    ["modal-login", "modal-registro", "modal-carrito", "add-producto", "edit-producto", "modal-editar"].forEach(id => {
+    ["modal-login", "modal-registro", "modal-carrito", "add-producto", "edit-producto", "modal-editar", "modal-usuarios", "modal-recargar-saldo"].forEach(id => {
         const modal = document.getElementById(id);
         if (modal) {
             modal.addEventListener("click", (e) => {
@@ -604,7 +1063,7 @@ function configurarModales() {
 }
 
 // ==============================================
-// 10. FORMULARIOS
+// 12. FORMULARIOS
 // ==============================================
 
 function configurarFormularios() {
@@ -634,7 +1093,42 @@ function configurarFormularios() {
     if (formAgregar) {
         formAgregar.addEventListener("submit", async (e) => {
             e.preventDefault();
-            const formData = new FormData(formAgregar);
+            
+            const nombre = sanitizarTexto(document.getElementById("nombreProducto").value);
+            const descripcion = sanitizarTexto(document.getElementById("descripcionProducto").value);
+            const precio = document.getElementById("precioProducto").value;
+            const stock = document.getElementById("stockProducto").value;
+            const temporada = document.getElementById("temporadaProducto").value;
+            const imagen = document.getElementById("imagenProducto").files[0];
+
+            // Validaciones
+            if (!nombre || nombre.length < 2) {
+                alert("⚠️ El nombre debe tener al menos 2 caracteres");
+                return;
+            }
+
+            if (!validarNumero(precio, 0.01, 100000)) {
+                alert("⚠️ El precio debe estar entre $0.01 y $100,000");
+                return;
+            }
+
+            if (!validarNumero(stock, 0, 10000)) {
+                alert("⚠️ El stock debe estar entre 0 y 10,000 unidades");
+                return;
+            }
+
+            if (!temporada) {
+                alert("⚠️ Selecciona una temporada");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("nombre", nombre);
+            formData.append("descripcion", descripcion);
+            formData.append("precio", precio);
+            formData.append("stock", stock);
+            formData.append("temporada", temporada);
+            if (imagen) formData.append("imagen", imagen);
 
             try {
                 const res = await fetch(`${API_URL}/api/producto`, {
@@ -645,7 +1139,7 @@ function configurarFormularios() {
                 const data = await res.json();
 
                 if (data.success) {
-                    alert("✅ Producto agregado");
+                    alert("✅ Producto agregado exitosamente");
                     formAgregar.reset();
                     document.getElementById("add-producto").close();
                     cargarProductos();
@@ -655,6 +1149,7 @@ function configurarFormularios() {
 
             } catch (err) {
                 console.error("Error:", err);
+                alert("❌ Error de conexión");
             }
         });
     }
@@ -663,8 +1158,38 @@ function configurarFormularios() {
     if (formEditar) {
         formEditar.addEventListener("submit", async (e) => {
             e.preventDefault();
+            
             const id = document.getElementById("edit-id").value;
-            const formData = new FormData(formEditar);
+            const nombre = sanitizarTexto(document.getElementById("edit-nombre").value);
+            const descripcion = sanitizarTexto(document.getElementById("edit-descripcion").value);
+            const precio = document.getElementById("edit-precio").value;
+            const stock = document.getElementById("edit-stock").value;
+            const temporada = document.getElementById("edit-temporada").value;
+            const imagen = document.getElementById("edit-imagen").files[0];
+
+            // Validaciones
+            if (!nombre || nombre.length < 2) {
+                alert("⚠️ El nombre debe tener al menos 2 caracteres");
+                return;
+            }
+
+            if (!validarNumero(precio, 0.01, 100000)) {
+                alert("⚠️ El precio debe estar entre $0.01 y $100,000");
+                return;
+            }
+
+            if (!validarNumero(stock, 0, 10000)) {
+                alert("⚠️ El stock debe estar entre 0 y 10,000 unidades");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("nombre", nombre);
+            formData.append("descripcion", descripcion);
+            formData.append("precio", precio);
+            formData.append("stock", stock);
+            formData.append("temporada", temporada);
+            if (imagen) formData.append("imagen", imagen);
 
             try {
                 const res = await fetch(`${API_URL}/api/producto/${id}`, {
@@ -675,7 +1200,7 @@ function configurarFormularios() {
                 const data = await res.json();
 
                 if (data.success) {
-                    alert("✅ Producto actualizado");
+                    alert("✅ Producto actualizado exitosamente");
                     formEditar.reset();
                     document.getElementById("edit-producto").close();
                     cargarProductos();
@@ -685,13 +1210,41 @@ function configurarFormularios() {
 
             } catch (err) {
                 console.error("Error:", err);
+                alert("❌ Error de conexión");
+            }
+        });
+    }
+
+    // Form recargar saldo (admin)
+    const formRecargar = document.getElementById("formRecargarSaldo");
+    if (formRecargar) {
+        formRecargar.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            await procesarRecargaAdmin();
+        });
+    }
+
+    // Preview de imagen en perfil
+    const imagenPerfil = document.getElementById("modal-edit-imagen");
+    if (imagenPerfil) {
+        imagenPerfil.addEventListener("change", function() {
+            const file = this.files[0];
+            const preview = document.getElementById("preview-img");
+
+            if (file && preview) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    preview.src = e.target.result;
+                    preview.style.display = "block";
+                };
+                reader.readAsDataURL(file);
             }
         });
     }
 }
 
 // ==============================================
-// 11. INICIALIZACIÓN
+// 13. INICIALIZACIÓN
 // ==============================================
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -713,6 +1266,40 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         if (resultado.permitido) {
             cargarDatosPerfil(resultado.usuario);
+            
+            // Botón editar perfil
+            const btnEditar = document.getElementById("btn-editar");
+            if (btnEditar) {
+                btnEditar.addEventListener("click", abrirModalEditarPerfil);
+            }
+
+            // Botón guardar cambios perfil
+            const btnGuardarPerfil = document.getElementById("btn-guardar-perfil");
+            if (btnGuardarPerfil) {
+                btnGuardarPerfil.addEventListener("click", actualizarPerfil);
+            }
+
+            // Botón actualizar saldo
+            const btnActualizarSaldo = document.querySelector('[onclick="actualizarSaldoUsuario()"]');
+            if (btnActualizarSaldo) {
+                btnActualizarSaldo.addEventListener("click", async () => {
+                    await cargarDatosPerfil(user);
+                    alert("✅ Saldo actualizado");
+                });
+            }
+
+            // Botones admin
+            if (user.rol === "admin") {
+                const btnUsuarios = document.querySelector('[data-open="modal-usuarios"]');
+                if (btnUsuarios) {
+                    btnUsuarios.addEventListener("click", cargarUsuariosAdmin);
+                }
+
+                const btnRecargar = document.querySelector('[data-open="modal-recargar-saldo"]');
+                if (btnRecargar) {
+                    btnRecargar.addEventListener("click", cargarUsuariosParaRecarga);
+                }
+            }
         }
     }
 
@@ -720,7 +1307,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const resultado = protegerPagina({
             requiereLogin: true,
             soloAdmin: true,
-            mensaje: "⚠️ Solo administradores pueden acceder"
+            mensaje: "⚠️ Solo administradores pueden acceder al inventario"
         });
         if (resultado.permitido) {
             cargarProductos();
@@ -728,11 +1315,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (ruta.includes("ventas.html")) {
-        protegerPagina({
+        const resultado = protegerPagina({
             requiereLogin: true,
             soloAdmin: true,
-            mensaje: "⚠️ Solo administradores pueden acceder"
+            mensaje: "⚠️ Solo administradores pueden acceder a ventas"
         });
+        if (resultado.permitido) {
+            cargarVentas();
+        }
     }
 
     if (ruta.includes("compra.html")) {
@@ -743,10 +1333,14 @@ document.addEventListener("DOMContentLoaded", () => {
     actualizarCantidadCarrito();
     
     const btnCarrito = document.querySelector('[data-open="modal-carrito"]');
-    btnCarrito?.addEventListener("click", mostrarCarrito);
+    if (btnCarrito) {
+        btnCarrito.addEventListener("click", mostrarCarrito);
+    }
 
     const btnPagar = document.getElementById("btnPagar");
-    btnPagar?.addEventListener("click", confirmarCompra);
+    if (btnPagar) {
+        btnPagar.addEventListener("click", confirmarCompra);
+    }
 
     // Abrir modal login si viene con #login
     if (window.location.hash === "#login") {
@@ -760,36 +1354,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-function contieneEtiquetasHTML(texto) {
-  const regex = /<[^>]*>/g;  // Detecta <loquesea>
-  return regex.test(texto);
-}
-
-document.getElementById("editarForm").addEventListener("submit", function (e) {
-  const nombre = document.getElementById("edit-nombre").value;
-  const email = document.getElementById("edit-email").value;
-
-  if (contieneEtiquetasHTML(nombre) || contieneEtiquetasHTML(email)) {
-    e.preventDefault();
-    alert("No se permiten etiquetas HTML en los campos.");
-    return;
-  }
-});
-
-function bloquearHTML(req, res, next) {
-    const peligrosas = /<script|<\/script|<marquee|<\/marquee|<img|onerror=|onload=/i;
-
-    const body = JSON.stringify(req.body);
-    
-    if (peligrosas.test(body)) {
-        return res.status(400).json({ error: "Entrada no permitida" });
-    }
-
-    next();
-}
-
-
-
 // ==============================================
 // EXPORTAR FUNCIONES GLOBALES
 // ==============================================
@@ -799,3 +1363,9 @@ window.eliminarDelCarrito = eliminarDelCarrito;
 window.confirmarCompra = confirmarCompra;
 window.obtenerUsuario = obtenerUsuario;
 window.cerrarSesion = cerrarSesion;
+window.eliminarUsuario = eliminarUsuario;
+window.seleccionarUsuarioRecarga = seleccionarUsuarioRecarga;
+window.verDetalleVenta = verDetalleVenta;
+window.abrirModalEditarPerfil = abrirModalEditarPerfil;
+window.actualizarPerfil = actualizarPerfil;
+window.sanitizarTexto = sanitizarTexto;
