@@ -717,13 +717,14 @@ async function actualizarPerfil() {
     }
 
     const formData = new FormData();
+    formData.append("id_usuario", usuario.id_usuario);
     formData.append("nombre", nombre);
     formData.append("email", email);
     if (password) formData.append("password", password);
     if (imagenInput.files[0]) formData.append("imagen", imagenInput.files[0]);
 
     try {
-        const res = await fetch(`${API_URL}/api/usuario/${usuario.id_usuario}`, {
+        const res = await fetch(`${API_URL}/api/usuario/editar`, {
             method: "PUT",
             body: formData
         });
@@ -835,17 +836,60 @@ async function cargarVentas() {
         alert("❌ Error al cargar ventas");
     }
 }
+
+async function verDetalleVenta(idVenta) {
+    try {
+        const res = await fetch(`${API_URL}/api/venta/${idVenta}`);
+        const data = await res.json();
+
+        if (!data.success) {
+            alert("❌ Error al cargar detalles");
+            return;
+        }
+
+        const detalle = data.detalles.map(d => 
+            `• ${sanitizarTexto(d.nombre_producto)} - Cantidad: ${d.cantidad} - Precio: ${d.precio.toFixed(2)} - Subtotal: ${d.subtotal.toFixed(2)}`
+        ).join('\n');
+
+        alert(
+            `📋 DETALLE DE VENTA #${idVenta}\n\n` +
+            `Cliente: ${sanitizarTexto(data.venta.nombre_usuario)}\n` +
+            `Fecha: ${new Date(data.venta.fecha).toLocaleString('es-MX')}\n\n` +
+            `PRODUCTOS:\n${detalle}\n\n` +
+            `TOTAL: ${parseFloat(data.venta.total).toFixed(2)}`
+        );
+
+    } catch (err) {
+        console.error("Error:", err);
+        alert("❌ Error al cargar detalles de venta");
+    }
+}
+
 // ==============================================
 // 10. ADMIN - GESTIÓN DE USUARIOS
 // ==============================================
 
 async function cargarUsuariosAdmin() {
     try {
-        const res = await fetch(`${API_URL}/api/usuario/todos`);
-        const usuarios = await res.json();
+        const res = await fetch(`${API_URL}/api/usuarios`);
+        
+        if (!res.ok) {
+            console.error("Error en la respuesta:", res.status);
+            alert("❌ Error al cargar usuarios");
+            return;
+        }
 
+        const data = await res.json();
         const tbody = document.getElementById("tablaUsuarios");
         if (!tbody) return;
+
+        // Si data es un array directamente
+        const usuarios = Array.isArray(data) ? data : (data.usuarios || []);
+
+        if (usuarios.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No hay usuarios registrados</td></tr>';
+            return;
+        }
 
         tbody.innerHTML = usuarios.map(u => `
             <tr>
@@ -900,11 +944,25 @@ async function eliminarUsuario(idUsuario) {
 
 async function cargarUsuariosParaRecarga() {
     try {
-        const res = await fetch(`${API_URL}/api/usuario/todos`);
-        const usuarios = await res.json();
+        const res = await fetch(`${API_URL}/api/usuarios`);
+        
+        if (!res.ok) {
+            console.error("Error en la respuesta:", res.status);
+            alert("❌ Error al cargar usuarios");
+            return;
+        }
 
+        const data = await res.json();
         const tbody = document.getElementById("tablaUsuariosRecarga");
         if (!tbody) return;
+
+        // Si data es un array directamente
+        const usuarios = Array.isArray(data) ? data : (data.usuarios || []);
+
+        if (usuarios.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No hay usuarios registrados</td></tr>';
+            return;
+        }
 
         tbody.innerHTML = usuarios.map(u => `
             <tr>
