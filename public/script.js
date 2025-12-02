@@ -1007,7 +1007,7 @@ async function procesarRecargaAdmin() {
     const idUsuario = parseInt(document.getElementById("recargar-id").value);
     const montoInput = document.getElementById("recargar-monto").value;
     const nombre = document.getElementById("recargar-nombre").value;
-    const saldoActual = parseFloat(document.getElementById("recargar-saldo-actual").value.replace(',', ''));
+    const saldoActual = parseFloat(document.getElementById("recargar-saldo-actual").value.replace(',', '.'));
 
     if (!idUsuario || isNaN(idUsuario)) {
         alert("⚠️ Selecciona un usuario primero");
