@@ -760,6 +760,35 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+function contieneEtiquetasHTML(texto) {
+  const regex = /<[^>]*>/g;  // Detecta <loquesea>
+  return regex.test(texto);
+}
+
+document.getElementById("editarForm").addEventListener("submit", function (e) {
+  const nombre = document.getElementById("edit-nombre").value;
+  const email = document.getElementById("edit-email").value;
+
+  if (contieneEtiquetasHTML(nombre) || contieneEtiquetasHTML(email)) {
+    e.preventDefault();
+    alert("No se permiten etiquetas HTML en los campos.");
+    return;
+  }
+});
+
+function bloquearHTML(req, res, next) {
+  const regex = /<[^>]*>/g;
+
+  for (const campo in req.body) {
+    if (typeof req.body[campo] === "string" && regex.test(req.body[campo])) {
+      return res.status(400).json({ error: "No se permiten etiquetas HTML" });
+    }
+  }
+
+  next();
+}
+
+
 // ==============================================
 // EXPORTAR FUNCIONES GLOBALES
 // ==============================================

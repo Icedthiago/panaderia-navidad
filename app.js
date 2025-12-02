@@ -49,7 +49,7 @@ const pool = new Pool({
 // --------------------------------------
 // API: REGISTRAR USUARIO
 // --------------------------------------
-app.post("/api/usuarios", async (req, res) => {
+app.post("/api/usuarios",bloquearHTML, async (req, res) => {
   const { nombre, email, password, rol } = req.body;
 
   try {
@@ -99,7 +99,7 @@ app.post("/api/usuarios", async (req, res) => {
 // --------------------------------------
 // API: LOGIN
 // --------------------------------------
-app.post("/api/login", async (req, res) => {
+app.post("/api/login",bloquearHTML, async (req, res) => {
   const { email, password } = req.body;
 
   try {
@@ -141,7 +141,7 @@ app.post("/api/login", async (req, res) => {
 // --------------------------------------
 // OBTENER TODOS LOS PRODUCTOS
 // --------------------------------------
-app.get("/api/productos", async (req, res) => {
+app.get("/api/productos",bloquearHTML, async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT 
@@ -167,7 +167,7 @@ app.get("/api/productos", async (req, res) => {
 // --------------------------------------
 // OBTENER PRODUCTO POR ID
 // --------------------------------------
-app.get("/api/producto/:id", async (req, res) => {
+app.get("/api/producto/:id",bloquearHTML, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -198,7 +198,7 @@ app.get("/api/producto/:id", async (req, res) => {
 // --------------------------------------
 // AGREGAR PRODUCTO
 // --------------------------------------
-app.post("/api/producto", upload.single("imagen"), async (req, res) => {
+app.post("/api/producto", upload.single("imagen"),bloquearHTML, async (req, res) => {
     try {
         const { nombre, descripcion, precio, stock, temporada } = req.body;
         const imagen = req.file ? req.file.buffer : null;
@@ -221,7 +221,7 @@ app.post("/api/producto", upload.single("imagen"), async (req, res) => {
 // --------------------------------------
 // ACTUALIZAR PRODUCTO
 // --------------------------------------
-app.put("/api/producto/:id", upload.single("imagen"), async (req, res) => {
+app.put("/api/producto/:id", upload.single("imagen"),bloquearHTML, async (req, res) => {
   try {
     const { id } = req.params;
     const { nombre, descripcion, precio, stock, temporada } = req.body;
@@ -264,7 +264,7 @@ app.put("/api/producto/:id", upload.single("imagen"), async (req, res) => {
 // --------------------------------------
 // ELIMINAR PRODUCTO
 // --------------------------------------
-app.delete("/api/producto/:id", async (req, res) => {
+app.delete("/api/producto/:id",bloquearHTML, async (req, res) => {
   try {
     await pool.query("DELETE FROM producto WHERE id_producto=$1", [req.params.id]);
     res.json({ success: true, message: "Producto eliminado" });
@@ -276,7 +276,7 @@ app.delete("/api/producto/:id", async (req, res) => {
 // --------------------------------------
 // ✅ REGISTRAR VENTA (CORREGIDO)
 // --------------------------------------
-app.post("/api/ventas", async (req, res) => {
+app.post("/api/ventas",bloquearHTML, async (req, res) => {
     const { id_usuario, carrito } = req.body;
 
     if (!id_usuario || !carrito?.length) {
@@ -385,7 +385,7 @@ app.post("/api/ventas", async (req, res) => {
 // --------------------------------------
 // ✅ EDITAR USUARIO (CORREGIDO)
 // --------------------------------------
-app.put("/api/usuario/editar", upload.single("imagen"), async (req, res) => {
+app.put("/api/usuario/editar", upload.single("imagen"),bloquearHTML, async (req, res) => {
     try {
         const { id_usuario, nombre, email, password } = req.body;
 
@@ -443,7 +443,7 @@ app.put("/api/usuario/editar", upload.single("imagen"), async (req, res) => {
 // --------------------------------------
 // ✅ OBTENER TODOS LOS USUARIOS (CORREGIDO)
 // --------------------------------------
-app.get("/api/usuario/perfil/:id", async (req, res) => {
+app.get("/api/usuario/perfil/:id",bloquearHTML, async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -487,7 +487,7 @@ app.get("/api/usuario/perfil/:id", async (req, res) => {
 // --------------------------------------
 // ✅ ELIMINAR USUARIO (CORREGIDO)
 // --------------------------------------
-app.delete("/api/usuario/eliminar/:id", async (req, res) => {
+app.delete("/api/usuario/eliminar/:id",bloquearHTML, async (req, res) => {
     try {
         const { id } = req.params;
         await pool.query("DELETE FROM usuario WHERE id_usuario = $1", [id]);
@@ -501,7 +501,7 @@ app.delete("/api/usuario/eliminar/:id", async (req, res) => {
 // --------------------------------------
 // ✅ OBTENER PERFIL DE USUARIO POR ID
 // --------------------------------------
-app.get("/api/usuario/perfil/:id", async (req, res) => {
+app.get("/api/usuario/perfil/:id",bloquearHTML, async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -555,14 +555,14 @@ app.use((req, res) => {
 // --------------------------------------
 // SESIÓN (SIMULADA)
 // --------------------------------------
-app.get("/auth/session", (req, res) => {
+app.get("/auth/session",bloquearHTML, (req, res) => {
   res.json({ logged: false });
 });
 
 // --------------------------------------
 // ✅ RECARGAR SALDO (cualquier rol)
 // --------------------------------------
-app.post("/api/usuario/recargar-saldo", async (req, res) => {
+app.post("/api/usuario/recargar-saldo",bloquearHTML, async (req, res) => {
     const { id_usuario, monto, id_admin } = req.body;
 
     try {
@@ -603,7 +603,7 @@ app.post("/api/usuario/recargar-saldo", async (req, res) => {
     }
 });
 
-app.get("/api/usuario/saldo/:id", async (req, res) => {
+app.get("/api/usuario/saldo/:id",bloquearHTML, async (req, res) => {
     try {
         const { id } = req.params;
 
