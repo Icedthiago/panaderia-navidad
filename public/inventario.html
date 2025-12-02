@@ -106,6 +106,80 @@
 <br>  
 <button class="btn-modal  btn btn-success" data-open="add-producto" type="button">Agregar Producto</button>
 
+<dialog id="modal-login">
+  <button class="btn-modal cerrar-btn btn-x" data-close="modal-login" type="button">X</button>
+  <h2>🔐 Inicio de Sesión</h2>
+  <form id="loginForm">
+    <label for="login-email">Correo electrónico:</label>
+    <input type="email" id="login-email" name="email" required><br><br>
+    
+    <label for="login-password">Contraseña:</label>
+    <input type="password" id="login-password" name="password" required><br><br>
+    
+    <button type="submit" class="btn btn-success">Ingresar</button>
+    <p id="login-error" style="color: #ffcccc; margin-top: 10px;"></p>
+  </form>
+  <p style="margin-top: 10px;">
+    ¿No tienes cuenta? 
+    <a href="#" id="link-abrir-registro" style="color: #ffd700;">Regístrate aquí</a>
+  </p>
+</dialog>
+
+<dialog id="modal-registro">
+  <button class="btn-modal cerrar-btn btn-x" data-close="modal-registro" type="button">X</button>
+  <h2>📝 Registro de Usuario</h2>
+  <form id="registroForm">
+    <label for="reg-nombre">Nombre:</label>
+    <input type="text" id="reg-nombre" name="nombre" required><br><br>
+    
+    <label for="reg-email">Correo electrónico:</label>
+    <input type="email" id="reg-email" name="email" required><br><br>
+    
+    <label for="reg-password">Contraseña:</label>
+    <input type="password" id="reg-password" name="password" required><br><br>
+    
+    <label for="reg-rol">Rol:</label>
+    <select id="reg-rol" name="rol">
+      <option value="cliente">Cliente</option>
+      <option value="admin">Admin</option>
+    </select><br><br>
+    
+    <button type="submit" class="btn btn-success">Registrar</button>
+    <p id="msg-error" style="color: #ffcccc; margin-top: 10px;"></p>
+  </form>
+  <p style="margin-top: 10px;">
+    ¿Ya tienes cuenta? 
+    <a href="#" id="link-abrir-login" style="color: #ffd700;">Inicia sesión</a>
+  </p>
+</dialog>
+
+<dialog id="modal-carrito" style="width: 90%; max-width: 900px;">
+  <button class="btn-modal cerrar-btn btn-x" data-close="modal-carrito" type="button">X</button>
+  <h2>🛒 Tu Carrito</h2>
+
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Imagen</th>
+        <th>Nombre</th>
+        <th>Precio</th>
+        <th>Cantidad</th>
+        <th>Subtotal</th>
+        <th>Acción</th>
+      </tr>
+    </thead>
+    <tbody id="tbodyCarrito"></tbody>
+  </table>
+
+  <div style="text-align: right; margin-top: 20px;">
+    <h3>Total: $<span id="totalCarrito">0.00</span></h3>
+    <button class="btn btn-success btn-lg" id="btnPagar">
+      💳 Confirmar Compra
+    </button>
+  </div>
+</dialog>
+
 <dialog id="add-producto">
 <h2>Agregar Producto</h2>
 
