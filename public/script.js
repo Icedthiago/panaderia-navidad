@@ -48,8 +48,8 @@ function validarNumero(valor, min = 0, max = Infinity) {
 }
 
 function validarPassword(password) {
-    if (password.length < 6) {
-        alert('⚠️ La contraseña debe tener al menos 6 caracteres');
+    if (password.length < 10) {
+        alert('⚠️ La contraseña debe tener al menos 10 caracteres');
         return false;
     }
     return true;
