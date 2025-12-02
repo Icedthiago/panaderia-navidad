@@ -777,16 +777,17 @@ document.getElementById("editarForm").addEventListener("submit", function (e) {
 });
 
 function bloquearHTML(req, res, next) {
-  const regex = /<[^>]*>/g;
+    const peligrosas = /<script|<\/script|<marquee|<\/marquee|<img|onerror=|onload=/i;
 
-  for (const campo in req.body) {
-    if (typeof req.body[campo] === "string" && regex.test(req.body[campo])) {
-      return res.status(400).json({ error: "No se permiten etiquetas HTML" });
+    const body = JSON.stringify(req.body);
+    
+    if (peligrosas.test(body)) {
+        return res.status(400).json({ error: "Entrada no permitida" });
     }
-  }
 
-  next();
+    next();
 }
+
 
 
 // ==============================================
