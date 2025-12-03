@@ -1007,7 +1007,8 @@ async function procesarRecargaAdmin() {
     const idUsuario = parseInt(document.getElementById("recargar-id").value);
     const montoInput = document.getElementById("recargar-monto").value;
     const nombre = document.getElementById("recargar-nombre").value;
-    const saldoActual = parseFloat(document.getElementById("recargar-saldo-actual").value.replace(',', ''));
+    const saldoActual = parseFloat(
+    document.getElementById("recargar-saldo-actual").value.replace(/,/g, ''));
 
     if (!idUsuario || isNaN(idUsuario)) {
         alert("⚠️ Selecciona un usuario primero");
@@ -1383,6 +1384,16 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    if (ruta.includes("historial.html")) {
+        const resultado = protegerPagina({
+            requiereLogin: true,
+            mensaje: "⚠️ Debes iniciar sesión para ver tu historial"
+        });
+        if (resultado.permitido) {
+            cargarHistorialCompras(resultado.usuario);
+        }
+    }
+
     if (ruta.includes("compra.html")) {
         cargarProductosParaComprar();
     }
@@ -1516,6 +1527,7 @@ async function actualizarSaldoUsuario() {
     }
 }
 
+
 // ==============================================
 // EXPORTAR FUNCIONES GLOBALES
 // ==============================================
@@ -1532,4 +1544,6 @@ window.abrirModalEditarPerfil = abrirModalEditarPerfil;
 window.actualizarPerfil = actualizarPerfil;
 window.sanitizarTexto = sanitizarTexto;
 window.actualizarSaldoUsuario = actualizarSaldoUsuario;
-window.cargarHistorialCompras = cargarHistorialCompras;
+window.abrirModalHistorial = abrirModalHistorial;
+window.verDetalleCompra = verDetalleCompra;
+window.volverAHistorial = volverAHistorial;
