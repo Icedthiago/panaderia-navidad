@@ -519,3 +519,223 @@ dialog.cerrando {
     margin-bottom: 5px;
     color: #333;
 }
+
+#modal-historial, #modal-detalle-compra {
+    background: linear-gradient(to bottom, #790A07 0%, #DC4141 50%, #400505 100%);
+    color: white;
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    padding: 30px;
+}
+
+#modal-historial::backdrop, #modal-detalle-compra::backdrop {
+    background: rgba(0, 0, 0, 0.85);
+}
+
+/* Cards de compras */
+.compra-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+.compra-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+}
+
+.compra-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid rgba(255,255,255,0.3);
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+}
+
+.compra-id {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #ffd700;
+}
+
+.compra-fecha {
+    font-size: 0.9em;
+    opacity: 0.9;
+}
+
+.compra-total {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #ffd700;
+    text-shadow: 0 0 10px rgba(255,215,0,0.5);
+}
+
+.compra-resumen {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.compra-productos-count {
+    background: rgba(255,255,255,0.2);
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.95em;
+}
+
+.ver-detalle-btn {
+    background: rgba(255,255,255,0.2);
+    border: 2px solid rgba(255,255,255,0.5);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+    font-weight: bold;
+}
+
+.ver-detalle-btn:hover {
+    background: rgba(255,255,255,0.4);
+    border-color: white;
+    transform: scale(1.05);
+}
+
+/* Detalle de compra */
+.detalle-compra-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.detalle-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.detalle-info-item {
+    background: rgba(255,255,255,0.1);
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.detalle-info-label {
+    font-size: 0.85em;
+    opacity: 0.8;
+    margin-bottom: 5px;
+}
+
+.detalle-info-value {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.producto-detalle-item {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.producto-detalle-info {
+    flex: 1;
+}
+
+.producto-detalle-nombre {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #ffd700;
+    margin-bottom: 8px;
+}
+
+.producto-detalle-cantidad {
+    font-size: 0.9em;
+    opacity: 0.9;
+}
+
+.producto-detalle-precio {
+    text-align: right;
+}
+
+.producto-detalle-precio-unitario {
+    font-size: 0.85em;
+    opacity: 0.8;
+}
+
+.producto-detalle-precio-total {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: #ffd700;
+}
+
+.total-compra-detalle {
+    background: rgba(255,215,0,0.2);
+    border: 2px solid #ffd700;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.total-compra-detalle-label {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+}
+
+.total-compra-detalle-valor {
+    font-size: 2.5em;
+    font-weight: bold;
+    color: #ffd700;
+    text-shadow: 0 0 15px rgba(255,215,0,0.5);
+}
+
+/* Animación de entrada */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.compra-card {
+    animation: slideIn 0.3s ease-out;
+}
+
+/* Sin compras */
+.mensaje-sin-compras {
+    text-align: center;
+    padding: 40px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 15px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .detalle-info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .producto-detalle-item {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .producto-detalle-precio {
+        margin-top: 10px;
+    }
+}

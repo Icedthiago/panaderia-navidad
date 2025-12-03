@@ -1413,6 +1413,110 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ==============================================
+// 14. HISTORIAL DE COMPRAS
+// ==============================================
+
+async function cargarHistorialCompras(usuario) {
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/${usuario.id_usuario}/compras`);
+        const data = await res.json();
+
+        const listaCompras = document.getElementById("lista-compras");
+        const mensajeSinCompras = document.getElementById("mensaje-sin-compras");
+
+        if (!data.success || !data.compras || data.compras.length === 0) {
+            if (mensajeSinCompras) {
+                mensajeSinCompras.classList.remove("d-none");
+            }
+            if (listaCompras) {
+                listaCompras.innerHTML = "";
+            }
+            return;
+        }
+
+        if (mensajeSinCompras) {
+            mensajeSinCompras.classList.add("d-none");
+        }
+
+        listaCompras.innerHTML = data.compras.map(compra => {
+            const productos = compra.productos || [];
+            const productosHTML = productos.map(p => `
+                <div class="producto-item">
+                    <div class="producto-info">
+                        <strong>${sanitizarTexto(p.producto)}</strong>
+                        <br>
+                        <small>Cantidad: ${p.cantidad} x ${parseFloat(p.precio).toFixed(2)}</small>
+                    </div>
+                    <div class="producto-precio">
+                        ${parseFloat(p.subtotal).toFixed(2)}
+                    </div>
+                </div>
+            `).join("");
+
+            return `
+                <div class="compra-card">
+                    <div class="compra-header">
+                        <div>
+                            <h5>🛒 Compra #${compra.id_venta}</h5>
+                            <small><i class="fas fa-calendar"></i> ${new Date(compra.fecha).toLocaleString('es-MX')}</small>
+                        </div>
+                        <div class="compra-total">
+                            ${parseFloat(compra.total).toFixed(2)}
+                        </div>
+                    </div>
+                    <div class="compra-productos">
+                        <h6><i class="fas fa-box"></i> Productos (${compra.num_productos}):</h6>
+                        ${productosHTML}
+                    </div>
+                </div>
+            `;
+        }).join("");
+
+    } catch (err) {
+        console.error("Error cargando historial:", err);
+        alert("❌ Error al cargar historial de compras");
+    }
+}
+
+async function actualizarSaldoUsuario() {
+    const usuario = obtenerUsuario();
+    if (!usuario) {
+        alert("⚠️ Debes iniciar sesión primero");
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/${usuario.id_usuario}/saldo-actual`);
+        const data = await res.json();
+
+        if (data.success) {
+            usuario.saldo = data.saldo;
+            guardarUsuario(usuario);
+
+            // Actualizar en navbar
+            const saldoNav = document.getElementById("nav-usuario-saldo");
+            if (saldoNav) {
+                saldoNav.textContent = `${data.saldo.toFixed(2)}`;
+            }
+
+            // Actualizar en perfil si existe
+            const saldoPerfil = document.getElementById("perfil-saldo");
+            if (saldoPerfil) {
+                saldoPerfil.textContent = `${data.saldo.toFixed(2)}`;
+            }
+
+            alert(`✅ Saldo actualizado: ${data.saldo.toFixed(2)}`);
+        } else {
+            alert("❌ " + data.message);
+        }
+
+    } catch (err) {
+        console.error("Error actualizando saldo:", err);
+        alert("❌ Error al actualizar saldo");
+    }
+}
+
+// ==============================================
 // EXPORTAR FUNCIONES GLOBALES
 // ==============================================
 window.agregarAlCarrito = agregarAlCarrito;
@@ -1427,3 +1531,5 @@ window.verDetalleVenta = verDetalleVenta;
 window.abrirModalEditarPerfil = abrirModalEditarPerfil;
 window.actualizarPerfil = actualizarPerfil;
 window.sanitizarTexto = sanitizarTexto;
+window.actualizarSaldoUsuario = actualizarSaldoUsuario;
+window.cargarHistorialCompras = cargarHistorialCompras;

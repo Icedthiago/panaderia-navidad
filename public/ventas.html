@@ -104,6 +104,43 @@
   </div>
 </nav>
 
+  <button class="btn btn-info" onclick="abrirModalHistorial()">
+    📜 Ver Mi Historial
+  </button>
+<dialog id="modal-historial" style="width: 90%; max-width: 900px; max-height: 90vh; overflow-y: auto;">
+  <button class="btn-modal cerrar-btn btn-x" data-close="modal-historial" type="button">X</button>
+  <h2>📜 Mi Historial de Compras</h2>
+
+  <div id="mensaje-sin-compras" class="alert alert-info text-center d-none" style="margin: 20px 0;">
+    <i class="fas fa-shopping-bag fa-3x mb-3" style="color: #17a2b8;"></i>
+    <p class="mb-0" style="color: #333;">Aún no has realizado ninguna compra.</p>
+    <a href="compra.html" class="btn btn-primary mt-3">🛒 Ir a Comprar</a>
+  </div>
+
+  <div id="lista-compras-modal"></div>
+
+  <div style="text-align: center; margin-top: 20px;">
+    <button class="btn btn-secondary" data-close="modal-historial">Cerrar</button>
+  </div>
+</dialog>
+
+<!-- Modal Detalle de Compra Individual -->
+<dialog id="modal-detalle-compra" style="width: 90%; max-width: 700px; max-height: 90vh; overflow-y: auto;">
+  <button class="btn-modal cerrar-btn btn-x" data-close="modal-detalle-compra" type="button">X</button>
+  <h2>📋 Detalle de Compra</h2>
+
+  <div id="contenido-detalle-compra" style="padding: 20px 0;"></div>
+
+  <div style="text-align: center; margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+    <button class="btn btn-secondary" onclick="volverAHistorial()">
+      ⬅️ Volver al Historial
+    </button>
+    <button class="btn btn-danger" data-close="modal-detalle-compra">
+      Cerrar
+    </button>
+  </div>
+</dialog>
+
 <dialog id="modal-login">
   <button class="btn-modal cerrar-btn btn-x" data-close="modal-login" type="button">X</button>
   <h2>🔐 Inicio de Sesión</h2>
