@@ -48,8 +48,8 @@ function validarNumero(valor, min = 0, max = Infinity) {
 }
 
 function validarPassword(password) {
-    if (password.length < 10) {
-        alert('⚠️ La contraseña debe tener al menos 10 caracteres');
+    if (password.length < 6) {
+        alert('⚠️ La contraseña debe tener al menos 6 caracteres');
         return false;
     }
     return true;
@@ -1007,7 +1007,7 @@ async function procesarRecargaAdmin() {
     const idUsuario = parseInt(document.getElementById("recargar-id").value);
     const montoInput = document.getElementById("recargar-monto").value;
     const nombre = document.getElementById("recargar-nombre").value;
-    const saldoActual = parseFloat(document.getElementById("recargar-saldo-actual").value.replace(',', '.'));
+    const saldoActual = parseFloat(document.getElementById("recargar-saldo-actual").value.replace(',', ''));
 
     if (!idUsuario || isNaN(idUsuario)) {
         alert("⚠️ Selecciona un usuario primero");
