@@ -1,3 +1,4 @@
+
 // ==============================================
 // SCRIPT.JS COMPLETO - PANADERÍA NAVIDEÑA
 // Con validaciones de seguridad XSS
@@ -1007,22 +1008,15 @@ async function procesarRecargaAdmin() {
     const idUsuario = parseInt(document.getElementById("recargar-id").value);
     const montoInput = document.getElementById("recargar-monto").value;
     const nombre = document.getElementById("recargar-nombre").value;
-
-    const saldoActualInput = document.getElementById("recargar-saldo-actual").value;
-    const saldoActual = parseFloat(saldoActualInput.replace(/,/g, ''));
+    const saldoActual = parseFloat(document.getElementById("recargar-saldo-actual").value.replace('  ', ''));
 
     if (!idUsuario || isNaN(idUsuario)) {
-        alert("⚠ Selecciona un usuario primero");
-        return;
-    }
-
-    if (isNaN(saldoActual)) {
-        alert("⚠ No se pudo obtener el saldo actual del usuario");
+        alert("⚠️ Selecciona un usuario primero");
         return;
     }
 
     if (!validarNumero(montoInput, 0.01, 100000)) {
-        alert("⚠ El monto debe estar entre $0.01 y $100,000");
+        alert("⚠️ El monto debe estar entre $0.01 y $100,000");
         return;
     }
 
@@ -1030,12 +1024,11 @@ async function procesarRecargaAdmin() {
     const nuevoSaldo = saldoActual + monto;
 
     const confirmar = confirm(
-`¿Confirmar recarga?
-
-Usuario: ${nombre}
-Saldo actual: $${saldoActual.toFixed(2)}
-Monto a recargar: $${monto.toFixed(2)}
-Nuevo saldo: $${nuevoSaldo.toFixed(2)}`
+        `¿Confirmar recarga?\n\n` +
+        `Usuario: ${nombre}\n` +
+        `Saldo actual: ${saldoActual.toFixed(2)}\n` +
+        `Monto a recargar: ${monto.toFixed(2)}\n` +
+        `Nuevo saldo: ${nuevoSaldo.toFixed(2)}`
     );
 
     if (!confirmar) return;
@@ -1054,10 +1047,8 @@ Nuevo saldo: $${nuevoSaldo.toFixed(2)}`
         const data = await res.json();
 
         if (data.success) {
-            alert(`✅ Recarga exitosa
-
-Nuevo saldo de ${nombre}: $${data.nuevoSaldo.toFixed(2)}`);
-
+            alert(`✅ Recarga exitosa\n\nNuevo saldo de ${nombre}: ${data.nuevoSaldo.toFixed(2)}`);
+            
             await cargarUsuariosParaRecarga();
             
             document.getElementById("formRecargarSaldo").reset();
@@ -1070,7 +1061,6 @@ Nuevo saldo de ${nombre}: $${data.nuevoSaldo.toFixed(2)}`);
         alert("❌ Error de conexión");
     }
 }
-
 
 // ==============================================
 // 11. MODALES
@@ -1537,7 +1527,6 @@ async function actualizarSaldoUsuario() {
     }
 }
 
-
 // ==============================================
 // EXPORTAR FUNCIONES GLOBALES
 // ==============================================
@@ -1557,3 +1546,5 @@ window.actualizarSaldoUsuario = actualizarSaldoUsuario;
 window.abrirModalHistorial = abrirModalHistorial;
 window.verDetalleCompra = verDetalleCompra;
 window.volverAHistorial = volverAHistorial;
+window.abrirModalRecargarSaldo = abrirModalRecargarSaldo;
+window.procesarRecargaSaldo = procesarRecargaSaldo;
