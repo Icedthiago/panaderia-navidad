@@ -739,3 +739,244 @@ dialog.cerrando {
         margin-top: 10px;
     }
 }
+#modal-ticket-venta {
+  background: linear-gradient(to bottom, #790A07 0%, #DC4141 50%, #400505 100%);
+  color: white;
+  border: none;
+  border-radius: 15px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  padding: 30px;
+}
+
+#modal-ticket-venta::backdrop {
+  background: rgba(0, 0, 0, 0.85);
+}
+
+/* Contenedor del ticket (papel blanco) */
+.ticket-container {
+  background: white;
+  color: #333;
+  padding: 20px;
+  border-radius: 10px;
+  font-family: 'Courier New', monospace;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+/* Header del ticket */
+.ticket-header {
+  text-align: center;
+  margin-bottom: 20px;
+  border-bottom: 2px dashed #333;
+  padding-bottom: 15px;
+}
+
+.ticket-header h3 {
+  margin: 0 0 5px 0;
+  font-size: 1.3em;
+  font-weight: bold;
+  color: #c82333;
+  text-shadow: none;
+}
+
+.ticket-subtitle {
+  margin: 5px 0;
+  font-size: 0.9em;
+  color: #666;
+}
+
+.ticket-divider {
+  margin: 10px 0;
+  color: #999;
+  font-size: 1.1em;
+  letter-spacing: 2px;
+}
+
+/* Info de la venta */
+.ticket-info {
+  margin-bottom: 15px;
+  font-size: 0.9em;
+  line-height: 1.6;
+}
+
+.ticket-info-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.ticket-info-label {
+  font-weight: bold;
+  color: #555;
+}
+
+/* Lista de productos */
+.ticket-productos {
+  margin: 20px 0;
+  border-top: 2px dashed #333;
+  border-bottom: 2px dashed #333;
+  padding: 15px 0;
+}
+
+.ticket-producto-item {
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px dotted #ccc;
+}
+
+.ticket-producto-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.ticket-producto-nombre {
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 5px;
+  font-size: 0.95em;
+}
+
+.ticket-producto-detalle {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85em;
+  color: #666;
+  margin-top: 3px;
+}
+
+.ticket-producto-cantidad {
+  flex: 1;
+}
+
+.ticket-producto-precio {
+  flex: 1;
+  text-align: center;
+}
+
+.ticket-producto-subtotal {
+  flex: 1;
+  text-align: right;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Total */
+.ticket-total {
+  margin: 20px 0;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 2px solid #c82333;
+}
+
+.ticket-total-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 0.9em;
+}
+
+.ticket-total-label {
+  font-weight: bold;
+  color: #555;
+}
+
+.ticket-total-final {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.3em;
+  font-weight: bold;
+  color: #c82333;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 2px solid #c82333;
+}
+
+/* Footer */
+.ticket-footer {
+  text-align: center;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 2px dashed #333;
+}
+
+.ticket-gracias {
+  font-size: 1.1em;
+  font-weight: bold;
+  margin: 10px 0;
+  color: #1E9965;
+}
+
+.ticket-mensaje {
+  font-size: 0.9em;
+  color: #666;
+  margin: 5px 0;
+}
+
+.ticket-barcode {
+  margin-top: 15px;
+  font-size: 1.5em;
+  letter-spacing: 3px;
+  color: #333;
+}
+
+/* Animación de entrada */
+@keyframes ticketSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ticket-container {
+  animation: ticketSlide 0.3s ease-out;
+}
+
+/* Responsive */
+@media (max-width: 500px) {
+  .ticket-container {
+    padding: 15px;
+    font-size: 0.9em;
+  }
+  
+  .ticket-header h3 {
+    font-size: 1.1em;
+  }
+  
+  .ticket-total-final {
+    font-size: 1.1em;
+  }
+}
+
+/* Estilos para impresión */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  
+  .ticket-container,
+  .ticket-container * {
+    visibility: visible;
+  }
+  
+  .ticket-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    box-shadow: none;
+  }
+  
+  #modal-ticket-venta::backdrop {
+    display: none;
+  }
+  
+  button {
+    display: none !important;
+  }
+}

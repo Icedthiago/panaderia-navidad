@@ -124,6 +124,56 @@
   </div>
 </dialog>
 
+<dialog id="modal-ticket-venta" style="width: 90%; max-width: 450px;">
+  <button class="btn-modal cerrar-btn btn-x" data-close="modal-ticket-venta">X</button>
+  
+  <!-- Ticket -->
+  <div class="ticket-container">
+    
+    <!-- Header del ticket -->
+    <div class="ticket-header">
+      <h3>🎄 PANADERÍA NAVIDEÑA 🎄</h3>
+      <p class="ticket-subtitle">Desesperanza</p>
+      <div class="ticket-divider">* * * * * * * * * * * * * * * *</div>
+    </div>
+
+    <!-- Info de la venta -->
+    <div class="ticket-info" id="ticket-info">
+      <!-- Se llenará dinámicamente -->
+    </div>
+
+    <!-- Productos -->
+    <div class="ticket-productos" id="ticket-productos">
+      <!-- Se llenará dinámicamente -->
+    </div>
+
+    <!-- Total -->
+    <div class="ticket-total" id="ticket-total">
+      <!-- Se llenará dinámicamente -->
+    </div>
+
+    <!-- Footer -->
+    <div class="ticket-footer">
+      <div class="ticket-divider">* * * * * * * * * * * * * * * *</div>
+      <p class="ticket-gracias">¡GRACIAS POR TU COMPRA!</p>
+      <p class="ticket-mensaje">🎅 Felices Fiestas 🎄</p>
+      <div class="ticket-barcode">||||  ||  |||||  |||  ||||||</div>
+    </div>
+
+  </div>
+
+  <!-- Botones -->
+  <div style="display: flex; gap: 10px; margin-top: 20px;">
+    <button class="btn btn-primary" onclick="imprimirTicket()" style="flex: 1;">
+      🖨️ Imprimir
+    </button>
+    <button class="btn btn-secondary" data-close="modal-ticket-venta" style="flex: 1;">
+      Cerrar
+    </button>
+  </div>
+</dialog>
+
+
 <!-- Modal Detalle de Compra Individual -->
 <dialog id="modal-detalle-compra" style="width: 90%; max-width: 700px; max-height: 90vh; overflow-y: auto;">
   <button class="btn-modal cerrar-btn btn-x" data-close="modal-detalle-compra" type="button">X</button>

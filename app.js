@@ -536,7 +536,7 @@ app.get("/api/usuario/:id/saldo-actual", async (req, res) => {
             });
         }
 
-        res.json({
+        res.json({ 
             success: true,
             saldo: parseFloat(result.rows[0].saldo)
         });
