@@ -36,23 +36,23 @@
         <span id="perfil-saldo" class="badge bg-success" style="font-size: 1.2em;">
           $0.00
         </span>
-        <button class="btn btn-sm btn-primary" onclick="actualizarSaldoUsuario()">
+        <button class="btn btn-sm btn-primary" id="btn-actualizar-saldo">
           🔄 Actualizar
         </button>
       </p>
     </div>
 
-    <!-- ✅ BOTONES PRINCIPALES -->
+    <!-- ✅ BOTONES PRINCIPALES (SIN onclick inline) -->
     <div class="perfil-actions">
       <button class="btn btn-primary" id="btn-editar">
         ✏️ Editar perfil
       </button>
       
-      <button class="btn btn-info" onclick="abrirModalHistorial()">
+      <button class="btn btn-info" id="btn-historial">
         📜 Ver Mi Historial
       </button>
       
-      <button class="btn btn-success" onclick="abrirModalRecargarSaldo()">
+      <button class="btn btn-success" id="btn-recargar-saldo">
         💰 Recargar Mi Saldo
       </button>
       
@@ -112,7 +112,7 @@
   <h2>📋 Detalle de Compra</h2>
   <div id="contenido-detalle-compra" style="padding: 20px 0;"></div>
   <div style="text-align: center; margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
-    <button class="btn btn-secondary" onclick="volverAHistorial()">⬅️ Volver</button>
+    <button class="btn btn-secondary" id="btn-volver-historial">⬅️ Volver</button>
     <button class="btn btn-danger" data-close="modal-detalle-compra">Cerrar</button>
   </div>
 </dialog>
@@ -148,7 +148,7 @@
       style="width: 100%; padding: 12px; font-size: 1.2em; border: 2px solid #ffd700; border-radius: 8px; text-align: center; background: white; color: #333;">
   </div>
   <div style="display: flex; gap: 10px; margin-top: 25px;">
-    <button type="button" class="btn btn-success" onclick="procesarRecargaSaldo()" style="flex: 1;">
+    <button type="button" class="btn btn-success" id="btn-confirmar-recarga" style="flex: 1;">
       ✅ Confirmar
     </button>
     <button type="button" class="btn btn-secondary" data-close="modal-recargar-saldo-simple" style="flex: 1;">
