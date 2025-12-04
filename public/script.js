@@ -138,45 +138,6 @@ function volverAHistorial() {
         document.getElementById("modal-historial")?.showModal();
     }, 200);
 }
-
-async function actualizarSaldoUsuario() {
-    const usuario = obtenerUsuario();
-    if (!usuario) {
-        alert("⚠️ Debes iniciar sesión primero");
-        return;
-    }
-
-    try {
-        const res = await fetch(`${API_URL}/api/usuario/${usuario.id_usuario}/saldo-actual`);
-        const data = await res.json();
-
-        if (data.success) {
-            usuario.saldo = data.saldo;
-            guardarUsuario(usuario);
-
-            // Actualizar en navbar
-            const saldoNav = document.getElementById("nav-usuario-saldo");
-            if (saldoNav) {
-                saldoNav.textContent = `${data.saldo.toFixed(2)}`;
-            }
-
-            // Actualizar en perfil si existe
-            const saldoPerfil = document.getElementById("perfil-saldo");
-            if (saldoPerfil) {
-                saldoPerfil.textContent = `${data.saldo.toFixed(2)}`;
-            }
-
-            alert(`✅ Saldo actualizado: ${data.saldo.toFixed(2)}`);
-        } else {
-            alert("❌ " + data.message);
-        }
-
-    } catch (err) {
-        console.error("Error actualizando saldo:", err);
-        alert("❌ Error al actualizar saldo");
-    }
-}
-
 // ==============================================
 // SCRIPT.JS COMPLETO - PANADERÍA NAVIDEÑA
 // Con validaciones de seguridad XSS
