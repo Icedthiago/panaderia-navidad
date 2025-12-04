@@ -1019,6 +1019,35 @@ async function recargarSaldo() {
     }
 }
 
+async function actualizarSaldoUsuario() {
+    const usuario = obtenerUsuario();
+    if (!usuario) {
+        alert("⚠️ Inicia sesión");
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/${usuario.id_usuario}/saldo-actual`);
+        const data = await res.json();
+
+        if (data.success) {
+            usuario.saldo = data.saldo;
+            guardarUsuario(usuario);
+
+            const saldoNav = document.getElementById("nav-usuario-saldo");
+            if (saldoNav) saldoNav.textContent = `$${data.saldo.toFixed(2)}`;
+            
+            const saldoPerfil = document.getElementById("perfil-saldo");
+            if (saldoPerfil) saldoPerfil.textContent = `$${data.saldo.toFixed(2)}`;
+
+            alert(`✅ Saldo: $${data.saldo.toFixed(2)}`);
+        }
+
+    } catch (err) {
+        console.error("Error:", err);
+    }
+}
+
 // ==============================================
 // 9. VENTAS (ADMIN)
 // ==============================================
