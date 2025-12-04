@@ -274,7 +274,7 @@ app.delete("/api/producto/:id", async (req, res) => {
 });
 
 // --------------------------------------
-// ✅ REGISTRAR VENTA (CORREGIDO)
+// ✅ REGISTRAR VENTA
 // --------------------------------------
 app.post("/api/ventas", async (req, res) => {
     const { id_usuario, carrito } = req.body;
@@ -286,12 +286,12 @@ app.post("/api/ventas", async (req, res) => {
         });
     }
 
-    const client = await pool.connect(); // ✅ Usar transacción
+    const client = await pool.connect();
 
     try {
-        await client.query('BEGIN'); // Iniciar transacción
+        await client.query('BEGIN');
 
-        // 1️⃣ Obtener saldo actual del usuario
+        // 1. Obtener saldo del usuario
         const usuarioRes = await client.query(
             "SELECT saldo FROM usuario WHERE id_usuario = $1",
             [id_usuario]
@@ -307,67 +307,85 @@ app.post("/api/ventas", async (req, res) => {
 
         const saldoActual = parseFloat(usuarioRes.rows[0].saldo);
 
-        // 2️⃣ Calcular total de la compra
+        // 2. Calcular total
         const totalCompra = carrito.reduce((sum, item) => {
-            return sum + (item.precio * item.cantidad);
+            return sum + (parseFloat(item.precio) * parseInt(item.cantidad));
         }, 0);
 
-        console.log(`💰 Saldo actual: $${saldoActual}`);
-        console.log(`🛒 Total compra: $${totalCompra}`);
-
-        // 3️⃣ Validar saldo suficiente
+        // 3. Validar saldo
         if (saldoActual < totalCompra) {
             await client.query('ROLLBACK');
             return res.status(400).json({
                 success: false,
-                message: `Saldo insuficiente. Tienes $${saldoActual.toFixed(2)} y necesitas $${totalCompra.toFixed(2)}`,
-                saldoActual: saldoActual,
-                totalCompra: totalCompra,
-                faltante: totalCompra - saldoActual
+                message: `Saldo insuficiente. Tienes $${saldoActual.toFixed(2)}, necesitas $${totalCompra.toFixed(2)}`,
+                saldoActual,
+                totalCompra
             });
         }
 
-        // 4️⃣ Crear la venta
+        // 4. Crear venta con monto_pagado
         const venta = await client.query(
-            "INSERT INTO venta (id_usuario, total, fecha) VALUES ($1, $2, NOW()) RETURNING id_venta",
+            "INSERT INTO venta (id_usuario, fecha, monto_pagado) VALUES ($1, NOW(), $2) RETURNING id_venta",
             [id_usuario, totalCompra]
         );
 
         const id_venta = venta.rows[0].id_venta;
 
-        // 5️⃣ Insertar detalles de la venta
+        // 5. Insertar detalles y actualizar stock
         for (const item of carrito) {
+            // Verificar stock
+            const productoRes = await client.query(
+                "SELECT stock, nombre FROM producto WHERE id_producto = $1",
+                [item.id_producto]
+            );
+
+            if (productoRes.rows.length === 0) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({
+                    success: false,
+                    message: `Producto ${item.id_producto} no encontrado`
+                });
+            }
+
+            const { stock, nombre } = productoRes.rows[0];
+
+            if (stock < item.cantidad) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({
+                    success: false,
+                    message: `Stock insuficiente para ${nombre}. Disponible: ${stock}, solicitado: ${item.cantidad}`
+                });
+            }
+
+            // Insertar detalle
             await client.query(
-                `INSERT INTO detalle_venta (id_venta, id_producto, cantidad, precio)
-                 VALUES ($1, $2, $3, $4)`,
+                "INSERT INTO detalle_venta (id_venta, id_producto, cantidad, precio) VALUES ($1, $2, $3, $4)",
                 [id_venta, item.id_producto, item.cantidad, item.precio]
             );
 
-            // ✅ Opcional: Descontar stock del producto
+            // Descontar stock
             await client.query(
-                `UPDATE producto 
-                 SET stock = stock - $1 
-                 WHERE id_producto = $2`,
+                "UPDATE producto SET stock = stock - $1 WHERE id_producto = $2",
                 [item.cantidad, item.id_producto]
             );
         }
 
-        // 6️⃣ Descontar saldo del usuario
+        // 6. Descontar saldo
         const nuevoSaldo = saldoActual - totalCompra;
         await client.query(
             "UPDATE usuario SET saldo = $1 WHERE id_usuario = $2",
             [nuevoSaldo, id_usuario]
         );
 
-        await client.query('COMMIT'); // ✅ Confirmar transacción
+        await client.query('COMMIT');
 
         res.json({
             success: true,
             id_venta,
             message: "¡Compra realizada exitosamente!",
-            totalCompra: totalCompra,
+            totalCompra,
             saldoAnterior: saldoActual,
-            nuevoSaldo: nuevoSaldo
+            nuevoSaldo
         });
 
     } catch (error) {
@@ -375,12 +393,13 @@ app.post("/api/ventas", async (req, res) => {
         console.error("Error en venta:", error);
         res.status(500).json({ 
             success: false, 
-            message: "Error registrando venta" 
+            message: "Error registrando venta: " + error.message
         });
     } finally {
         client.release();
     }
 });
+
 // --------------------------------------
 // ✅ OBTENER TODOS LOS USUARIOS (ADMIN)
 // Esta ruta faltaba y causaba el error 404
@@ -421,7 +440,7 @@ app.get("/api/usuario/:id/compras", async (req, res) => {
             SELECT 
                 v.id_venta,
                 v.fecha,
-                COALESCE(SUM(dv.cantidad * dv.precio), 0) as total,
+                v.monto_pagado as total,
                 COUNT(dv.id_detalle) as num_productos,
                 json_agg(
                     json_build_object(
@@ -435,7 +454,7 @@ app.get("/api/usuario/:id/compras", async (req, res) => {
             LEFT JOIN detalle_venta dv ON v.id_venta = dv.id_venta
             LEFT JOIN producto p ON dv.id_producto = p.id_producto
             WHERE v.id_usuario = $1
-            GROUP BY v.id_venta, v.fecha
+            GROUP BY v.id_venta, v.fecha, v.monto_pagado
             ORDER BY v.fecha DESC
             LIMIT 50
         `, [id]);
@@ -455,40 +474,7 @@ app.get("/api/usuario/:id/compras", async (req, res) => {
 });
 
 // --------------------------------------
-// ✅ ACTUALIZAR SALDO (VERIFICACIÓN)
-// --------------------------------------
-app.get("/api/usuario/:id/saldo-actual", async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        const result = await pool.query(
-            "SELECT COALESCE(saldo, 0) as saldo FROM usuario WHERE id_usuario = $1",
-            [id]
-        );
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "Usuario no encontrado"
-            });
-        }
-
-        res.json({
-            success: true,
-            saldo: parseFloat(result.rows[0].saldo)
-        });
-
-    } catch (err) {
-        console.error("Error obteniendo saldo:", err);
-        res.status(500).json({
-            success: false,
-            message: "Error al obtener saldo"
-        });
-    }
-});
-
-// --------------------------------------
-// ✅ RECARGAR SALDO (AUTO-RECARGA CLIENTE)
+// ✅ RECARGAR SALDO (CUALQUIER USUARIO)
 // --------------------------------------
 app.post("/api/usuario/recargar", async (req, res) => {
     const { id_usuario, monto } = req.body;
@@ -530,6 +516,73 @@ app.post("/api/usuario/recargar", async (req, res) => {
         });
     }
 });
+
+// --------------------------------------
+// ✅ OBTENER SALDO ACTUAL
+// --------------------------------------
+app.get("/api/usuario/:id/saldo-actual", async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await pool.query(
+            "SELECT COALESCE(saldo, 0) as saldo FROM usuario WHERE id_usuario = $1",
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Usuario no encontrado"
+            });
+        }
+
+        res.json({
+            success: true,
+            saldo: parseFloat(result.rows[0].saldo)
+        });
+
+    } catch (err) {
+        console.error("Error obteniendo saldo:", err);
+        res.status(500).json({
+            success: false,
+            message: "Error al obtener saldo"
+        });
+    }
+});
+
+// --------------------------------------
+// ✅ ACTUALIZAR SALDO (VERIFICACIÓN)
+// --------------------------------------
+app.get("/api/usuario/:id/saldo-actual", async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await pool.query(
+            "SELECT COALESCE(saldo, 0) as saldo FROM usuario WHERE id_usuario = $1",
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Usuario no encontrado"
+            });
+        }
+
+        res.json({
+            success: true,
+            saldo: parseFloat(result.rows[0].saldo)
+        });
+
+    } catch (err) {
+        console.error("Error obteniendo saldo:", err);
+        res.status(500).json({
+            success: false,
+            message: "Error al obtener saldo"
+        });
+    }
+});
+
 // --------------------------------------
 // ✅ EDITAR USUARIO (CORREGIDO)
 // --------------------------------------
@@ -591,43 +644,27 @@ app.put("/api/usuario/editar", upload.single("imagen"), async (req, res) => {
 // --------------------------------------
 // ✅ OBTENER TODOS LOS USUARIOS (CORREGIDO)
 // --------------------------------------
-app.get("/api/usuario/perfil/:id", async (req, res) => {
+app.get("/api/usuarios", async (req, res) => {
     try {
-        const { id } = req.params;
-
-        const result = await pool.query(
-            `SELECT 
+        const result = await pool.query(`
+            SELECT 
                 id_usuario, 
                 nombre, 
                 email, 
                 rol,
-                saldo,
+                COALESCE(saldo, 0) as saldo,
                 encode(imagen, 'base64') AS imagen
-             FROM usuario 
-             WHERE id_usuario = $1`,
-            [id]
-        );
+            FROM usuario
+            ORDER BY id_usuario ASC
+        `);
 
-        if (result.rows.length === 0) {
-            return res.status(404).json({ 
-                success: false, 
-                message: "Usuario no encontrado" 
-            });
-        }
-
-        res.json({
-            success: true,
-            usuario: {
-                ...result.rows[0],
-                saldo: parseFloat(result.rows[0].saldo)
-            }
-        });
+        res.json(result.rows);
 
     } catch (err) {
-        console.error("Error obteniendo perfil:", err);
+        console.error("Error obteniendo usuarios:", err);
         res.status(500).json({ 
             success: false, 
-            message: "Error al obtener perfil" 
+            message: "Error al obtener usuarios" 
         });
     }
 });
@@ -707,50 +744,6 @@ app.get("/auth/session", (req, res) => {
   res.json({ logged: false });
 });
 
-// --------------------------------------
-// ✅ RECARGAR SALDO (cualquier rol)
-// --------------------------------------
-app.post("/api/usuario/recargar-saldo", async (req, res) => {
-    const { id_usuario, monto, id_admin } = req.body;
-
-    try {
-        // Verificar que quien recarga es admin
-        const adminRes = await pool.query(
-            "SELECT rol FROM usuario WHERE id_usuario = $1",
-            [id_admin]
-        );
-
-        if (adminRes.rows.length === 0 || adminRes.rows[0].rol !== 'admin') {
-            return res.status(403).json({
-                success: false,
-                message: "No tienes permisos para recargar saldo"
-            });
-        }
-
-        // Recargar saldo
-        const result = await pool.query(
-            `UPDATE usuario 
-             SET saldo = saldo + $1 
-             WHERE id_usuario = $2
-             RETURNING saldo`,
-            [monto, id_usuario]
-        );
-
-        res.json({
-            success: true,
-            message: `Se recargaron $${monto} correctamente`,
-            nuevoSaldo: parseFloat(result.rows[0].saldo)
-        });
-
-    } catch (err) {
-        console.error("Error recargando saldo:", err);
-        res.status(500).json({ 
-            success: false, 
-            message: "Error al recargar saldo" 
-        });
-    }
-});
-
 app.get("/api/usuario/saldo/:id", async (req, res) => {
     try {
         const { id } = req.params;
@@ -818,8 +811,8 @@ app.get("/api/ventas", async (req, res) => {
             SELECT 
                 v.id_venta,
                 v.id_usuario,
-                v.total,
                 v.fecha,
+                v.monto_pagado,
                 u.nombre as nombre_usuario,
                 u.email as email_usuario
             FROM venta v
@@ -850,8 +843,8 @@ app.get("/api/venta/:id", async (req, res) => {
         const ventaRes = await pool.query(`
             SELECT 
                 v.id_venta,
-                v.total,
                 v.fecha,
+                v.monto_pagado,
                 v.id_usuario,
                 u.nombre as nombre_usuario,
                 u.email as email_usuario
@@ -874,8 +867,8 @@ app.get("/api/venta/:id", async (req, res) => {
                 dv.cantidad,
                 dv.precio,
                 dv.id_producto,
-                p.nombre as nombre_producto,
-                (dv.cantidad * dv.precio) as subtotal
+                dv.subtotal,
+                p.nombre as nombre_producto
             FROM detalle_venta dv
             JOIN producto p ON dv.id_producto = p.id_producto
             WHERE dv.id_venta = $1
@@ -893,50 +886,6 @@ app.get("/api/venta/:id", async (req, res) => {
         res.status(500).json({ 
             success: false, 
             message: "Error al obtener detalle" 
-        });
-    }
-});
-
-// --------------------------------------
-// ✅ RECARGAR SALDO (auto-recarga para clientes)
-// --------------------------------------
-app.post("/api/usuario/recargar", async (req, res) => {
-    const { id_usuario, monto } = req.body;
-
-    if (!id_usuario || !monto || monto <= 0 || monto > 100000) {
-        return res.status(400).json({
-            success: false,
-            message: "Monto inválido. Debe estar entre $0.01 y $100,000"
-        });
-    }
-
-    try {
-        const result = await pool.query(
-            `UPDATE usuario 
-             SET saldo = COALESCE(saldo, 0) + $1 
-             WHERE id_usuario = $2
-             RETURNING saldo`,
-            [monto, id_usuario]
-        );
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "Usuario no encontrado"
-            });
-        }
-
-        res.json({
-            success: true,
-            message: `Se recargaron ${parseFloat(monto).toFixed(2)} correctamente`,
-            nuevoSaldo: parseFloat(result.rows[0].saldo)
-        });
-
-    } catch (err) {
-        console.error("Error recargando saldo:", err);
-        res.status(500).json({ 
-            success: false, 
-            message: "Error al recargar saldo" 
         });
     }
 });

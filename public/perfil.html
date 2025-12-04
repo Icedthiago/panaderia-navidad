@@ -11,6 +11,93 @@
 </head>
 <body>
 
+  <nav class="navbar navbar-expand-lg navbar-dark bg-success px-3">
+  <div class="container-fluid">
+
+    <a class="navbar-brand" href="index.html">Panadería</a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#navbarSupportedContent">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+        <!-- ✅ Botones para NO logueados - CORREGIDOS -->
+        <li class="nav-item" id="nav-login-btn">
+          <button class="btn btn-outline-light" data-open="modal-login" type="button">
+            🔐 Inicio de sesión
+          </button>
+        </li>
+
+        <li class="nav-item" id="nav-registro-btn">
+          <button class="btn btn-outline-light ms-2" data-open="modal-registro" type="button">
+            📝 Registrar
+          </button>
+        </li>
+
+        <!-- ✅ USUARIO LOGUEADO CON SALDO -->
+        <li class="nav-item d-none" id="nav-usuario">
+          <span class="nav-link">
+            👤 <b id="nav-usuario-nombre"></b> 
+            | 💰 <span id="nav-usuario-saldo" class="badge bg-warning text-dark">$0.00</span>
+          </span>
+        </li>
+
+        <!-- Botón logout -->
+        <li class="nav-item d-none" id="nav-logout">
+          <button class="btn btn-danger btn-sm ms-2" id="logoutBtn">
+            🚪 Cerrar sesión
+          </button>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="#acerca">Nosotros</a>
+        </li>
+
+        <!-- Menú dropdown -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" 
+             data-bs-toggle="dropdown">
+            Menú
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="perfil.html">Perfil</a></li>
+            <li><a class="dropdown-item" href="compra.html">Compra</a></li>
+            <li><a class="dropdown-item admin-only d-none" href="inventario.html">
+              Inventario
+            </a></li>
+            <li><a class="dropdown-item admin-only d-none" href="ventas.html">
+              Ventas
+            </a></li>
+          </ul>
+        </li>
+
+        <!-- ✅ Carrito -->
+        <li class="nav-item d-none" id="nav-carrito-btn">
+          <button class="btn btn-warning btn-sm" data-open="modal-carrito">
+            🛒 <span id="carrito-cantidad">0</span>
+          </button>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link">🎅</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link">🎄</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link">❄️</a>
+        </li>
+
+      </ul>
+
+    </div>
+  </div>
+</nav>
+
 <div class="header">
   <h1 class="header h1">panaderia desesperanza</h1>
 </div>
@@ -179,6 +266,95 @@
 <footer class="footer">
   <p>&copy; 2025 Panadería Navideña</p>
 </footer>
+
+<!-- ============ AGREGAR AL FINAL, ANTES DE </body> ============ -->
+
+<script>
+// ✅ Configurar eventos cuando el DOM esté listo
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("🔧 Configurando eventos de perfil...");
+    
+    // Verificar que las funciones existen
+    const funciones = {
+        abrirModalHistorial: window.abrirModalHistorial,
+        abrirModalRecargarSaldo: window.abrirModalRecargarSaldo,
+        actualizarSaldoUsuario: window.actualizarSaldoUsuario,
+        volverAHistorial: window.volverAHistorial,
+        procesarRecargaSaldo: window.procesarRecargaSaldo
+    };
+    
+    for (const [nombre, func] of Object.entries(funciones)) {
+        if (typeof func !== 'function') {
+            console.error(`❌ ${nombre} no está definida`);
+        } else {
+            console.log(`✅ ${nombre} disponible`);
+        }
+    }
+    
+    // Configurar botones
+    const btnHistorial = document.getElementById("btn-historial");
+    if (btnHistorial) {
+        btnHistorial.onclick = () => {
+            console.log("Click en historial");
+            if (typeof window.abrirModalHistorial === 'function') {
+                window.abrirModalHistorial();
+            } else {
+                alert("❌ Error: abrirModalHistorial no está disponible");
+            }
+        };
+    }
+    
+    const btnRecargar = document.getElementById("btn-recargar-saldo");
+    if (btnRecargar) {
+        btnRecargar.onclick = () => {
+            console.log("Click en recargar");
+            if (typeof window.abrirModalRecargarSaldo === 'function') {
+                window.abrirModalRecargarSaldo();
+            } else {
+                alert("❌ Error: abrirModalRecargarSaldo no está disponible");
+            }
+        };
+    }
+    
+    const btnActualizar = document.getElementById("btn-actualizar-saldo");
+    if (btnActualizar) {
+        btnActualizar.onclick = () => {
+            console.log("Click en actualizar");
+            if (typeof window.actualizarSaldoUsuario === 'function') {
+                window.actualizarSaldoUsuario();
+            } else {
+                alert("❌ Error: actualizarSaldoUsuario no está disponible");
+            }
+        };
+    }
+    
+    const btnVolver = document.getElementById("btn-volver-historial");
+    if (btnVolver) {
+        btnVolver.onclick = () => {
+            console.log("Click en volver");
+            if (typeof window.volverAHistorial === 'function') {
+                window.volverAHistorial();
+            } else {
+                alert("❌ Error: volverAHistorial no está disponible");
+            }
+        };
+    }
+    
+    const btnConfirmar = document.getElementById("btn-confirmar-recarga");
+    if (btnConfirmar) {
+        btnConfirmar.onclick = () => {
+            console.log("Click en confirmar recarga");
+            if (typeof window.procesarRecargaSaldo === 'function') {
+                window.procesarRecargaSaldo();
+            } else {
+                alert("❌ Error: procesarRecargaSaldo no está disponible");
+            }
+        };
+    }
+    
+    console.log("✅ Eventos de perfil configurados");
+});
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="script.js"></script>
