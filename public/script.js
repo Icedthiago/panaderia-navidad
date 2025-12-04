@@ -1,3 +1,106 @@
+// ==============================================
+// 14. HISTORIAL DE COMPRAS
+// ==============================================
+
+async function cargarHistorialCompras(usuario) {
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/${usuario.id_usuario}/compras`);
+        const data = await res.json();
+
+        const listaCompras = document.getElementById("lista-compras");
+        const mensajeSinCompras = document.getElementById("mensaje-sin-compras");
+
+        if (!data.success || !data.compras || data.compras.length === 0) {
+            if (mensajeSinCompras) {
+                mensajeSinCompras.classList.remove("d-none");
+            }
+            if (listaCompras) {
+                listaCompras.innerHTML = "";
+            }
+            return;
+        }
+
+        if (mensajeSinCompras) {
+            mensajeSinCompras.classList.add("d-none");
+        }
+
+        listaCompras.innerHTML = data.compras.map(compra => {
+            const productos = compra.productos || [];
+            const productosHTML = productos.map(p => `
+                <div class="producto-item">
+                    <div class="producto-info">
+                        <strong>${sanitizarTexto(p.producto)}</strong>
+                        <br>
+                        <small>Cantidad: ${p.cantidad} x ${parseFloat(p.precio).toFixed(2)}</small>
+                    </div>
+                    <div class="producto-precio">
+                        ${parseFloat(p.subtotal).toFixed(2)}
+                    </div>
+                </div>
+            `).join("");
+
+            return `
+                <div class="compra-card">
+                    <div class="compra-header">
+                        <div>
+                            <h5>🛒 Compra #${compra.id_venta}</h5>
+                            <small><i class="fas fa-calendar"></i> ${new Date(compra.fecha).toLocaleString('es-MX')}</small>
+                        </div>
+                        <div class="compra-total">
+                            ${parseFloat(compra.total).toFixed(2)}
+                        </div>
+                    </div>
+                    <div class="compra-productos">
+                        <h6><i class="fas fa-box"></i> Productos (${compra.num_productos}):</h6>
+                        ${productosHTML}
+                    </div>
+                </div>
+            `;
+        }).join("");
+
+    } catch (err) {
+        console.error("Error cargando historial:", err);
+        alert("❌ Error al cargar historial de compras");
+    }
+}
+
+async function actualizarSaldoUsuario() {
+    const usuario = obtenerUsuario();
+    if (!usuario) {
+        alert("⚠️ Debes iniciar sesión primero");
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/${usuario.id_usuario}/saldo-actual`);
+        const data = await res.json();
+
+        if (data.success) {
+            usuario.saldo = data.saldo;
+            guardarUsuario(usuario);
+
+            // Actualizar en navbar
+            const saldoNav = document.getElementById("nav-usuario-saldo");
+            if (saldoNav) {
+                saldoNav.textContent = `${data.saldo.toFixed(2)}`;
+            }
+
+            // Actualizar en perfil si existe
+            const saldoPerfil = document.getElementById("perfil-saldo");
+            if (saldoPerfil) {
+                saldoPerfil.textContent = `${data.saldo.toFixed(2)}`;
+            }
+
+            alert(`✅ Saldo actualizado: ${data.saldo.toFixed(2)}`);
+        } else {
+            alert("❌ " + data.message);
+        }
+
+    } catch (err) {
+        console.error("Error actualizando saldo:", err);
+        alert("❌ Error al actualizar saldo");
+    }
+}
 
 // ==============================================
 // SCRIPT.JS COMPLETO - PANADERÍA NAVIDEÑA
@@ -1008,7 +1111,7 @@ async function procesarRecargaAdmin() {
     const idUsuario = parseInt(document.getElementById("recargar-id").value);
     const montoInput = document.getElementById("recargar-monto").value;
     const nombre = document.getElementById("recargar-nombre").value;
-    const saldoActual = parseFloat(document.getElementById("recargar-saldo-actual").value.replace(',', ''));
+    const saldoActual  = parseFloat(document.getElementById("recargar-saldo-actual").value.replace(',', ''));
 
     if (!idUsuario || isNaN(idUsuario)) {
         alert("⚠️ Selecciona un usuario primero");
@@ -1326,39 +1429,60 @@ document.addEventListener("DOMContentLoaded", () => {
         if (resultado.permitido) {
             cargarDatosPerfil(resultado.usuario);
             
-            // Botón editar perfil
-            const btnEditar = document.getElementById("btn-editar");
-            if (btnEditar) {
-                btnEditar.addEventListener("click", abrirModalEditarPerfil);
-            }
-
-            // Botón guardar cambios perfil
-            const btnGuardarPerfil = document.getElementById("btn-guardar-perfil");
-            if (btnGuardarPerfil) {
-                btnGuardarPerfil.addEventListener("click", actualizarPerfil);
-            }
-
-            // Botón actualizar saldo
-            const btnActualizarSaldo = document.querySelector('[onclick="actualizarSaldoUsuario()"]');
-            if (btnActualizarSaldo) {
-                btnActualizarSaldo.addEventListener("click", async () => {
-                    await cargarDatosPerfil(user);
-                    alert("✅ Saldo actualizado");
-                });
-            }
-
-            // Botones admin
-            if (user.rol === "admin") {
-                const btnUsuarios = document.querySelector('[data-open="modal-usuarios"]');
-                if (btnUsuarios) {
-                    btnUsuarios.addEventListener("click", cargarUsuariosAdmin);
+            // ✅ Configurar TODOS los eventos de botones
+            setTimeout(() => {
+                // Botón editar perfil
+                const btnEditar = document.getElementById("btn-editar");
+                if (btnEditar) {
+                    btnEditar.onclick = abrirModalEditarPerfil;
                 }
 
-                const btnRecargar = document.querySelector('[data-open="modal-recargar-saldo"]');
-                if (btnRecargar) {
-                    btnRecargar.addEventListener("click", cargarUsuariosParaRecarga);
+                // Botón guardar cambios perfil
+                const btnGuardarPerfil = document.getElementById("btn-guardar-perfil");
+                if (btnGuardarPerfil) {
+                    btnGuardarPerfil.onclick = actualizarPerfil;
                 }
-            }
+
+                // Botón actualizar saldo
+                const btnActualizarSaldo = document.getElementById("btn-actualizar-saldo");
+                if (btnActualizarSaldo) {
+                    btnActualizarSaldo.onclick = actualizarSaldoUsuario;
+                }
+
+                // Botón historial
+                const btnHistorial = document.getElementById("btn-historial");
+                if (btnHistorial) {
+                    btnHistorial.onclick = abrirModalHistorial;
+                }
+
+                // Botón recargar saldo
+                const btnRecargarSaldo = document.getElementById("btn-recargar-saldo");
+                if (btnRecargarSaldo) {
+                    btnRecargarSaldo.onclick = abrirModalRecargarSaldo;
+                }
+
+                // Botón confirmar recarga
+                const btnConfirmarRecarga = document.getElementById("btn-confirmar-recarga");
+                if (btnConfirmarRecarga) {
+                    btnConfirmarRecarga.onclick = procesarRecargaSaldo;
+                }
+
+                // Botón volver al historial
+                const btnVolverHistorial = document.getElementById("btn-volver-historial");
+                if (btnVolverHistorial) {
+                    btnVolverHistorial.onclick = volverAHistorial;
+                }
+
+                // Botones admin
+                if (resultado.usuario.rol === "admin") {
+                    const btnUsuarios = document.querySelector('[data-open="modal-usuarios"]');
+                    if (btnUsuarios) {
+                        btnUsuarios.addEventListener("click", cargarUsuariosAdmin);
+                    }
+                }
+
+                console.log("✅ Todos los eventos configurados");
+            }, 100);
         }
     }
 
@@ -1422,111 +1546,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 300);
     }
 });
-
-// ==============================================
-// 14. HISTORIAL DE COMPRAS
-// ==============================================
-
-async function cargarHistorialCompras(usuario) {
-    try {
-        const res = await fetch(`${API_URL}/api/usuario/${usuario.id_usuario}/compras`);
-        const data = await res.json();
-
-        const listaCompras = document.getElementById("lista-compras");
-        const mensajeSinCompras = document.getElementById("mensaje-sin-compras");
-
-        if (!data.success || !data.compras || data.compras.length === 0) {
-            if (mensajeSinCompras) {
-                mensajeSinCompras.classList.remove("d-none");
-            }
-            if (listaCompras) {
-                listaCompras.innerHTML = "";
-            }
-            return;
-        }
-
-        if (mensajeSinCompras) {
-            mensajeSinCompras.classList.add("d-none");
-        }
-
-        listaCompras.innerHTML = data.compras.map(compra => {
-            const productos = compra.productos || [];
-            const productosHTML = productos.map(p => `
-                <div class="producto-item">
-                    <div class="producto-info">
-                        <strong>${sanitizarTexto(p.producto)}</strong>
-                        <br>
-                        <small>Cantidad: ${p.cantidad} x ${parseFloat(p.precio).toFixed(2)}</small>
-                    </div>
-                    <div class="producto-precio">
-                        ${parseFloat(p.subtotal).toFixed(2)}
-                    </div>
-                </div>
-            `).join("");
-
-            return `
-                <div class="compra-card">
-                    <div class="compra-header">
-                        <div>
-                            <h5>🛒 Compra #${compra.id_venta}</h5>
-                            <small><i class="fas fa-calendar"></i> ${new Date(compra.fecha).toLocaleString('es-MX')}</small>
-                        </div>
-                        <div class="compra-total">
-                            ${parseFloat(compra.total).toFixed(2)}
-                        </div>
-                    </div>
-                    <div class="compra-productos">
-                        <h6><i class="fas fa-box"></i> Productos (${compra.num_productos}):</h6>
-                        ${productosHTML}
-                    </div>
-                </div>
-            `;
-        }).join("");
-
-    } catch (err) {
-        console.error("Error cargando historial:", err);
-        alert("❌ Error al cargar historial de compras");
-    }
-}
-
-async function actualizarSaldoUsuario() {
-    const usuario = obtenerUsuario();
-    if (!usuario) {
-        alert("⚠️ Debes iniciar sesión primero");
-        return;
-    }
-
-    try {
-        const res = await fetch(`${API_URL}/api/usuario/${usuario.id_usuario}/saldo-actual`);
-        const data = await res.json();
-
-        if (data.success) {
-            usuario.saldo = data.saldo;
-            guardarUsuario(usuario);
-
-            // Actualizar en navbar
-            const saldoNav = document.getElementById("nav-usuario-saldo");
-            if (saldoNav) {
-                saldoNav.textContent = `${data.saldo.toFixed(2)}`;
-            }
-
-            // Actualizar en perfil si existe
-            const saldoPerfil = document.getElementById("perfil-saldo");
-            if (saldoPerfil) {
-                saldoPerfil.textContent = `${data.saldo.toFixed(2)}`;
-            }
-
-            alert(`✅ Saldo actualizado: ${data.saldo.toFixed(2)}`);
-        } else {
-            alert("❌ " + data.message);
-        }
-
-    } catch (err) {
-        console.error("Error actualizando saldo:", err);
-        alert("❌ Error al actualizar saldo");
-    }
-}
-
 
 // ==============================================
 // EXPORTAR FUNCIONES GLOBALES
