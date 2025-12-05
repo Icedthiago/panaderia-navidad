@@ -17,7 +17,6 @@
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-success px-3">
   <div class="container-fluid">
-
     <a class="navbar-brand" href="index.html">Panadería</a>
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
@@ -26,10 +25,7 @@
     </button>
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
-
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-
-        <!-- ✅ Botones para NO logueados - CORREGIDOS -->
         <li class="nav-item" id="nav-login-btn">
           <button class="btn btn-outline-light" data-open="modal-login" type="button">
             🔐 Inicio de sesión
@@ -42,7 +38,6 @@
           </button>
         </li>
 
-        <!-- ✅ USUARIO LOGUEADO CON SALDO -->
         <li class="nav-item d-none" id="nav-usuario">
           <span class="nav-link">
             👤 <b id="nav-usuario-nombre"></b> 
@@ -50,7 +45,6 @@
           </span>
         </li>
 
-        <!-- Botón logout -->
         <li class="nav-item d-none" id="nav-logout">
           <button class="btn btn-danger btn-sm ms-2" id="logoutBtn">
             🚪 Cerrar sesión
@@ -61,7 +55,6 @@
           <a class="nav-link" href="#acerca">Nosotros</a>
         </li>
 
-        <!-- Menú dropdown -->
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" 
              data-bs-toggle="dropdown">
@@ -70,38 +63,26 @@
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="perfil.html">Perfil</a></li>
             <li><a class="dropdown-item" href="compra.html">Compra</a></li>
-            <li><a class="dropdown-item admin-only d-none" href="inventario.html">
-              Inventario
-            </a></li>
-            <li><a class="dropdown-item admin-only d-none" href="ventas.html">
-              Ventas
-            </a></li>
+            <li><a class="dropdown-item admin-only d-none" href="inventario.html">Inventario</a></li>
+            <li><a class="dropdown-item admin-only d-none" href="ventas.html">Ventas</a></li>
           </ul>
         </li>
 
-        <!-- ✅ Carrito -->
         <li class="nav-item d-none" id="nav-carrito-btn">
           <button class="btn btn-warning btn-sm" data-open="modal-carrito">
             🛒 <span id="carrito-cantidad">0</span>
           </button>
         </li>
 
-        <li class="nav-item">
-          <a class="nav-link">🎅</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link">🎄</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link">❄️</a>
-        </li>
-
+        <li class="nav-item"><a class="nav-link">🎅</a></li>
+        <li class="nav-item"><a class="nav-link">🎄</a></li>
+        <li class="nav-item"><a class="nav-link">❄️</a></li>
       </ul>
-
     </div>
   </div>
 </nav>
 
+<!-- ✅ SECCIÓN DE PERFIL -->
 <div class="perfil-container">
   <div class="perfil-card">
     <div class="perfil-header">
@@ -116,77 +97,134 @@
     </div>
 
     <div class="perfil-actions">
-      <button class="btn btn-primary" id="btn-editar">✏️ Editar perfil</button>
-      <button class="btn btn-info" id="btn-historial">📜 Mi Historial</button>
-      <button class="btn btn-success" id="btn-recargar">💰 Recargar Saldo</button>
-      <button class="btn btn-warning admin-only d-none" id="btn-admin-usuarios">👥 Usuarios</button>
+      <button class="btn btn-primary" id="btn-editar-perfil">✏️ Editar perfil</button>
+      <button class="btn btn-info" id="btn-historial-perfil">📜 Mi Historial</button>
+      <button class="btn btn-success" id="btn-recargar-perfil">💰 Recargar Saldo</button>
+      <button class="btn btn-warning admin-only d-none" id="btn-admin-usuarios-perfil">👥 Usuarios</button>
     </div>
   </div>
 </div>
 
-<!-- Modal Editar -->
-<dialog id="modal-editar">
-  <button class="btn-x" onclick="document.getElementById('modal-editar').close()">X</button>
+<!-- ✅ MODAL EDITAR PERFIL -->
+<dialog id="modal-editar-perfil">
+  <button class="btn-x" onclick="cerrarModalPerfil('modal-editar-perfil')">X</button>
   <h2>Editar Perfil</h2>
   <div style="padding:20px;">
     <label>Nombre:</label>
-    <input type="text" id="modal-edit-nombre" class="form-control" required>
+    <input type="text" id="modal-edit-nombre-perfil" class="form-control" required>
+    
     <label>Email:</label>
-    <input type="email" id="modal-edit-email" class="form-control" required>
+    <input type="email" id="modal-edit-email-perfil" class="form-control" required>
+    
     <label>Contraseña (opcional):</label>
-    <input type="password" id="modal-edit-password" class="form-control">
+    <input type="password" id="modal-edit-password-perfil" class="form-control">
+    
     <label>Foto:</label>
-    <input type="file" id="modal-edit-imagen" class="form-control" accept="image/*">
-    <button class="btn btn-success mt-3" id="btn-guardar-perfil">Guardar</button>
+    <input type="file" id="modal-edit-imagen-perfil" class="form-control" accept="image/*">
+    
+    <button class="btn btn-success mt-3" id="btn-guardar-perfil-cambios">Guardar</button>
   </div>
 </dialog>
 
-<!-- Modal Historial -->
-<dialog id="modal-historial" style="width:90%;max-width:900px;">
-  <button class="btn-x" onclick="document.getElementById('modal-historial').close()">X</button>
+<!-- ✅ MODAL HISTORIAL -->
+<dialog id="modal-historial-perfil" style="width:90%;max-width:900px;">
+  <button class="btn-x" onclick="cerrarModalPerfil('modal-historial-perfil')">X</button>
   <h2>Mi Historial</h2>
-  <div id="lista-compras-modal"></div>
-  <button class="btn btn-secondary mt-3" onclick="document.getElementById('modal-historial').close()">Cerrar</button>
+  <div id="lista-compras-modal-perfil"></div>
+  <button class="btn btn-secondary mt-3" onclick="cerrarModalPerfil('modal-historial-perfil')">Cerrar</button>
 </dialog>
 
-<!-- Modal Detalle Compra -->
-<dialog id="modal-detalle-compra" style="width:90%;max-width:700px;">
-  <button class="btn-x" onclick="document.getElementById('modal-detalle-compra').close()">X</button>
+<!-- ✅ MODAL DETALLE COMPRA -->
+<dialog id="modal-detalle-compra-perfil" style="width:90%;max-width:700px;">
+  <button class="btn-x" onclick="cerrarModalPerfil('modal-detalle-compra-perfil')">X</button>
   <h2>Detalle de Compra</h2>
-  <div id="contenido-detalle-compra"></div>
-  <button class="btn btn-secondary mt-3" id="btn-volver-historial">⬅️ Volver</button>
+  <div id="contenido-detalle-compra-perfil"></div>
+  <button class="btn btn-secondary mt-3" id="btn-volver-historial-perfil">⬅️ Volver</button>
 </dialog>
 
-<!-- Modal Recargar -->
-<dialog id="modal-recargar-saldo-simple" style="width:90%;max-width:500px;">
-  <button class="btn-x" onclick="document.getElementById('modal-recargar-saldo-simple').close()">X</button>
+<!-- ✅ MODAL RECARGAR SALDO -->
+<dialog id="modal-recargar-saldo-perfil" style="width:90%;max-width:500px;">
+  <button class="btn-x" onclick="cerrarModalPerfil('modal-recargar-saldo-perfil')">X</button>
   <h2>Recargar Saldo</h2>
   <div style="padding:20px;">
-    <p>Usuario: <b id="recarga-usuario-nombre"></b></p>
-    <p>Saldo: <b id="recarga-usuario-saldo"></b></p>
-    <input type="number" id="recarga-monto-input" class="form-control" placeholder="Monto" step="0.01">
-    <button class="btn btn-success mt-3" id="btn-confirmar-recarga">Confirmar</button>
+    <p>Usuario: <b id="recarga-usuario-nombre-perfil"></b></p>
+    <p>Saldo actual: <b id="recarga-usuario-saldo-perfil"></b></p>
+    <input type="number" id="recarga-monto-input-perfil" class="form-control" placeholder="Monto" step="0.01" min="0.01">
+    <button class="btn btn-success mt-3" id="btn-confirmar-recarga-perfil">Confirmar</button>
   </div>
 </dialog>
 
-<!-- Modal Usuarios (Admin) -->
-<dialog id="modal-usuarios" style="width:90%;max-width:900px;">
-  <button class="btn-x" onclick="document.getElementById('modal-usuarios').close()">X</button>
-  <h2>Usuarios</h2>
-  <table class="table">
+<!-- ✅ MODAL USUARIOS (ADMIN) -->
+<dialog id="modal-usuarios-perfil" style="width:90%;max-width:900px;">
+  <button class="btn-x" onclick="cerrarModalPerfil('modal-usuarios-perfil')">X</button>
+  <h2>Gestión de Usuarios</h2>
+  <table class="table table-striped">
     <thead>
-      <tr><th>ID</th><th>Nombre</th><th>Email</th><th>Rol</th><th>Saldo</th><th>Acciones</th></tr>
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Email</th>
+        <th>Rol</th>
+        <th>Saldo</th>
+        <th>Acciones</th>
+      </tr>
     </thead>
-    <tbody id="tablaUsuarios"></tbody>
+    <tbody id="tablaUsuariosPerfil"></tbody>
   </table>
 </dialog>
+
+    <div class="container">
+	<div class="snowflakes" aria-hidden="true">
+		<div class="snowflake">
+			❅
+		</div>
+		<div class="snowflake">
+			❆
+		</div>
+		<div class="snowflake">
+			❅
+		</div>
+		<div class="snowflake">
+			❆
+		</div>
+		<div class="snowflake">
+			❅
+		</div>
+		<div class="snowflake">
+			❆
+		</div>
+		<div class="snowflake">
+			❅
+		</div>
+		<div class="snowflake">
+			❆
+		</div>
+		<div class="snowflake">
+			❅
+		</div>
+		<div class="snowflake">
+			❆
+		</div>
+		<div class="snowflake">
+			❅
+		</div>
+		<div class="snowflake">
+			❆
+		</div>
+	</div>
+    </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="script.js"></script>
 
 <script>
-// ✅ SCRIPTS LOCALES PARA PERFIL
+// ✅ FUNCIONES LOCALES PARA PERFIL
 const API_URL = "https://panaderia-navidad.onrender.com";
+
+function cerrarModalPerfil(id) {
+    const modal = document.getElementById(id);
+    if (modal) modal.close();
+}
 
 document.addEventListener("DOMContentLoaded", async () => {
     console.log("🔧 Iniciando perfil...");
@@ -194,38 +232,51 @@ document.addEventListener("DOMContentLoaded", async () => {
     const user = JSON.parse(localStorage.getItem("usuario"));
     
     if (!user) {
-        alert("Inicia sesión");
+        alert("⚠️ Debes iniciar sesión para ver tu perfil");
         window.location.href = "index.html";
         return;
     }
 
-    // Cargar datos
+    // Cargar datos básicos
     document.getElementById("perfil-nombre").textContent = user.nombre;
     document.getElementById("perfil-email").textContent = user.email;
     document.getElementById("perfil-rol").textContent = user.rol;
     document.getElementById("perfil-saldo").textContent = `$${parseFloat(user.saldo || 0).toFixed(2)}`;
 
-    // Botón editar
-    document.getElementById("btn-editar").onclick = async () => {
-        console.log("Click editar");
-        document.getElementById("modal-edit-nombre").value = user.nombre;
-        document.getElementById("modal-edit-email").value = user.email;
-        document.getElementById("modal-editar").showModal();
+    // ✅ BOTÓN EDITAR PERFIL
+    document.getElementById("btn-editar-perfil").onclick = async () => {
+        console.log("✅ Click editar perfil");
+        
+        document.getElementById("modal-edit-nombre-perfil").value = user.nombre;
+        document.getElementById("modal-edit-email-perfil").value = user.email;
+        
+        const modal = document.getElementById("modal-editar-perfil");
+        if (modal) {
+            modal.showModal();
+            console.log("✅ Modal editar abierto");
+        } else {
+            console.error("❌ Modal no encontrado");
+        }
     };
 
-    // Botón guardar perfil
-    document.getElementById("btn-guardar-perfil").onclick = async () => {
-        const nombre = document.getElementById("modal-edit-nombre").value;
-        const email = document.getElementById("modal-edit-email").value;
-        const password = document.getElementById("modal-edit-password").value;
+    // ✅ GUARDAR CAMBIOS DE PERFIL
+    document.getElementById("btn-guardar-perfil-cambios").onclick = async () => {
+        const nombre = document.getElementById("modal-edit-nombre-perfil").value.trim();
+        const email = document.getElementById("modal-edit-email-perfil").value.trim();
+        const password = document.getElementById("modal-edit-password-perfil").value.trim();
         
+        if (!nombre || !email) {
+            alert("⚠️ Nombre y email son obligatorios");
+            return;
+        }
+
         const formData = new FormData();
         formData.append("id_usuario", user.id_usuario);
         formData.append("nombre", nombre);
         formData.append("email", email);
         if (password) formData.append("password", password);
         
-        const imagen = document.getElementById("modal-edit-imagen").files[0];
+        const imagen = document.getElementById("modal-edit-imagen-perfil").files[0];
         if (imagen) formData.append("imagen", imagen);
 
         try {
@@ -237,14 +288,14 @@ document.addEventListener("DOMContentLoaded", async () => {
             const data = await res.json();
 
             if (data.success) {
-                alert("✅ Perfil actualizado");
+                alert("✅ Perfil actualizado exitosamente");
                 user.nombre = nombre;
                 user.email = email;
                 localStorage.setItem("usuario", JSON.stringify(user));
-                document.getElementById("modal-editar").close();
+                cerrarModalPerfil('modal-editar-perfil');
                 location.reload();
             } else {
-                alert("❌ Error: " + data.message);
+                alert("❌ Error: " + (data.message || "No se pudo actualizar"));
             }
         } catch (err) {
             console.error(err);
@@ -252,86 +303,114 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     };
 
-    // Botón historial
-    document.getElementById("btn-historial").onclick = async () => {
-        console.log("Click historial");
-        document.getElementById("modal-historial").showModal();
+    // ✅ BOTÓN HISTORIAL
+    document.getElementById("btn-historial-perfil").onclick = async () => {
+        console.log("✅ Click historial");
         
-        try {
-            const res = await fetch(`${API_URL}/api/usuario/${user.id_usuario}/compras`);
-            const data = await res.json();
+        const modal = document.getElementById("modal-historial-perfil");
+        if (modal) {
+            modal.showModal();
             
-            const lista = document.getElementById("lista-compras-modal");
-            
-            if (!data.success || !data.compras || data.compras.length === 0) {
-                lista.innerHTML = '<p>No hay compras</p>';
-                return;
+            try {
+                const res = await fetch(`${API_URL}/api/usuario/${user.id_usuario}/compras`);
+                const data = await res.json();
+                
+                const lista = document.getElementById("lista-compras-modal-perfil");
+                
+                if (!data.success || !data.compras || data.compras.length === 0) {
+                    lista.innerHTML = '<p class="text-center">No tienes compras registradas</p>';
+                    return;
+                }
+
+                lista.innerHTML = data.compras.map(c => `
+                    <div style="border:1px solid #ddd; padding:15px; margin:10px 0; border-radius:8px; cursor:pointer; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;"
+                         onclick="verDetalleCompraPerfil(${c.id_venta})">
+                        <b>🛒 Compra #${c.id_venta}</b><br>
+                        📅 ${new Date(c.fecha).toLocaleDateString('es-MX')}<br>
+                        💰 Total: $${parseFloat(c.total).toFixed(2)}
+                    </div>
+                `).join("");
+
+            } catch (err) {
+                console.error(err);
+                alert("❌ Error al cargar historial");
             }
-
-            lista.innerHTML = data.compras.map(c => `
-                <div style="border:1px solid #ddd; padding:10px; margin:10px 0; border-radius:8px; cursor:pointer;"
-                     onclick="verDetalleLocal(${c.id_venta})">
-                    <b>Compra #${c.id_venta}</b> - ${new Date(c.fecha).toLocaleDateString()} - $${parseFloat(c.total).toFixed(2)}
-                </div>
-            `).join("");
-
-        } catch (err) {
-            console.error(err);
         }
     };
 
-    // Función ver detalle
-    window.verDetalleLocal = async (idVenta) => {
+    // ✅ FUNCIÓN VER DETALLE
+    window.verDetalleCompraPerfil = async (idVenta) => {
         try {
             const res = await fetch(`${API_URL}/api/venta/${idVenta}`);
             const data = await res.json();
 
             if (!data.success) {
-                alert("❌ Error");
+                alert("❌ Error al cargar detalle");
                 return;
             }
+
+            cerrarModalPerfil('modal-historial-perfil');
 
             const venta = data.venta;
             const productos = data.detalles || [];
 
-            document.getElementById("modal-historial").close();
-
             const html = `
-                <h3>Compra #${venta.id_venta}</h3>
-                <p>Fecha: ${new Date(venta.fecha).toLocaleString()}</p>
-                ${productos.map(p => `<p>${p.nombre_producto} - Cant: ${p.cantidad} - $${parseFloat(p.subtotal).toFixed(2)}</p>`).join("")}
-                <h4>Total: $${parseFloat(venta.monto_pagado).toFixed(2)}</h4>
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; color: white; margin-bottom: 20px;">
+                    <h3>🛒 Compra #${venta.id_venta}</h3>
+                    <p>📅 ${new Date(venta.fecha).toLocaleString('es-MX')}</p>
+                </div>
+                ${productos.map(p => `
+                    <div style="background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #667eea;">
+                        <b>${p.nombre_producto}</b><br>
+                        Cantidad: ${p.cantidad} | Precio: $${parseFloat(p.precio).toFixed(2)}<br>
+                        <b>Subtotal: $${parseFloat(p.subtotal).toFixed(2)}</b>
+                    </div>
+                `).join("")}
+                <div style="background: #ffd700; padding: 20px; border-radius: 10px; text-align: center; margin-top: 20px;">
+                    <h4 style="margin: 0; color: #333;">💰 TOTAL: $${parseFloat(venta.monto_pagado).toFixed(2)}</h4>
+                </div>
             `;
 
-            document.getElementById("contenido-detalle-compra").innerHTML = html;
-            document.getElementById("modal-detalle-compra").showModal();
+            document.getElementById("contenido-detalle-compra-perfil").innerHTML = html;
+            document.getElementById("modal-detalle-compra-perfil").showModal();
 
         } catch (err) {
             console.error(err);
-            alert("❌ Error");
+            alert("❌ Error al cargar detalle");
         }
     };
 
-    // Botón volver
-    document.getElementById("btn-volver-historial").onclick = () => {
-        document.getElementById("modal-detalle-compra").close();
-        setTimeout(() => document.getElementById("modal-historial").showModal(), 200);
+    // ✅ BOTÓN VOLVER
+    document.getElementById("btn-volver-historial-perfil").onclick = () => {
+        cerrarModalPerfil('modal-detalle-compra-perfil');
+        setTimeout(() => document.getElementById("modal-historial-perfil").showModal(), 200);
     };
 
-    // Botón recargar
-    document.getElementById("btn-recargar").onclick = () => {
-        console.log("Click recargar");
-        document.getElementById("recarga-usuario-nombre").textContent = user.nombre;
-        document.getElementById("recarga-usuario-saldo").textContent = `$${parseFloat(user.saldo || 0).toFixed(2)}`;
-        document.getElementById("modal-recargar-saldo-simple").showModal();
+    // ✅ BOTÓN RECARGAR SALDO
+    document.getElementById("btn-recargar-perfil").onclick = () => {
+        console.log("✅ Click recargar saldo");
+        
+        document.getElementById("recarga-usuario-nombre-perfil").textContent = user.nombre;
+        document.getElementById("recarga-usuario-saldo-perfil").textContent = `$${parseFloat(user.saldo || 0).toFixed(2)}`;
+        document.getElementById("recarga-monto-input-perfil").value = "";
+        
+        const modal = document.getElementById("modal-recargar-saldo-perfil");
+        if (modal) {
+            modal.showModal();
+        }
     };
 
-    // Confirmar recarga
-    document.getElementById("btn-confirmar-recarga").onclick = async () => {
-        const monto = parseFloat(document.getElementById("recarga-monto-input").value);
+    // ✅ CONFIRMAR RECARGA
+    document.getElementById("btn-confirmar-recarga-perfil").onclick = async () => {
+        const monto = parseFloat(document.getElementById("recarga-monto-input-perfil").value);
         
         if (!monto || monto <= 0) {
-            alert("⚠️ Monto inválido");
+            alert("⚠️ Ingresa un monto válido mayor a $0");
+            return;
+        }
+
+        if (monto > 100000) {
+            alert("⚠️ El monto máximo es $100,000");
             return;
         }
 
@@ -350,58 +429,88 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (data.success) {
                 user.saldo = data.nuevoSaldo;
                 localStorage.setItem("usuario", JSON.stringify(user));
+                
                 alert(`✅ Recarga exitosa!\n\nNuevo saldo: $${data.nuevoSaldo.toFixed(2)}`);
+                
                 document.getElementById("perfil-saldo").textContent = `$${data.nuevoSaldo.toFixed(2)}`;
-                document.getElementById("modal-recargar-saldo-simple").close();
+                
+                const navSaldo = document.getElementById("nav-usuario-saldo");
+                if (navSaldo) navSaldo.textContent = `$${data.nuevoSaldo.toFixed(2)}`;
+                
+                cerrarModalPerfil('modal-recargar-saldo-perfil');
             } else {
-                alert("❌ " + data.message);
+                alert("❌ " + (data.message || "Error al recargar"));
             }
         } catch (err) {
             console.error(err);
-            alert("❌ Error");
+            alert("❌ Error de conexión");
         }
     };
 
-    // Botón admin usuarios
+    // ✅ BOTÓN ADMIN USUARIOS
     if (user.rol === "admin") {
-        const btnAdmin = document.getElementById("btn-admin-usuarios");
-        btnAdmin.classList.remove("d-none");
-        
-        btnAdmin.onclick = async () => {
-            console.log("Click admin usuarios");
-            document.getElementById("modal-usuarios").showModal();
+        const btnAdmin = document.getElementById("btn-admin-usuarios-perfil");
+        if (btnAdmin) {
+            btnAdmin.classList.remove("d-none");
             
-            try {
-                const res = await fetch(`${API_URL}/api/usuarios`);
-                const usuarios = await res.json();
+            btnAdmin.onclick = async () => {
+                console.log("✅ Click admin usuarios");
                 
-                const tbody = document.getElementById("tablaUsuarios");
-                
-                if (!Array.isArray(usuarios) || usuarios.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6">No hay usuarios</td></tr>';
-                    return;
+                const modal = document.getElementById("modal-usuarios-perfil");
+                if (modal) {
+                    modal.showModal();
+                    
+                    try {
+                        const res = await fetch(`${API_URL}/api/usuarios`);
+                        
+                        if (!res.ok) {
+                            throw new Error(`Error HTTP: ${res.status}`);
+                        }
+                        
+                        const usuarios = await res.json();
+                        console.log("📊 Usuarios recibidos:", usuarios);
+                        
+                        const tbody = document.getElementById("tablaUsuariosPerfil");
+                        
+                        if (!Array.isArray(usuarios) || usuarios.length === 0) {
+                            tbody.innerHTML = '<tr><td colspan="6" class="text-center">No hay usuarios registrados</td></tr>';
+                            return;
+                        }
+
+                        tbody.innerHTML = usuarios.map(u => `
+                            <tr>
+                                <td>${u.id_usuario}</td>
+                                <td>${u.nombre}</td>
+                                <td>${u.email}</td>
+                                <td><span class="badge bg-${u.rol === 'admin' ? 'danger' : 'primary'}">${u.rol}</span></td>
+                                <td>$${parseFloat(u.saldo || 0).toFixed(2)}</td>
+                                <td>
+                                    <button class="btn btn-danger btn-sm" onclick="eliminarUsuarioPerfil(${u.id_usuario}, '${u.nombre}')">
+                                        🗑️ Eliminar
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join("");
+
+                    } catch (err) {
+                        console.error("❌ Error cargando usuarios:", err);
+                        alert("❌ Error al cargar usuarios: " + err.message);
+                    }
                 }
-
-                tbody.innerHTML = usuarios.map(u => `
-                    <tr>
-                        <td>${u.id_usuario}</td>
-                        <td>${u.nombre}</td>
-                        <td>${u.email}</td>
-                        <td>${u.rol}</td>
-                        <td>$${parseFloat(u.saldo || 0).toFixed(2)}</td>
-                        <td><button class="btn btn-danger btn-sm" onclick="eliminarUsuarioLocal(${u.id_usuario})">Eliminar</button></td>
-                    </tr>
-                `).join("");
-
-            } catch (err) {
-                console.error(err);
-            }
-        };
+            };
+        }
     }
 
-    // Función eliminar usuario
-    window.eliminarUsuarioLocal = async (id) => {
-        if (!confirm("¿Eliminar usuario?")) return;
+    // ✅ FUNCIÓN ELIMINAR USUARIO
+    window.eliminarUsuarioPerfil = async (id, nombre) => {
+        if (id === user.id_usuario) {
+            alert("❌ No puedes eliminar tu propia cuenta");
+            return;
+        }
+
+        if (!confirm(`⚠️ ¿Eliminar a ${nombre}?\n\nEsta acción no se puede deshacer.`)) {
+            return;
+        }
 
         try {
             const res = await fetch(`${API_URL}/api/usuario/eliminar/${id}`, {
@@ -409,17 +518,18 @@ document.addEventListener("DOMContentLoaded", async () => {
             });
 
             if (res.ok) {
-                alert("✅ Usuario eliminado");
-                document.getElementById("btn-admin-usuarios").click();
+                alert("✅ Usuario eliminado exitosamente");
+                document.getElementById("btn-admin-usuarios-perfil").click();
             } else {
-                alert("❌ Error");
+                alert("❌ Error al eliminar usuario");
             }
         } catch (err) {
             console.error(err);
+            alert("❌ Error de conexión");
         }
     };
 
-    console.log("✅ Perfil cargado");
+    console.log("✅ Perfil cargado completamente");
 });
 </script>
 
