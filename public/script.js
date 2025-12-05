@@ -303,27 +303,126 @@ function agregarAlCarrito(producto) {
         alert('⚠️ Producto no válido');
         return;
     }
+    
+    // Validar stock disponible
+    if (producto.stock <= 0) {
+        alert('⚠️ Este producto no tiene stock disponible');
+        return;
+    }
 
+    // Obtener carrito actual
+    let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+    
     const existe = carrito.find(item => item.id_producto === producto.id_producto);
 
     if (existe) {
-        if (existe.cantidad >= 99) {
-            alert('⚠️ Cantidad máxima alcanzada para este producto');
+        // Verificar que no exceda el stock disponible
+        if (existe.cantidad >= producto.stock) {
+            alert(
+                `⚠️ Stock máximo alcanzado\n\n` +
+                `Producto: ${producto.nombre}\n` +
+                `En tu carrito: ${existe.cantidad}\n` +
+                `Stock disponible: ${producto.stock}\n\n` +
+                `No puedes agregar más unidades de este producto.`
+            );
             return;
         }
+        
+        if (existe.cantidad >= 99) {
+            alert('⚠️ Cantidad máxima por producto: 99 unidades');
+            return;
+        }
+        
         existe.cantidad++;
     } else {
         carrito.push({
             id_producto: producto.id_producto,
-            nombre: sanitizarTexto(producto.nombre),
-            precio: parseFloat(producto.precio),
+            nombre: producto.nombre,
+            precio: producto.precio,
             cantidad: 1,
+            stock: producto.stock,
             imagen: producto.imagen
         });
     }
 
-    guardarCarrito();
-    alert(`✅ ${sanitizarTexto(producto.nombre)} agregado al carrito`);
+    localStorage.setItem("carrito", JSON.stringify(carrito));
+    actualizarCantidadCarrito();
+    
+    // Feedback visual mejorado
+    const cantidadEnCarrito = existe ? existe.cantidad : 1;
+    alert(
+        `✅ ${producto.nombre} agregado al carrito\n\n` +
+        `📦 Cantidad en tu carrito: ${cantidadEnCarrito}\n` +
+        `🏪 Stock disponible: ${producto.stock}\n` +
+        `💰 Precio unitario: $${producto.precio.toFixed(2)}`
+    );
+}
+
+function buscarProductosEnCompra(termino) {
+    termino = termino.toLowerCase().trim();
+    
+    console.log(`🔍 Buscando: "${termino}"`);
+    
+    if (!termino) {
+        // Si no hay término, mostrar todos los productos con stock
+        mostrarProductosEnTabla(productosVisibles);
+        return;
+    }
+    
+    // Filtrar productos que contengan el término
+    const resultados = productosVisibles.filter(p => {
+        const nombre = (p.nombre || '').toLowerCase();
+        const descripcion = (p.descripcion || '').toLowerCase();
+        const temporada = (p.temporada || '').toLowerCase();
+        
+        return nombre.includes(termino) || 
+               descripcion.includes(termino) || 
+               temporada.includes(termino);
+    });
+    
+    console.log(`✅ Se encontraron ${resultados.length} resultados`);
+    
+    // Mostrar resultados
+    mostrarProductosEnTabla(resultados);
+    
+    // Si no hay resultados, mostrar mensaje especial
+    if (resultados.length === 0) {
+        const tbody = document.getElementById("tbodyCompras");
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" style="text-align:center; padding: 40px;">
+                    <i class="fas fa-search fa-3x mb-3" style="color: #ccc;"></i>
+                    <p style="color: #666; margin: 10px 0;">
+                        No se encontraron productos con: "<b>${sanitizarTexto(termino)}</b>"
+                    </p>
+                    <small class="text-muted d-block mb-3">
+                        Intenta con otros términos de búsqueda
+                    </small>
+                    <button class="btn btn-primary" id="btn-ver-todos-temp">
+                        📦 Ver todos los productos
+                    </button>
+                </td>
+            </tr>
+        `;
+        
+        // Agregar evento al botón temporal
+        const btnTemp = document.getElementById("btn-ver-todos-temp");
+        if (btnTemp) {
+            btnTemp.addEventListener("click", limpiarBusquedaProductos);
+        }
+    }
+}
+
+// ==============================================
+// LIMPIAR BÚSQUEDA
+// ==============================================
+function limpiarBusquedaProductos() {
+    const inputBusqueda = document.getElementById("busqueda-productos");
+    if (inputBusqueda) {
+        inputBusqueda.value = "";
+    }
+    mostrarProductosEnTabla(productosVisibles);
+    console.log("🧹 Búsqueda limpiada - Mostrando todos los productos");
 }
 
 function guardarCarrito() {
@@ -497,68 +596,157 @@ async function confirmarCompra() {
 // 6. PRODUCTOS (COMPRA)
 // ==============================================
 
+let todosLosProductos = [];
+let productosVisibles = [];
+
 async function cargarProductosParaComprar() {
     try {
+        console.log("🔄 Cargando productos para compra...");
+        
         const res = await fetch(`${API_URL}/api/productos`);
         const productos = await res.json();
-
+        
+        console.log(`📦 Total de productos en BD: ${productos.length}`);
+        
+        // Guardar TODOS los productos
+        todosLosProductos = productos;
+        
+        // Filtrar solo los que tienen stock > 0
+        productosVisibles = productos.filter(p => {
+            const stock = parseInt(p.stock);
+            return !isNaN(stock) && stock > 0;
+        });
+        
+        console.log(`✅ Productos con stock disponible: ${productosVisibles.length}`);
+        console.log(`❌ Productos sin stock (ocultos): ${todosLosProductos.length - productosVisibles.length}`);
+        
+        // Mostrar en consola los productos sin stock
+        const sinStock = todosLosProductos.filter(p => parseInt(p.stock) <= 0);
+        if (sinStock.length > 0) {
+            console.log("🚫 Productos ocultos por falta de stock:");
+            sinStock.forEach(p => {
+                console.log(`   - ${p.nombre} (ID: ${p.id_producto}, Stock: ${p.stock})`);
+            });
+        }
+        
+        // Mostrar productos en la tabla
+        mostrarProductosEnTabla(productosVisibles);
+        
+    } catch (err) {
+        console.error("❌ Error cargando productos:", err);
         const tbody = document.getElementById("tbodyCompras");
-        if (!tbody) return;
-
-        tbody.innerHTML = productos.map(p => {
-            const nombreSeguro = sanitizarTexto(p.nombre);
-            const descSegura = sanitizarTexto(p.descripcion);
-            
-            return `
+        if (tbody) {
+            tbody.innerHTML = `
                 <tr>
-                    <td>${p.id_producto}</td>
-                    <td>
-                        <img src="${p.imagen 
-                            ? `data:image/jpeg;base64,${p.imagen}` 
-                            : 'https://via.placeholder.com/60?text=Sin+Imagen'
-                        }" 
-                        width="60"
-                        onerror="this.src='https://via.placeholder.com/60?text=Error'">
-                    </td>
-                    <td>${nombreSeguro}</td>
-                    <td>${descSegura}</td>
-                    <td>$${parseFloat(p.precio).toFixed(2)}</td>
-                    <td>${sanitizarTexto(p.temporada)}</td>
-                    <td>
-                        <button 
-                            class="btn btn-primary btn-comprar"
-                            data-id="${p.id_producto}"
-                            data-precio="${p.precio}"
-                            data-nombre="${nombreSeguro}"
-                            data-imagen="${p.imagen 
-                                ? `data:image/jpeg;base64,${p.imagen}` 
-                                : 'https://via.placeholder.com/60?text=Sin+Imagen'
-                            }"
-                        >
-                            🛒 Agregar
-                        </button>
+                    <td colspan="8" class="text-center text-danger" style="padding: 40px;">
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                        <p>Error al cargar productos. Por favor, recarga la página.</p>
                     </td>
                 </tr>
             `;
-        }).join("");
-
-        document.querySelectorAll(".btn-comprar").forEach(btn => {
-            btn.addEventListener("click", () => {
-                const producto = {
-                    id_producto: Number(btn.dataset.id),
-                    nombre: btn.dataset.nombre,
-                    precio: Number(btn.dataset.precio),
-                    imagen: btn.dataset.imagen
-                };
-                agregarAlCarrito(producto);
-            });
-        });
-
-    } catch (err) {
-        console.error("Error cargando productos:", err);
-        alert("❌ Error al cargar productos");
+        }
     }
 }
+
+function mostrarProductosEnTabla(productos) {
+    const tbody = document.getElementById("tbodyCompras");
+    if (!tbody) {
+        console.error("❌ No se encontró el elemento tbodyCompras");
+        return;
+    }
+    
+    // Limpiar tabla
+    tbody.innerHTML = "";
+    
+    // Si no hay productos disponibles
+    if (productos.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" style="text-align:center; padding: 40px;">
+                    <i class="fas fa-box-open fa-3x mb-3" style="color: #ccc;"></i>
+                    <p style="color: #666; margin: 10px 0;">No hay productos disponibles en este momento</p>
+                    <small class="text-muted">Los productos volverán a aparecer cuando tengan stock</small>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    // Crear filas de productos
+    productos.forEach(p => {
+        const nombreSeguro = sanitizarTexto(p.nombre);
+        const descSegura = sanitizarTexto(p.descripcion);
+        const temporadaSegura = sanitizarTexto(p.temporada);
+        const stock = parseInt(p.stock);
+        const precio = parseFloat(p.precio);
+        
+        // Determinar el badge de stock
+        let stockBadge = '';
+        if (stock > 10) {
+            stockBadge = `<span class="badge bg-success">✅ Stock: ${stock}</span>`;
+        } else if (stock > 0) {
+            stockBadge = `<span class="badge bg-warning text-dark">⚠️ ¡Solo ${stock}!</span>`;
+        }
+        
+        // Imagen del producto
+        const imagenSrc = p.imagen 
+            ? `data:image/jpeg;base64,${p.imagen}` 
+            : 'https://via.placeholder.com/60?text=Sin+Imagen';
+        
+        // Crear fila
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${p.id_producto}</td>
+            <td>
+                <img src="${imagenSrc}" 
+                     width="60" height="60"
+                     style="object-fit: cover; border-radius: 8px; border: 2px solid #28a745;"
+                     onerror="this.src='https://via.placeholder.com/60?text=Error'"
+                     alt="${nombreSeguro}">
+            </td>
+            <td><b>${nombreSeguro}</b></td>
+            <td>${descSegura}</td>
+            <td style="font-size: 1.2em; color: #28a745;"><b>$${precio.toFixed(2)}</b></td>
+            <td>${stockBadge}</td>
+            <td><span class="badge bg-info">${temporadaSegura}</span></td>
+            <td>
+                <button 
+                    class="btn btn-primary btn-sm btn-comprar-producto"
+                    data-id="${p.id_producto}"
+                    data-precio="${precio}"
+                    data-nombre="${nombreSeguro}"
+                    data-stock="${stock}"
+                    data-imagen="${imagenSrc}"
+                    ${stock <= 0 ? 'disabled' : ''}
+                >
+                    🛒 Agregar
+                </button>
+            </td>
+        `;
+        
+        tbody.appendChild(tr);
+    });
+
+    function configurarBotonesCompra() {
+    document.querySelectorAll(".btn-comprar-producto").forEach(btn => {
+        btn.addEventListener("click", function() {
+            const producto = {
+                id_producto: Number(this.dataset.id),
+                nombre: this.dataset.nombre,
+                precio: Number(this.dataset.precio),
+                stock: Number(this.dataset.stock),
+                imagen: this.dataset.imagen
+            };
+            
+            agregarAlCarritoConValidacion(producto);
+        });
+    });
+}
+    
+    // Agregar event listeners a los botones de compra
+    configurarBotonesCompra();
+}
+
 
 // ==============================================
 // 7. PRODUCTOS (INVENTARIO - ADMIN)
@@ -1666,3 +1854,6 @@ window.verDetalleCompra = verDetalleCompra;
 window.volverAHistorial = volverAHistorial;
 window.abrirModalRecargarSaldo = abrirModalRecargarSaldo;
 window.procesarRecargaSaldo = procesarRecargaSaldo;
+window.cargarProductosParaComprar = cargarProductosParaComprar;
+window.buscarProductosEnCompra = buscarProductosEnCompra;
+window.limpiarBusquedaProductos = limpiarBusquedaProductos;
