@@ -601,50 +601,64 @@ let productosVisibles = [];
 
 async function cargarProductosParaComprar() {
     try {
-        console.log("🔄 Cargando productos para compra...");
-        
         const res = await fetch(`${API_URL}/api/productos`);
         const productos = await res.json();
-        
-        console.log(`📦 Total de productos en BD: ${productos.length}`);
-        
-        // Guardar TODOS los productos
-        todosLosProductos = productos;
-        
-        // Filtrar solo los que tienen stock > 0
-        productosVisibles = productos.filter(p => {
-            const stock = parseInt(p.stock);
-            return !isNaN(stock) && stock > 0;
-        });
-        
-        console.log(`✅ Productos con stock disponible: ${productosVisibles.length}`);
-        console.log(`❌ Productos sin stock (ocultos): ${todosLosProductos.length - productosVisibles.length}`);
-        
-        // Mostrar en consola los productos sin stock
-        const sinStock = todosLosProductos.filter(p => parseInt(p.stock) <= 0);
-        if (sinStock.length > 0) {
-            console.log("🚫 Productos ocultos por falta de stock:");
-            sinStock.forEach(p => {
-                console.log(`   - ${p.nombre} (ID: ${p.id_producto}, Stock: ${p.stock})`);
-            });
-        }
-        
-        // Mostrar productos en la tabla
-        mostrarProductosEnTabla(productosVisibles);
-        
-    } catch (err) {
-        console.error("❌ Error cargando productos:", err);
+
         const tbody = document.getElementById("tbodyCompras");
-        if (tbody) {
-            tbody.innerHTML = `
+        if (!tbody) return;
+
+        tbody.innerHTML = productos.map(p => {
+            const nombreSeguro = sanitizarTexto(p.nombre);
+            const descSegura = sanitizarTexto(p.descripcion);
+            
+            return `
                 <tr>
-                    <td colspan="8" class="text-center text-danger" style="padding: 40px;">
-                        <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
-                        <p>Error al cargar productos. Por favor, recarga la página.</p>
+                    <td>${p.id_producto}</td>
+                    <td>
+                        <img src="${p.imagen 
+                            ? `data:image/jpeg;base64,${p.imagen}` 
+                            : 'https://via.placeholder.com/60?text=Sin+Imagen'
+                        }" 
+                        width="60"
+                        onerror="this.src='https://via.placeholder.com/60?text=Error'">
+                    </td>
+                    <td>${nombreSeguro}</td>
+                    <td>${descSegura}</td>
+                    <td>$${parseFloat(p.precio).toFixed(2)}</td>
+                    <td>${sanitizarTexto(p.temporada)}</td>
+                    <td>
+                        <button 
+                            class="btn btn-primary btn-comprar"
+                            data-id="${p.id_producto}"
+                            data-precio="${p.precio}"
+                            data-nombre="${nombreSeguro}"
+                            data-imagen="${p.imagen 
+                                ? `data:image/jpeg;base64,${p.imagen}` 
+                                : 'https://via.placeholder.com/60?text=Sin+Imagen'
+                            }"
+                        >
+                            🛒 Agregar
+                        </button>
                     </td>
                 </tr>
             `;
-        }
+        }).join("");
+
+        document.querySelectorAll(".btn-comprar").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const producto = {
+                    id_producto: Number(btn.dataset.id),
+                    nombre: btn.dataset.nombre,
+                    precio: Number(btn.dataset.precio),
+                    imagen: btn.dataset.imagen
+                };
+                agregarAlCarrito(producto);
+            });
+        });
+
+    } catch (err) {
+        console.error("Error cargando productos:", err);
+        alert("❌ Error al cargar productos");
     }
 }
 
@@ -745,22 +759,6 @@ function mostrarProductosEnTabla(productos) {
     
     // Agregar event listeners a los botones de compra
     configurarBotonesCompra();
-}
-
-function configurarBotonesCompra() {
-    document.querySelectorAll(".btn-comprar-producto").forEach(btn => {
-        btn.addEventListener("click", function() {
-            const producto = {
-                id_producto: Number(this.dataset.id),
-                nombre: this.dataset.nombre,
-                precio: Number(this.dataset.precio),
-                stock: Number(this.dataset.stock),
-                imagen: this.dataset.imagen
-            };
-            
-            agregarAlCarritoConValidacion(producto);
-        });
-    });
 }
 
 // ==============================================
