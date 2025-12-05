@@ -217,15 +217,6 @@
     </small>
   </div>
 </dialog>
-
-<!-- ============================================== -->
-<!-- 3️⃣ ELIMINAR LOS MODALES ANTIGUOS (si existen) -->
-<!-- Busca y ELIMINA estos modales si los tienes: -->
-<!-- - modal-recargar-saldo (el complejo con tabla) -->
-<!-- - tablaUsuariosRecarga -->
-<!-- - formRecargarSaldo -->
-<!-- ============================================== -->
-
   </div>
 </div>
 
@@ -234,46 +225,107 @@
 <!-- Reemplaza el modal-editar en perfil.html -->
 <!-- ============================================== -->
 
+<!-- Modal Editar Perfil -->
 <dialog id="modal-editar" class="modal-editar">
-  <button class="btn-modal cerrar-btn btn-x" data-close="modal-editar" type="button">X</button>
+  <button class="btn-modal cerrar-btn btn-x" data-close="modal-editar">X</button>
   <h2>✏️ Editar Perfil</h2>
-
   <div style="text-align: left; max-width: 400px; margin: 0 auto;">
-    
     <div class="mb-3">
       <label for="modal-edit-nombre"><b>Nombre:</b></label>
       <input type="text" id="modal-edit-nombre" class="form-control" required>
     </div>
-
     <div class="mb-3">
       <label for="modal-edit-email"><b>Correo:</b></label>
       <input type="email" id="modal-edit-email" class="form-control" required>
     </div>
-
     <div class="mb-3">
       <label for="modal-edit-password"><b>Nueva Contraseña (opcional):</b></label>
-      <input type="password" id="modal-edit-password" class="form-control" 
-             placeholder="Dejar vacío para no cambiar">
-      <small style="color: #ffd700;">Mínimo 6 caracteres</small>
+      <input type="password" id="modal-edit-password" class="form-control">
     </div>
-
     <div class="mb-3">
-      <label for="modal-edit-imagen"><b>Foto de Perfil:</b></label>
+      <label for="modal-edit-imagen"><b>Foto:</b></label>
       <input type="file" id="modal-edit-imagen" class="form-control" accept="image/*">
-      <img id="preview-img" class="preview-img mt-2" style="display:none; width: 120px; height: 120px; object-fit: cover; border-radius: 50%;">
+      <img id="preview-img" style="display:none; width:120px; height:120px; margin-top:10px; border-radius:50%;">
+    </div>
+    <button type="button" class="btn btn-success" id="btn-guardar-perfil">💾 Guardar</button>
+  </div>
+</dialog>
+
+
+<dialog id="modal-ticket-venta" style="width: 90%; max-width: 450px;">
+  <button class="btn-modal cerrar-btn btn-x" data-close="modal-ticket-venta">X</button>
+  
+  <!-- Ticket -->
+  <div class="ticket-container">
+    
+    <!-- Header del ticket -->
+    <div class="ticket-header">
+      <h3>🎄 PANADERÍA NAVIDEÑA 🎄</h3>
+      <p class="ticket-subtitle">Desesperanza</p>
+      <div class="ticket-divider">* * * * * * * * * * * * * * * *</div>
     </div>
 
-    <div style="display: flex; gap: 10px; margin-top: 20px;">
-      <button type="button" class="btn btn-success" id="btn-guardar-perfil" style="flex: 1;">
-        💾 Guardar Cambios
-      </button>
-      <button type="button" class="btn btn-secondary" data-close="modal-editar" style="flex: 1;">
-        ❌ Cancelar
-      </button>
+    <!-- Info de la venta -->
+    <div class="ticket-info" id="ticket-info">
+      <!-- Se llenará dinámicamente -->
+    </div>
+
+    <!-- Productos -->
+    <div class="ticket-productos" id="ticket-productos">
+      <!-- Se llenará dinámicamente -->
+    </div>
+
+    <!-- Total -->
+    <div class="ticket-total" id="ticket-total">
+      <!-- Se llenará dinámicamente -->
+    </div>
+
+    <!-- Footer -->
+    <div class="ticket-footer">
+      <div class="ticket-divider">* * * * * * * * * * * * * * * *</div>
+      <p class="ticket-gracias">¡GRACIAS POR TU COMPRA!</p>
+      <p class="ticket-mensaje">🎅 Felices Fiestas 🎄</p>
+      <div class="ticket-barcode">||||  ||  |||||  |||  ||||||</div>
     </div>
 
   </div>
+
+  <!-- Botones -->
+  <div style="display: flex; gap: 10px; margin-top: 20px;">
+    <button class="btn btn-primary" onclick="imprimirTicket()" style="flex: 1;">
+      🖨️ Imprimir
+    </button>
+    <button class="btn btn-secondary" data-close="modal-ticket-venta" style="flex: 1;">
+      Cerrar
+    </button>
+  </div>
 </dialog>
+
+<dialog id="modal-historial" style="width: 90%; max-width: 900px; max-height: 90vh; overflow-y: auto;">
+  <button class="btn-modal cerrar-btn btn-x" data-close="modal-historial">X</button>
+  <h2>📜 Mi Historial de Compras</h2>
+  <div id="mensaje-sin-compras" class="alert alert-info text-center d-none" style="margin: 20px 0;">
+    <i class="fas fa-shopping-bag fa-3x mb-3" style="color: #17a2b8;"></i>
+    <p class="mb-0" style="color: #333;">Aún no has realizado ninguna compra.</p>
+    <a href="compra.html" class="btn btn-primary mt-3">🛒 Ir a Comprar</a>
+  </div>
+  <div id="lista-compras-modal"></div>
+  <div style="text-align: center; margin-top: 20px;">
+    <button class="btn btn-secondary" data-close="modal-historial">Cerrar</button>
+  </div>
+</dialog>
+
+<!-- Modal Detalle Compra -->
+<dialog id="modal-detalle-compra" style="width: 90%; max-width: 700px; max-height: 90vh; overflow-y: auto;">
+  <button class="btn-modal cerrar-btn btn-x" data-close="modal-detalle-compra">X</button>
+  <h2>📋 Detalle de Compra</h2>
+  <div id="contenido-detalle-compra" style="padding: 20px 0;"></div>
+  <div style="text-align: center; margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+    <button class="btn btn-secondary" id="btn-volver-historial">⬅️ Volver</button>
+    <button class="btn btn-danger" data-close="modal-detalle-compra">Cerrar</button>
+  </div>
+</dialog>
+
 
 <!-- ============================================== -->
 <!-- MODAL RECARGAR SALDO (ADMIN) -->
@@ -281,10 +333,8 @@
 <!-- ============================================== -->
   <button class="btn-modal cerrar-btn btn-x" data-close="modal-recargar-saldo">X</button>
 <dialog id="modal-recargar-saldo-simple" style="width: 90%; max-width: 500px;">
-  <button class="btn-modal cerrar-btn btn-x" data-close="modal-recargar-saldo-simple" type="button">X</button>
-  
+  <button class="btn-modal cerrar-btn btn-x" data-close="modal-recargar-saldo-simple">X</button>
   <h2>💰 Recargar Mi Saldo</h2>
-
   <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; margin: 20px 0; color: white;">
     <div style="text-align: center;">
       <div style="font-size: 1.1em; opacity: 0.9; margin-bottom: 10px;">
@@ -298,7 +348,6 @@
       </div>
     </div>
   </div>
-
   <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px;">
     <label style="display: block; margin-bottom: 10px; font-size: 1.1em; color: #ffd700;">
       <b>💵 Monto a Recargar:</b>
@@ -310,36 +359,15 @@
       step="0.01" 
       min="0.01" 
       max="100000"
-      style="width: 100%; padding: 12px; font-size: 1.2em; border: 2px solid #ffd700; border-radius: 8px; text-align: center; background: white; color: #333;"
-      required
-    >
-    <small style="display: block; margin-top: 8px; opacity: 0.8;">
-      Monto mínimo: $0.01 | Máximo: $100,000
-    </small>
+      style="width: 100%; padding: 12px; font-size: 1.2em; border: 2px solid #ffd700; border-radius: 8px; text-align: center; background: white; color: #333;">
   </div>
-
   <div style="display: flex; gap: 10px; margin-top: 25px;">
-    <button 
-      type="button" 
-      class="btn btn-success" 
-      onclick="procesarRecargaSaldo()" 
-      style="flex: 1; padding: 12px; font-size: 1.1em;">
-      ✅ Confirmar Recarga
+    <button type="button" class="btn btn-success" id="btn-confirmar-recarga" style="flex: 1;">
+      ✅ Confirmar
     </button>
-    <button 
-      type="button" 
-      class="btn btn-secondary" 
-      data-close="modal-recargar-saldo-simple" 
-      style="flex: 1; padding: 12px;">
+    <button type="button" class="btn btn-secondary" data-close="modal-recargar-saldo-simple" style="flex: 1;">
       ❌ Cancelar
     </button>
-  </div>
-
-  <div style="margin-top: 20px; padding: 15px; background: rgba(255,215,0,0.1); border-left: 4px solid #ffd700; border-radius: 5px;">
-    <small style="color: #ffd700;">
-      <b>ℹ️ Nota:</b> Este es un sistema de recarga simulado para pruebas. 
-      En un sistema real, aquí se integraría con una pasarela de pago.
-    </small>
   </div>
 </dialog>
 

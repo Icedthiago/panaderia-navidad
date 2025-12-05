@@ -838,32 +838,141 @@ async function cargarVentas() {
     }
 }
 
-async function verDetalleVenta(idVenta) {
+async function abrirModalHistorial() {
+    const usuario = obtenerUsuario();
+
+    if (!usuario) {
+        alert("⚠️ Debes iniciar sesión");
+        return;
+    }
+
+    const modal = document.getElementById("modal-historial");
+    if (modal) {
+        modal.showModal();
+        await cargarHistorialComprasModal(usuario);
+    } else {
+        console.error("❌ Modal modal-historial no encontrado");
+    }
+}
+
+async function cargarHistorialComprasModal(usuario) {
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/${usuario.id_usuario}/compras`);
+        const data = await res.json();
+
+        const listaCompras = document.getElementById("lista-compras-modal");
+        const mensajeSinCompras = document.getElementById("mensaje-sin-compras");
+
+        if (!data.success || !data.compras || data.compras.length === 0) {
+            if (mensajeSinCompras) mensajeSinCompras.classList.remove("d-none");
+            if (listaCompras) listaCompras.innerHTML = "";
+            return;
+        }
+
+        if (mensajeSinCompras) mensajeSinCompras.classList.add("d-none");
+
+        listaCompras.innerHTML = data.compras.map((compra, index) => `
+            <div class="compra-card" onclick="verDetalleCompra(${compra.id_venta})" style="animation-delay: ${index * 0.1}s;">
+                <div class="compra-header">
+                    <div>
+                        <div class="compra-id">🛒 Compra #${compra.id_venta}</div>
+                        <div class="compra-fecha">
+                            <i class="fas fa-calendar"></i> 
+                            ${new Date(compra.fecha).toLocaleString('es-MX')}
+                        </div>
+                    </div>
+                    <div class="compra-total">
+                        $${parseFloat(compra.total).toFixed(2)}
+                    </div>
+                </div>
+                <div class="compra-resumen">
+                    <div class="compra-productos-count">
+                        <i class="fas fa-box"></i> ${compra.num_productos} producto${compra.num_productos > 1 ? 's' : ''}
+                    </div>
+                    <button class="ver-detalle-btn" onclick="event.stopPropagation(); verDetalleCompra(${compra.id_venta})">
+                        Ver Detalle <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        `).join("");
+
+    } catch (err) {
+        console.error("Error:", err);
+        alert("❌ Error al cargar historial");
+    }
+}
+
+async function verDetalleCompra(idVenta) {
     try {
         const res = await fetch(`${API_URL}/api/venta/${idVenta}`);
         const data = await res.json();
 
         if (!data.success) {
-            alert("❌ Error al cargar detalles");
+            alert("❌ Error al cargar detalle");
             return;
         }
 
-        const detalle = data.detalles.map(d => 
-            `• ${sanitizarTexto(d.nombre_producto)} - Cantidad: ${d.cantidad} - Precio: ${d.precio.toFixed(2)} - Subtotal: ${d.subtotal.toFixed(2)}`
-        ).join('\n');
+        const venta = data.venta;
+        const productos = data.detalles || [];
 
-        alert(
-            `📋 DETALLE DE VENTA #${idVenta}\n\n` +
-            `Cliente: ${sanitizarTexto(data.venta.nombre_usuario)}\n` +
-            `Fecha: ${new Date(data.venta.fecha).toLocaleString('es-MX')}\n\n` +
-            `PRODUCTOS:\n${detalle}\n\n` +
-            `TOTAL: ${parseFloat(data.venta.total).toFixed(2)}`
-        );
+        document.getElementById("modal-historial")?.close();
+
+        const productosHTML = productos.map(p => `
+            <div class="producto-detalle-item">
+                <div class="producto-detalle-info">
+                    <div class="producto-detalle-nombre">${p.nombre_producto}</div>
+                    <div class="producto-detalle-cantidad">
+                        <i class="fas fa-shopping-cart"></i> 
+                        Cantidad: <strong>${p.cantidad}</strong>
+                    </div>
+                </div>
+                <div class="producto-detalle-precio">
+                    <div class="producto-detalle-precio-unitario">$${parseFloat(p.precio).toFixed(2)} c/u</div>
+                    <div class="producto-detalle-precio-total">$${parseFloat(p.subtotal).toFixed(2)}</div>
+                </div>
+            </div>
+        `).join("");
+
+        const contenidoDetalle = document.getElementById("contenido-detalle-compra");
+        if (contenidoDetalle) {
+            contenidoDetalle.innerHTML = `
+                <div class="detalle-compra-header">
+                    <h3 style="margin: 0; color: #ffd700;">🛒 Compra #${venta.id_venta}</h3>
+                    <div class="detalle-info-grid">
+                        <div class="detalle-info-item">
+                            <div class="detalle-info-label">📅 Fecha</div>
+                            <div class="detalle-info-value">${new Date(venta.fecha).toLocaleDateString('es-MX')}</div>
+                        </div>
+                        <div class="detalle-info-item">
+                            <div class="detalle-info-label">🕐 Hora</div>
+                            <div class="detalle-info-value">${new Date(venta.fecha).toLocaleTimeString('es-MX')}</div>
+                        </div>
+                    </div>
+                </div>
+                <h4 style="color: #ffd700; margin-bottom: 15px;">
+                    <i class="fas fa-list"></i> Productos comprados:
+                </h4>
+                ${productosHTML}
+                <div class="total-compra-detalle">
+                    <div class="total-compra-detalle-label">💰 TOTAL PAGADO</div>
+                    <div class="total-compra-detalle-valor">$${parseFloat(venta.monto_pagado).toFixed(2)}</div>
+                </div>
+            `;
+        }
+
+        document.getElementById("modal-detalle-compra")?.showModal();
 
     } catch (err) {
         console.error("Error:", err);
-        alert("❌ Error al cargar detalles de venta");
+        alert("❌ Error al cargar detalle");
     }
+}
+
+function volverAHistorial() {
+    document.getElementById("modal-detalle-compra")?.close();
+    setTimeout(() => {
+        document.getElementById("modal-historial")?.showModal();
+    }, 200);
 }
 
 // ==============================================
@@ -943,115 +1052,123 @@ async function eliminarUsuario(idUsuario) {
     }
 }
 
-async function cargarUsuariosParaRecarga() {
-    try {
-        const res = await fetch(`${API_URL}/api/usuarios`);
-        
-        if (!res.ok) {
-            console.error("Error en la respuesta:", res.status);
-            alert("❌ Error al cargar usuarios");
-            return;
-        }
+async function abrirModalRecargarSaldo() {
+    const usuario = obtenerUsuario();
 
-        const data = await res.json();
-        const tbody = document.getElementById("tablaUsuariosRecarga");
-        if (!tbody) return;
-
-        // Si data es un array directamente
-        const usuarios = Array.isArray(data) ? data : (data.usuarios || []);
-
-        if (usuarios.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No hay usuarios registrados</td></tr>';
-            return;
-        }
-
-        tbody.innerHTML = usuarios.map(u => `
-            <tr>
-                <td>${u.id_usuario}</td>
-                <td>${sanitizarTexto(u.nombre)}</td>
-                <td>${sanitizarTexto(u.email)}</td>
-                <td>
-                    <span class="badge bg-${u.saldo > 100 ? 'success' : 'warning'}">
-                        ${parseFloat(u.saldo || 0).toFixed(2)}
-                    </span>
-                </td>
-                <td>
-                    <button class="btn btn-sm btn-primary" 
-                            onclick="seleccionarUsuarioRecarga(${u.id_usuario}, '${sanitizarTexto(u.nombre)}', ${u.saldo || 0})">
-                        Seleccionar
-                    </button>
-                </td>
-            </tr>
-        `).join("");
-
-    } catch (err) {
-        console.error("Error:", err);
-        alert("❌ Error al cargar usuarios");
-    }
-}
-
-function seleccionarUsuarioRecarga(id, nombre, saldo) {
-    document.getElementById("recargar-id").value = id;
-    document.getElementById("recargar-nombre").value = nombre;
-    document.getElementById("recargar-saldo-actual").value = `${parseFloat(saldo).toFixed(2)}`;
-    document.getElementById("recargar-monto").focus();
-}
-
-async function procesarRecargaAdmin() {
-    const admin = obtenerUsuario();
-    
-    if (!admin || admin.rol !== 'admin') {
-        alert("❌ No tienes permisos para recargar saldo");
+    if (!usuario) {
+        alert("⚠️ Debes iniciar sesión");
         return;
     }
 
-    const idUsuario = parseInt(document.getElementById("recargar-id").value);
-    const montoInput = document.getElementById("recargar-monto").value;
-    const nombre = document.getElementById("recargar-nombre").value;
-    const saldoActual = parseFloat(document.getElementById("recargar-saldo-actual").value.replace(',', ''));
+    document.getElementById("recarga-usuario-nombre").textContent = usuario.nombre;
+    document.getElementById("recarga-usuario-saldo").textContent = `$${parseFloat(usuario.saldo || 0).toFixed(2)}`;
+    document.getElementById("recarga-monto-input").value = "";
 
-    if (!idUsuario || isNaN(idUsuario)) {
-        alert("⚠️ Selecciona un usuario primero");
+    const modal = document.getElementById("modal-recargar-saldo-simple");
+    if (modal) {
+        modal.showModal();
+    } else {
+        console.error("❌ Modal modal-recargar-saldo-simple no encontrado");
+    }
+}
+
+async function procesarRecargaSaldo() {
+    const usuario = obtenerUsuario();
+
+    if (!usuario) {
+        alert("⚠️ Debes iniciar sesión");
         return;
     }
 
-    if (!validarNumero(montoInput, 0.01, 100000)) {
-        alert("⚠️ El monto debe estar entre $0.01 y $100,000");
+    const montoInput = document.getElementById("recarga-monto-input").value;
+
+    if (!montoInput || parseFloat(montoInput) <= 0) {
+        alert("⚠️ Ingresa un monto válido");
         return;
     }
 
     const monto = parseFloat(montoInput);
-    const nuevoSaldo = saldoActual + monto;
+    const saldoActual = parseFloat(usuario.saldo || 0);
 
-    const confirmar = confirm(
-        `¿Confirmar recarga?\n\n` +
-        `Usuario: ${nombre}\n` +
-        `Saldo actual: ${saldoActual.toFixed(2)}\n` +
-        `Monto a recargar: ${monto.toFixed(2)}\n` +
-        `Nuevo saldo: ${nuevoSaldo.toFixed(2)}`
-    );
-
-    if (!confirmar) return;
+    if (!confirm(`¿Recargar $${monto.toFixed(2)}?\n\nNuevo saldo: $${(saldoActual + monto).toFixed(2)}`)) {
+        return;
+    }
 
     try {
-        const res = await fetch(`${API_URL}/api/usuario/recargar-saldo`, {
+        const res = await fetch(`${API_URL}/api/usuario/recargar`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                id_usuario: idUsuario,
-                monto: monto,
-                id_admin: admin.id_usuario
+                id_usuario: usuario.id_usuario,
+                monto: monto
             })
         });
 
         const data = await res.json();
 
         if (data.success) {
-            alert(`✅ Recarga exitosa\n\nNuevo saldo de ${nombre}: ${data.nuevoSaldo.toFixed(2)}`);
-            
-            await cargarUsuariosParaRecarga();
-            
-            document.getElementById("formRecargarSaldo").reset();
+            usuario.saldo = data.nuevoSaldo;
+            guardarUsuario(usuario);
+
+            alert(`✅ Recarga exitosa!\n\nNuevo saldo: $${data.nuevoSaldo.toFixed(2)}`);
+
+            document.getElementById("modal-recargar-saldo-simple")?.close();
+
+            // Actualizar UI
+            const saldoNav = document.getElementById("nav-usuario-saldo");
+            if (saldoNav) saldoNav.textContent = `$${data.nuevoSaldo.toFixed(2)}`;
+
+            const saldoPerfil = document.getElementById("perfil-saldo");
+            if (saldoPerfil) saldoPerfil.textContent = `$${data.nuevoSaldo.toFixed(2)}`;
+        } else {
+            alert("❌ " + (data.message || "Error al recargar"));
+        }
+
+    } catch (err) {
+        console.error("Error:", err);
+        alert("❌ Error de conexión");
+    }
+}
+
+async function recargarSaldo() {
+    const usuario = obtenerUsuario();
+    if (!usuario) return;
+
+    const montoInput = document.getElementById("monto-recarga").value;
+
+    if (!validarNumero(montoInput, 1, 10000)) {
+        alert("⚠️ El monto debe estar entre $1 y $10,000");
+        return;
+    }
+
+    const monto = parseFloat(montoInput);
+
+    if (!confirm(`¿Recargar $${monto.toFixed(2)} a tu cuenta?`)) return;
+
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/recargar`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                id_usuario: usuario.id_usuario,
+                monto: monto
+            })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            usuario.saldo = data.nuevoSaldo;
+            guardarUsuario(usuario);
+
+            alert(`✅ Recarga exitosa\n\nNuevo saldo: $${data.nuevoSaldo.toFixed(2)}`);
+
+            document.getElementById("perfil-saldo").textContent = 
+                `$${data.nuevoSaldo.toFixed(2)}`;
+
+            document.getElementById("modal-recargar-saldo")?.close();
+            document.getElementById("monto-recarga").value = "";
+
         } else {
             alert("❌ " + (data.message || "Error al recargar saldo"));
         }
@@ -1152,7 +1269,7 @@ function configurarFormularios() {
     if (formAgregar) {
         formAgregar.addEventListener("submit", async (e) => {
             e.preventDefault();
-            
+
             const nombre = sanitizarTexto(document.getElementById("nombreProducto").value);
             const descripcion = sanitizarTexto(document.getElementById("descripcionProducto").value);
             const precio = document.getElementById("precioProducto").value;
@@ -1217,7 +1334,7 @@ function configurarFormularios() {
     if (formEditar) {
         formEditar.addEventListener("submit", async (e) => {
             e.preventDefault();
-            
+
             const id = document.getElementById("edit-id").value;
             const nombre = sanitizarTexto(document.getElementById("edit-nombre").value);
             const descripcion = sanitizarTexto(document.getElementById("edit-descripcion").value);
