@@ -851,6 +851,13 @@ async function cargarDatosPerfil(usuario) {
     }
 }
 
+function abrirModalEditarPerfil() {
+    const modal = document.getElementById("modal-editar");
+    if (!modal) return alert("❌ Modal editar no encontrado");
+
+    modal.showModal();
+}
+
 async function abrirModalEditarPerfil() {
     const usuario = obtenerUsuario();
     if (!usuario) return;
