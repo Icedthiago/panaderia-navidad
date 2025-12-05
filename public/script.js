@@ -632,6 +632,7 @@ async function cargarProductosParaComprar() {
                             data-id="${p.id_producto}"
                             data-precio="${p.precio}"
                             data-nombre="${nombreSeguro}"
+                            data-stock="${stock}"
                             data-imagen="${p.imagen 
                                 ? `data:image/jpeg;base64,${p.imagen}` 
                                 : 'https://via.placeholder.com/60?text=Sin+Imagen'
