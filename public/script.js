@@ -738,7 +738,7 @@ function mostrarProductosEnTabla(productos) {
                 imagen: this.dataset.imagen
             };
             
-            agregarAlCarritoConValidacion(producto);
+            agregarAlCarrito(producto);
         });
     });
 }
@@ -747,6 +747,21 @@ function mostrarProductosEnTabla(productos) {
     configurarBotonesCompra();
 }
 
+function configurarBotonesCompra() {
+    document.querySelectorAll(".btn-comprar-producto").forEach(btn => {
+        btn.addEventListener("click", function() {
+            const producto = {
+                id_producto: Number(this.dataset.id),
+                nombre: this.dataset.nombre,
+                precio: Number(this.dataset.precio),
+                stock: Number(this.dataset.stock),
+                imagen: this.dataset.imagen
+            };
+            
+            agregarAlCarritoConValidacion(producto);
+        });
+    });
+}
 
 // ==============================================
 // 7. PRODUCTOS (INVENTARIO - ADMIN)
