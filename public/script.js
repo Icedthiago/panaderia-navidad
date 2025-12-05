@@ -598,6 +598,7 @@ async function confirmarCompra() {
 
 let todosLosProductos = [];
 let productosVisibles = [];
+let temporadasDisponibles = [];
 
 async function cargarProductosParaComprar() {
     try {
@@ -628,6 +629,12 @@ async function cargarProductosParaComprar() {
                 console.log(`   - ${p.nombre} (ID: ${p.id_producto}, Stock: ${p.stock})`);
             });
         }
+        
+        // Extraer temporadas únicas de productos con stock
+        extraerTemporadas();
+        
+        // Cargar opciones en el select
+        cargarOpcionesTemporadas();
         
         // Mostrar productos en la tabla
         mostrarProductosEnTabla(productosVisibles);
@@ -747,6 +754,202 @@ function mostrarProductosEnTabla(productos) {
     configurarBotonesCompra();
 }
 
+function extraerTemporadas() {
+    // Obtener todas las temporadas de productos con stock
+    const temporadas = productosVisibles.map(p => p.temporada);
+    
+    // Eliminar duplicados y ordenar
+    temporadasDisponibles = [...new Set(temporadas)]
+        .filter(t => t && t.trim() !== '') // Eliminar vacíos
+        .sort();
+    
+    console.log(`🎭 Temporadas disponibles: ${temporadasDisponibles.join(', ')}`);
+}
+
+function cargarOpcionesTemporadas() {
+    const select = document.getElementById("filtro-temporada");
+    if (!select) {
+        console.warn("⚠️ No se encontró el select de temporadas");
+        return;
+    }
+    
+    // Limpiar opciones existentes (excepto la primera)
+    while (select.options.length > 1) {
+        select.remove(1);
+    }
+    
+    // Agregar cada temporada como opción
+    temporadasDisponibles.forEach(temporada => {
+        const option = document.createElement("option");
+        option.value = temporada;
+        
+        // Agregar emoji según la temporada
+        let emoji = "🎉";
+        if (temporada.toLowerCase().includes("navid")) emoji = "🎄";
+        else if (temporada.toLowerCase().includes("halloween")) emoji = "🎃";
+        else if (temporada.toLowerCase().includes("muertos")) emoji = "💀";
+        else if (temporada.toLowerCase().includes("reyes")) emoji = "👑";
+        else if (temporada.toLowerCase().includes("valent")) emoji = "💝";
+        else if (temporada.toLowerCase().includes("pascua")) emoji = "🐰";
+        else if (temporada.toLowerCase().includes("año")) emoji = "📅";
+        
+        option.textContent = `${emoji} ${temporada}`;
+        select.appendChild(option);
+    });
+    
+    console.log(`✅ Select cargado con ${temporadasDisponibles.length} temporadas`);
+}
+
+function filtrarPorTemporada(temporada) {
+    console.log(`🎭 Filtrando por temporada: "${temporada}"`);
+    
+    if (!temporada || temporada === "") {
+        // Mostrar todos los productos con stock
+        console.log("📦 Mostrando todos los productos");
+        mostrarProductosEnTabla(productosVisibles);
+        return;
+    }
+    
+    // Filtrar productos por temporada
+    const productosFiltrados = productosVisibles.filter(p => {
+        return p.temporada === temporada;
+    });
+    
+    console.log(`✅ Productos encontrados de "${temporada}": ${productosFiltrados.length}`);
+    
+    // Mostrar productos filtrados
+    mostrarProductosEnTabla(productosFiltrados);
+    
+    // Si no hay productos de esa temporada
+    if (productosFiltrados.length === 0) {
+        const tbody = document.getElementById("tbodyCompras");
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" style="text-align:center; padding: 40px;">
+                    <i class="fas fa-calendar-times fa-3x mb-3" style="color: #ccc;"></i>
+                    <p style="color: #666; margin: 10px 0;">
+                        No hay productos disponibles de la temporada: <b>"${sanitizarTexto(temporada)}"</b>
+                    </p>
+                    <small class="text-muted d-block mb-3">
+                        Es posible que estén agotados o fuera de temporada
+                    </small>
+                    <button class="btn btn-primary" id="btn-ver-todos-temp">
+                        📦 Ver todos los productos
+                    </button>
+                </td>
+            </tr>
+        `;
+        
+        // Agregar evento al botón temporal
+        const btnTemp = document.getElementById("btn-ver-todos-temp");
+        if (btnTemp) {
+            btnTemp.addEventListener("click", limpiarFiltroTemporada);
+        }
+    }
+}
+
+function limpiarFiltroTemporada() {
+    const select = document.getElementById("filtro-temporada");
+    if (select) {
+        select.value = "";
+    }
+    mostrarProductosEnTabla(productosVisibles);
+    console.log("🧹 Filtro limpiado - Mostrando todos los productos");
+}
+
+function mostrarProductosEnTabla(productos) {
+    const tbody = document.getElementById("tbodyCompras");
+    if (!tbody) {
+        console.error("❌ No se encontró el elemento tbodyCompras");
+        return;
+    }
+    
+    // Limpiar tabla
+    tbody.innerHTML = "";
+    
+    // Si no hay productos disponibles
+    if (productos.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" style="text-align:center; padding: 40px;">
+                    <i class="fas fa-box-open fa-3x mb-3" style="color: #ccc;"></i>
+                    <p style="color: #666; margin: 10px 0;">No hay productos disponibles en este momento</p>
+                    <small class="text-muted">Los productos volverán a aparecer cuando tengan stock</small>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    // Mostrar contador de productos
+    console.log(`📊 Mostrando ${productos.length} producto(s) en la tabla`);
+    
+    // Crear filas de productos
+    productos.forEach(p => {
+        const nombreSeguro = sanitizarTexto(p.nombre);
+        const descSegura = sanitizarTexto(p.descripcion);
+        const temporadaSegura = sanitizarTexto(p.temporada);
+        const stock = parseInt(p.stock);
+        const precio = parseFloat(p.precio);
+        
+        // Determinar el badge de stock
+        let stockBadge = '';
+        let stockClass = '';
+        if (stock > 10) {
+            stockBadge = `<span class="badge bg-success">✅ Stock: ${stock}</span>`;
+            stockClass = 'table-success';
+        } else if (stock > 5) {
+            stockBadge = `<span class="badge bg-warning text-dark">⚠️ Stock: ${stock}</span>`;
+            stockClass = 'table-warning';
+        } else if (stock > 0) {
+            stockBadge = `<span class="badge bg-danger">🔥 ¡Solo ${stock}!</span>`;
+            stockClass = 'table-danger';
+        }
+        
+        // Imagen del producto
+        const imagenSrc = p.imagen 
+            ? `data:image/jpeg;base64,${p.imagen}` 
+            : 'https://via.placeholder.com/60?text=Sin+Imagen';
+        
+        // Crear fila
+        const tr = document.createElement('tr');
+        tr.className = stockClass;
+        tr.innerHTML = `
+            <td>${p.id_producto}</td>
+            <td>
+                <img src="${imagenSrc}" 
+                     width="60" height="60"
+                     style="object-fit: cover; border-radius: 8px; border: 2px solid #28a745;"
+                     onerror="this.src='https://via.placeholder.com/60?text=Error'"
+                     alt="${nombreSeguro}"
+                     title="${nombreSeguro}">
+            </td>
+            <td><b>${nombreSeguro}</b></td>
+            <td>${descSegura}</td>
+            <td style="font-size: 1.2em; color: #28a745;"><b>$${precio.toFixed(2)}</b></td>
+            <td>${stockBadge}</td>
+            <td><span class="badge bg-info">${temporadaSegura}</span></td>
+            <td>
+                <button 
+                    class="btn btn-primary btn-sm btn-comprar-producto"
+                    data-id="${p.id_producto}"
+                    data-precio="${precio}"
+                    data-nombre="${nombreSeguro}"
+                    data-stock="${stock}"
+                    data-imagen="${imagenSrc}"
+                    ${stock <= 0 ? 'disabled' : ''}
+                >
+                    🛒 Agregar
+                </button>
+            </td>
+        `;
+        
+        tbody.appendChild(tr);
+    });
+    
+    // Agregar event listeners a los botones de compra
+    configurarBotonesCompra();
+}
 
 // ==============================================
 // 7. PRODUCTOS (INVENTARIO - ADMIN)
