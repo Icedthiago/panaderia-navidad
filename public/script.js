@@ -3,17 +3,20 @@
 // ==============================================
 
 async function abrirModalHistorial() {
-  const usuario = obtenerUsuario();
-  if (!usuario) { alert("⚠️ Debes iniciar sesión"); return; }
+    const usuario = obtenerUsuario();
+    
+    if (!usuario) {
+        alert("⚠️ Debes iniciar sesión");
+        return;
+    }
 
-  const modal = document.getElementById("modal-historial") || document.getElementById("modal-historial-perfil");
-  if (modal) {
-    modal.showModal();
-    // cargarHistorialComprasModal espera elementos con ids sin -perfil; si estás en perfil usamos los ids perfil
-    await cargarHistorialComprasModal(usuario);
-  } else {
-    console.error("❌ Modal modal-historial no encontrado");
-  }
+    const modal = document.getElementById("modal-historial");
+    if (modal) {
+        modal.showModal();
+        await cargarHistorialComprasModal(usuario);
+    } else {
+        console.error("❌ Modal modal-historial no encontrado");
+    }
 }
 
 async function cargarHistorialComprasModal(usuario) {
@@ -64,59 +67,116 @@ async function cargarHistorialComprasModal(usuario) {
 }
 
 async function verDetalleCompra(idVenta) {
-  try {
-    const res = await fetch(`${API_URL}/api/venta/${idVenta}`);
-    const data = await res.json();
-    if (!data.success) { alert("❌ Error al cargar detalle"); return; }
+    try {
+        const res = await fetch(`${API_URL}/api/venta/${idVenta}`);
+        const data = await res.json();
 
-    const venta = data.venta;
-    const productos = data.detalles || [];
+        if (!data.success) {
+            alert("❌ Error al cargar detalle");
+            return;
+        }
 
-    // cerrar historial (intenta ambos IDs)
-    const modalHist = document.getElementById("modal-historial") || document.getElementById("modal-historial-perfil");
-    if (modalHist) modalHist.close();
+        const venta = data.venta;
+        const productos = data.detalles || [];
 
-    // render contenido en el id correcto (perfil o global)
-    const contenidoId = document.getElementById("contenido-detalle-compra") || document.getElementById("contenido-detalle-compra-perfil");
-    if (contenidoId) {
-      contenidoId.innerHTML = productos.map(p => `
-        <div class="producto-detalle-item">
-          <div class="producto-detalle-info">
-            <div class="producto-detalle-nombre">${p.nombre_producto}</div>
-            <div class="producto-detalle-cantidad">Cantidad: <strong>${p.cantidad}</strong></div>
-          </div>
-          <div class="producto-detalle-precio">
-            <div>${parseFloat(p.precio).toFixed(2)} c/u</div>
-            <div>${parseFloat(p.subtotal).toFixed(2)}</div>
-          </div>
-        </div>
-      `).join("");
+        document.getElementById("modal-historial")?.close();
+
+        const productosHTML = productos.map(p => `
+            <div class="producto-detalle-item">
+                <div class="producto-detalle-info">
+                    <div class="producto-detalle-nombre">${p.nombre_producto}</div>
+                    <div class="producto-detalle-cantidad">
+                        <i class="fas fa-shopping-cart"></i> 
+                        Cantidad: <strong>${p.cantidad}</strong>
+                    </div>
+                </div>
+                <div class="producto-detalle-precio">
+                    <div class="producto-detalle-precio-unitario">$${parseFloat(p.precio).toFixed(2)} c/u</div>
+                    <div class="producto-detalle-precio-total">$${parseFloat(p.subtotal).toFixed(2)}</div>
+                </div>
+            </div>
+        `).join("");
+
+        const contenidoDetalle = document.getElementById("contenido-detalle-compra");
+        if (contenidoDetalle) {
+            contenidoDetalle.innerHTML = `
+                <div class="detalle-compra-header">
+                    <h3 style="margin: 0; color: #ffd700;">🛒 Compra #${venta.id_venta}</h3>
+                    <div class="detalle-info-grid">
+                        <div class="detalle-info-item">
+                            <div class="detalle-info-label">📅 Fecha</div>
+                            <div class="detalle-info-value">${new Date(venta.fecha).toLocaleDateString('es-MX')}</div>
+                        </div>
+                        <div class="detalle-info-item">
+                            <div class="detalle-info-label">🕐 Hora</div>
+                            <div class="detalle-info-value">${new Date(venta.fecha).toLocaleTimeString('es-MX')}</div>
+                        </div>
+                    </div>
+                </div>
+                <h4 style="color: #ffd700; margin-bottom: 15px;">
+                    <i class="fas fa-list"></i> Productos comprados:
+                </h4>
+                ${productosHTML}
+                <div class="total-compra-detalle">
+                    <div class="total-compra-detalle-label">💰 TOTAL PAGADO</div>
+                    <div class="total-compra-detalle-valor">$${parseFloat(venta.monto_pagado).toFixed(2)}</div>
+                </div>
+            `;
+        }
+
+        document.getElementById("modal-detalle-compra")?.showModal();
+
+    } catch (err) {
+        console.error("Error:", err);
+        alert("❌ Error al cargar detalle");
     }
-
-    // abrir modal detalle (fallback)
-    const modalDetalle = document.getElementById("modal-detalle-compra") || document.getElementById("modal-detalle-compra-perfil");
-    if (modalDetalle) modalDetalle.showModal();
-
-  } catch (err) {
-    console.error("Error:", err);
-    alert("❌ Error al cargar detalle");
-  }
 }
 
 function volverAHistorial() {
-  const modalDetalle = document.getElementById("modal-detalle-compra") || document.getElementById("modal-detalle-compra-perfil");
-  if (modalDetalle) modalDetalle.close();
-  setTimeout(() => {
-    const modalHist = document.getElementById("modal-historial") || document.getElementById("modal-historial-perfil");
-    if (modalHist) modalHist.showModal();
-  }, 200);
+    document.getElementById("modal-detalle-compra")?.close();
+    setTimeout(() => {
+        document.getElementById("modal-historial")?.showModal();
+    }, 200);
 }
 
-// cerrar modal desde el botón X inline en perfil.html
-function cerrarModalPerfil(id) {
-  const modal = document.getElementById(id) || document.getElementById(id.replace('-perfil',''));
-  if (modal) modal.close();
+async function actualizarSaldoUsuario() {
+    const usuario = obtenerUsuario();
+    if (!usuario) {
+        alert("⚠️ Debes iniciar sesión primero");
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/api/usuario/${usuario.id_usuario}/saldo-actual`);
+        const data = await res.json();
+
+        if (data.success) {
+            usuario.saldo = data.saldo;
+            guardarUsuario(usuario);
+
+            // Actualizar en navbar
+            const saldoNav = document.getElementById("nav-usuario-saldo");
+            if (saldoNav) {
+                saldoNav.textContent = `${data.saldo.toFixed(2)}`;
+            }
+
+            // Actualizar en perfil si existe
+            const saldoPerfil = document.getElementById("perfil-saldo");
+            if (saldoPerfil) {
+                saldoPerfil.textContent = `${data.saldo.toFixed(2)}`;
+            }
+
+            alert(`✅ Saldo actualizado: ${data.saldo.toFixed(2)}`);
+        } else {
+            alert("❌ " + data.message);
+        }
+
+    } catch (err) {
+        console.error("Error actualizando saldo:", err);
+        alert("❌ Error al actualizar saldo");
+    }
 }
+
 // ==============================================
 // SCRIPT.JS COMPLETO - PANADERÍA NAVIDEÑA
 // Con validaciones de seguridad XSS
@@ -803,7 +863,7 @@ async function abrirModalEditarPerfil() {
             document.getElementById("modal-edit-nombre").value = data.usuario.nombre;
             document.getElementById("modal-edit-email").value = data.usuario.email;
             
-            document.getElementById("modal-editar-perfil")?.showModal();
+            document.getElementById("modal-editar")?.showModal();
         }
     } catch (err) {
         console.error("Error:", err);
@@ -879,15 +939,15 @@ async function abrirModalRecargarSaldo() {
         return;
     }
 
-    document.getElementById("recarga-usuario-nombre-perfil").textContent = usuario.nombre;
+    document.getElementById("recarga-usuario-nombre").textContent = usuario.nombre;
     document.getElementById("recarga-usuario-saldo").textContent = `$${parseFloat(usuario.saldo || 0).toFixed(2)}`;
     document.getElementById("recarga-monto-input").value = "";
     
-    const modal = document.getElementById("modal-recargar-saldo-perfil");
+    const modal = document.getElementById("modal-recargar-saldo-simple");
     if (modal) {
         modal.showModal();
     } else {
-        console.error("❌ Modal modal-recargar-saldo-perfil no encontrado");
+        console.error("❌ Modal modal-recargar-saldo-simple no encontrado");
     }
 }
 
@@ -995,35 +1055,6 @@ async function recargarSaldo() {
     } catch (err) {
         console.error("Error:", err);
         alert("❌ Error de conexión");
-    }
-}
-
-async function actualizarSaldoUsuario() {
-    const usuario = obtenerUsuario();
-    if (!usuario) {
-        alert("⚠️ Inicia sesión");
-        return;
-    }
-
-    try {
-        const res = await fetch(`${API_URL}/api/usuario/${usuario.id_usuario}/saldo-actual`);
-        const data = await res.json();
-
-        if (data.success) {
-            usuario.saldo = data.saldo;
-            guardarUsuario(usuario);
-
-            const saldoNav = document.getElementById("nav-usuario-saldo");
-            if (saldoNav) saldoNav.textContent = `$${data.saldo.toFixed(2)}`;
-            
-            const saldoPerfil = document.getElementById("perfil-saldo");
-            if (saldoPerfil) saldoPerfil.textContent = `$${data.saldo.toFixed(2)}`;
-
-            alert(`✅ Saldo: $${data.saldo.toFixed(2)}`);
-        }
-
-    } catch (err) {
-        console.error("Error:", err);
     }
 }
 
@@ -1617,10 +1648,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 300);
     }
 });
-
-function getModalElement(baseId) {
-  return document.getElementById(baseId) || document.getElementById(baseId + '-perfil') || document.getElementById(baseId.replace('modal-','modal-') + '-perfil');
-}
 
 // ==============================================
 // EXPORTAR FUNCIONES GLOBALES

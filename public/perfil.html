@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mi Perfil</title>
+  <title>Mi Perfil - Panadería Navideña</title>
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -11,12 +11,9 @@
 </head>
 <body>
 
-<div class="header">
-  <h1>panaderia desesperanza</h1>
-</div>
-
-<nav class="navbar navbar-expand-lg navbar-dark bg-success px-3">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-success px-3">
   <div class="container-fluid">
+
     <a class="navbar-brand" href="index.html">Panadería</a>
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
@@ -25,7 +22,10 @@
     </button>
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
+
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+        <!-- ✅ Botones para NO logueados - CORREGIDOS -->
         <li class="nav-item" id="nav-login-btn">
           <button class="btn btn-outline-light" data-open="modal-login" type="button">
             🔐 Inicio de sesión
@@ -38,6 +38,7 @@
           </button>
         </li>
 
+        <!-- ✅ USUARIO LOGUEADO CON SALDO -->
         <li class="nav-item d-none" id="nav-usuario">
           <span class="nav-link">
             👤 <b id="nav-usuario-nombre"></b> 
@@ -45,6 +46,7 @@
           </span>
         </li>
 
+        <!-- Botón logout -->
         <li class="nav-item d-none" id="nav-logout">
           <button class="btn btn-danger btn-sm ms-2" id="logoutBtn">
             🚪 Cerrar sesión
@@ -55,6 +57,7 @@
           <a class="nav-link" href="#acerca">Nosotros</a>
         </li>
 
+        <!-- Menú dropdown -->
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" 
              data-bs-toggle="dropdown">
@@ -63,103 +66,275 @@
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="perfil.html">Perfil</a></li>
             <li><a class="dropdown-item" href="compra.html">Compra</a></li>
-            <li><a class="dropdown-item admin-only d-none" href="inventario.html">Inventario</a></li>
-            <li><a class="dropdown-item admin-only d-none" href="ventas.html">Ventas</a></li>
+            <li><a class="dropdown-item admin-only d-none" href="inventario.html">
+              Inventario
+            </a></li>
+            <li><a class="dropdown-item admin-only d-none" href="ventas.html">
+              Ventas
+            </a></li>
           </ul>
         </li>
 
+        <!-- ✅ Carrito -->
         <li class="nav-item d-none" id="nav-carrito-btn">
           <button class="btn btn-warning btn-sm" data-open="modal-carrito">
             🛒 <span id="carrito-cantidad">0</span>
           </button>
         </li>
 
-        <li class="nav-item"><a class="nav-link">🎅</a></li>
-        <li class="nav-item"><a class="nav-link">🎄</a></li>
-        <li class="nav-item"><a class="nav-link">❄️</a></li>
+        <li class="nav-item">
+          <a class="nav-link">🎅</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link">🎄</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link">❄️</a>
+        </li>
+
       </ul>
+
     </div>
   </div>
 </nav>
 
-<!-- ✅ SECCIÓN DE PERFIL -->
+<div class="header">
+  <h1 class="header h1">panaderia desesperanza</h1>
+</div>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-success px-3">
+  <div class="container-fluid">
+
+    <a class="navbar-brand" href="index.html">Panadería</a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#navbarSupportedContent">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+        <!-- ✅ Botones para NO logueados - CORREGIDOS -->
+        <li class="nav-item" id="nav-login-btn">
+          <button class="btn btn-outline-light" data-open="modal-login" type="button">
+            🔐 Inicio de sesión
+          </button>
+        </li>
+
+        <li class="nav-item" id="nav-registro-btn">
+          <button class="btn btn-outline-light ms-2" data-open="modal-registro" type="button">
+            📝 Registrar
+          </button>
+        </li>
+
+        <!-- ✅ USUARIO LOGUEADO CON SALDO -->
+        <li class="nav-item d-none" id="nav-usuario">
+          <span class="nav-link">
+            👤 <b id="nav-usuario-nombre"></b> 
+            | 💰 <span id="nav-usuario-saldo" class="badge bg-warning text-dark">$0.00</span>
+          </span>
+        </li>
+
+        <!-- Botón logout -->
+        <li class="nav-item d-none" id="nav-logout">
+          <button class="btn btn-danger btn-sm ms-2" id="logoutBtn">
+            🚪 Cerrar sesión
+          </button>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="#acerca">Nosotros</a>
+        </li>
+
+        <!-- Menú dropdown -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" 
+             data-bs-toggle="dropdown">
+            Menú
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="perfil.html">Perfil</a></li>
+            <li><a class="dropdown-item" href="compra.html">Compra</a></li>
+            <li><a class="dropdown-item admin-only d-none" href="inventario.html">
+              Inventario
+            </a></li>
+            <li><a class="dropdown-item admin-only d-none" href="ventas.html">
+              Ventas
+            </a></li>
+          </ul>
+        </li>
+
+        <!-- ✅ Carrito -->
+        <li class="nav-item d-none" id="nav-carrito-btn">
+          <button class="btn btn-warning btn-sm" data-open="modal-carrito">
+            🛒 <span id="carrito-cantidad">0</span>
+          </button>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link">🎅</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link">🎄</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link">❄️</a>
+        </li>
+
+      </ul>
+
+    </div>
+  </div>
+</nav>
+
+<!-- PERFIL CARD -->
 <div class="perfil-container">
   <div class="perfil-card">
     <div class="perfil-header">
-      <img id="perfil-foto" class="perfil-foto" src="https://via.placeholder.com/120" alt="Foto">
+      <img id="perfil-foto" class="perfil-foto" 
+           src="https://via.placeholder.com/120?text=Sin+Foto" 
+           alt="Foto de perfil">
       <h2 id="perfil-nombre">Usuario</h2>
-      <p id="perfil-email">email@example.com</p>
+      <p id="perfil-email">correo@example.com</p>
     </div>
 
     <div class="perfil-info">
-      <p><b>Rol:</b> <span id="perfil-rol">Cliente</span></p>
-      <p><b>💰 Saldo:</b> <span id="perfil-saldo" class="badge bg-success">$0.00</span></p>
+      <p><b>Rol:</b> <span id="perfil-rol">Invitado</span></p>
+      
+      <p class="perfil-saldo-container">
+        <b>💰 Saldo:</b> 
+        <span id="perfil-saldo" class="badge bg-success" style="font-size: 1.2em;">
+          $0.00
+        </span>
+        <button class="btn btn-sm btn-primary" id="btn-actualizar-saldo">
+          🔄 Actualizar
+        </button>
+      </p>
     </div>
 
+    <!-- ✅ BOTONES PRINCIPALES (SIN onclick inline) -->
     <div class="perfil-actions">
-      <button class="btn btn-primary" id="btn-editar-perfil">✏️ Editar perfil</button>
-      <button class="btn btn-info" id="btn-historial-perfil">📜 Mi Historial</button>
-      <button class="btn btn-success" id="btn-recargar-perfil">💰 Recargar Saldo</button>
-      <button class="btn btn-warning admin-only d-none" id="btn-admin-usuarios-perfil">👥 Usuarios</button>
+      <button class="btn btn-primary" id="btn-editar">
+        ✏️ Editar perfil
+      </button>
+      
+      <button class="btn btn-info" id="btn-historial">
+        📜 Ver Mi Historial
+      </button>
+      
+      <button class="btn btn-success" id="btn-recargar-saldo">
+        💰 Recargar Mi Saldo
+      </button>
+      
+      <button class="btn btn-warning admin-only d-none" data-open="modal-usuarios">
+        👥 Administrar Usuarios
+      </button>
     </div>
   </div>
 </div>
 
-<!-- ✅ MODAL EDITAR PERFIL -->
-<dialog id="modal-editar-perfil">
-  <button class="btn-x" onclick="cerrarModalPerfil('modal-editar-perfil')">X</button>
-  <h2>Editar Perfil</h2>
-  <div style="padding:20px;">
-    <label>Nombre:</label>
-    <input type="text" id="modal-edit-nombre-perfil" class="form-control" required>
-    
-    <label>Email:</label>
-    <input type="email" id="modal-edit-email-perfil" class="form-control" required>
-    
-    <label>Contraseña (opcional):</label>
-    <input type="password" id="modal-edit-password-perfil" class="form-control">
-    
-    <label>Foto:</label>
-    <input type="file" id="modal-edit-imagen-perfil" class="form-control" accept="image/*">
-    
-    <button class="btn btn-success mt-3" id="btn-guardar-perfil-cambios">Guardar</button>
+<!-- ============ MODALES ============ -->
+
+<!-- Modal Editar Perfil -->
+<dialog id="modal-editar" class="modal-editar">
+  <button class="btn-modal cerrar-btn btn-x" data-close="modal-editar">X</button>
+  <h2>✏️ Editar Perfil</h2>
+  <div style="text-align: left; max-width: 400px; margin: 0 auto;">
+    <div class="mb-3">
+      <label for="modal-edit-nombre"><b>Nombre:</b></label>
+      <input type="text" id="modal-edit-nombre" class="form-control" required>
+    </div>
+    <div class="mb-3">
+      <label for="modal-edit-email"><b>Correo:</b></label>
+      <input type="email" id="modal-edit-email" class="form-control" required>
+    </div>
+    <div class="mb-3">
+      <label for="modal-edit-password"><b>Nueva Contraseña (opcional):</b></label>
+      <input type="password" id="modal-edit-password" class="form-control">
+    </div>
+    <div class="mb-3">
+      <label for="modal-edit-imagen"><b>Foto:</b></label>
+      <input type="file" id="modal-edit-imagen" class="form-control" accept="image/*">
+      <img id="preview-img" style="display:none; width:120px; height:120px; margin-top:10px; border-radius:50%;">
+    </div>
+    <button type="button" class="btn btn-success" id="btn-guardar-perfil">💾 Guardar</button>
   </div>
 </dialog>
 
-<!-- ✅ MODAL HISTORIAL -->
-<dialog id="modal-historial-perfil" style="width:90%;max-width:900px;">
-  <button class="btn-x" onclick="cerrarModalPerfil('modal-historial-perfil')">X</button>
-  <h2>Mi Historial</h2>
-  <div id="lista-compras-modal-perfil"></div>
-  <button class="btn btn-secondary mt-3" onclick="cerrarModalPerfil('modal-historial-perfil')">Cerrar</button>
-</dialog>
-
-<!-- ✅ MODAL DETALLE COMPRA -->
-<dialog id="modal-detalle-compra-perfil" style="width:90%;max-width:700px;">
-  <button class="btn-x" onclick="cerrarModalPerfil('modal-detalle-compra-perfil')">X</button>
-  <h2>Detalle de Compra</h2>
-  <div id="contenido-detalle-compra-perfil"></div>
-  <button class="btn btn-secondary mt-3" id="btn-volver-historial-perfil">⬅️ Volver</button>
-</dialog>
-
-<!-- ✅ MODAL RECARGAR SALDO -->
-<dialog id="modal-recargar-saldo-perfil" style="width:90%;max-width:500px;">
-  <button class="btn-x" onclick="cerrarModalPerfil('modal-recargar-saldo-perfil')">X</button>
-  <h2>Recargar Saldo</h2>
-  <div style="padding:20px;">
-    <p>Usuario: <b id="recarga-usuario-nombre-perfil"></b></p>
-    <p>Saldo actual: <b id="recarga-usuario-saldo-perfil"></b></p>
-    <input type="number" id="recarga-monto-input-perfil" class="form-control" placeholder="Monto" step="0.01" min="0.01">
-    <button class="btn btn-success mt-3" id="btn-confirmar-recarga-perfil">Confirmar</button>
+<!-- Modal Historial -->
+<dialog id="modal-historial" style="width: 90%; max-width: 900px; max-height: 90vh; overflow-y: auto;">
+  <button class="btn-modal cerrar-btn btn-x" data-close="modal-historial">X</button>
+  <h2>📜 Mi Historial de Compras</h2>
+  <div id="mensaje-sin-compras" class="alert alert-info text-center d-none" style="margin: 20px 0;">
+    <i class="fas fa-shopping-bag fa-3x mb-3" style="color: #17a2b8;"></i>
+    <p class="mb-0" style="color: #333;">Aún no has realizado ninguna compra.</p>
+    <a href="compra.html" class="btn btn-primary mt-3">🛒 Ir a Comprar</a>
+  </div>
+  <div id="lista-compras-modal"></div>
+  <div style="text-align: center; margin-top: 20px;">
+    <button class="btn btn-secondary" data-close="modal-historial">Cerrar</button>
   </div>
 </dialog>
 
-<!-- ✅ MODAL USUARIOS (ADMIN) -->
-<dialog id="modal-usuarios-perfil" style="width:90%;max-width:900px;">
-  <button class="btn-x" onclick="cerrarModalPerfil('modal-usuarios-perfil')">X</button>
-  <h2>Gestión de Usuarios</h2>
-  <table class="table table-striped">
-    <thead>
+<!-- Modal Detalle Compra -->
+<dialog id="modal-detalle-compra" style="width: 90%; max-width: 700px; max-height: 90vh; overflow-y: auto;">
+  <button class="btn-modal cerrar-btn btn-x" data-close="modal-detalle-compra">X</button>
+  <h2>📋 Detalle de Compra</h2>
+  <div id="contenido-detalle-compra" style="padding: 20px 0;"></div>
+  <div style="text-align: center; margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+    <button class="btn btn-secondary" id="btn-volver-historial">⬅️ Volver</button>
+    <button class="btn btn-danger" data-close="modal-detalle-compra">Cerrar</button>
+  </div>
+</dialog>
+
+<!-- Modal Recargar Saldo -->
+<dialog id="modal-recargar-saldo-simple" style="width: 90%; max-width: 500px;">
+  <button class="btn-modal cerrar-btn btn-x" data-close="modal-recargar-saldo-simple">X</button>
+  <h2>💰 Recargar Mi Saldo</h2>
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; margin: 20px 0; color: white;">
+    <div style="text-align: center;">
+      <div style="font-size: 1.1em; opacity: 0.9; margin-bottom: 10px;">
+        👤 <span id="recarga-usuario-nombre">Usuario</span>
+      </div>
+      <div style="font-size: 0.9em; opacity: 0.8; margin-bottom: 10px;">
+        Tu saldo actual:
+      </div>
+      <div style="font-size: 2.5em; font-weight: bold; color: #ffd700; text-shadow: 0 0 15px rgba(255,215,0,0.5);">
+        <span id="recarga-usuario-saldo">$0.00</span>
+      </div>
+    </div>
+  </div>
+  <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px;">
+    <label style="display: block; margin-bottom: 10px; font-size: 1.1em; color: #ffd700;">
+      <b>💵 Monto a Recargar:</b>
+    </label>
+    <input 
+      type="number" 
+      id="recarga-monto-input" 
+      placeholder="Ej: 500.00" 
+      step="0.01" 
+      min="0.01" 
+      max="100000"
+      style="width: 100%; padding: 12px; font-size: 1.2em; border: 2px solid #ffd700; border-radius: 8px; text-align: center; background: white; color: #333;">
+  </div>
+  <div style="display: flex; gap: 10px; margin-top: 25px;">
+    <button type="button" class="btn btn-success" id="btn-confirmar-recarga" style="flex: 1;">
+      ✅ Confirmar
+    </button>
+    <button type="button" class="btn btn-secondary" data-close="modal-recargar-saldo-simple" style="flex: 1;">
+      ❌ Cancelar
+    </button>
+  </div>
+</dialog>
+
+<!-- Modal Admin Usuarios -->
+<dialog id="modal-usuarios" style="width: 90%; max-width: 900px;">
+  <button class="btn-modal cerrar-btn btn-x" data-close="modal-usuarios">X</button>
+  <h2>👥 Usuarios Registrados</h2>
+  <table class="table table-bordered table-striped mt-3">
+    <thead class="table-dark">
       <tr>
         <th>ID</th>
         <th>Nombre</th>
@@ -169,7 +344,7 @@
         <th>Acciones</th>
       </tr>
     </thead>
-    <tbody id="tablaUsuariosPerfil"></tbody>
+    <tbody id="tablaUsuarios"></tbody>
   </table>
 </dialog>
 
@@ -214,9 +389,100 @@
 	</div>
     </div>
 
+<footer class="footer">
+  <p>&copy; 2025 Panadería Navideña</p>
+</footer>
+
+<!-- ============ AGREGAR AL FINAL, ANTES DE </body> ============ -->
+
+<script>
+// ✅ Configurar eventos cuando el DOM esté listo
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("🔧 Configurando eventos de perfil...");
+    
+    // Verificar que las funciones existen
+    const funciones = {
+        abrirModalHistorial: window.abrirModalHistorial,
+        abrirModalRecargarSaldo: window.abrirModalRecargarSaldo,
+        actualizarSaldoUsuario: window.actualizarSaldoUsuario,
+        volverAHistorial: window.volverAHistorial,
+        procesarRecargaSaldo: window.procesarRecargaSaldo
+    };
+    
+    for (const [nombre, func] of Object.entries(funciones)) {
+        if (typeof func !== 'function') {
+            console.error(`❌ ${nombre} no está definida`);
+        } else {
+            console.log(`✅ ${nombre} disponible`);
+        }
+    }
+    
+    // Configurar botones
+    const btnHistorial = document.getElementById("btn-historial");
+    if (btnHistorial) {
+        btnHistorial.onclick = () => {
+            console.log("Click en historial");
+            if (typeof window.abrirModalHistorial === 'function') {
+                window.abrirModalHistorial();
+            } else {
+                alert("❌ Error: abrirModalHistorial no está disponible");
+            }
+        };
+    }
+    
+    const btnRecargar = document.getElementById("btn-recargar-saldo");
+    if (btnRecargar) {
+        btnRecargar.onclick = () => {
+            console.log("Click en recargar");
+            if (typeof window.abrirModalRecargarSaldo === 'function') {
+                window.abrirModalRecargarSaldo();
+            } else {
+                alert("❌ Error: abrirModalRecargarSaldo no está disponible");
+            }
+        };
+    }
+    
+    const btnActualizar = document.getElementById("btn-actualizar-saldo");
+    if (btnActualizar) {
+        btnActualizar.onclick = () => {
+            console.log("Click en actualizar");
+            if (typeof window.actualizarSaldoUsuario === 'function') {
+                window.actualizarSaldoUsuario();
+            } else {
+                alert("❌ Error: actualizarSaldoUsuario no está disponible");
+            }
+        };
+    }
+    
+    const btnVolver = document.getElementById("btn-volver-historial");
+    if (btnVolver) {
+        btnVolver.onclick = () => {
+            console.log("Click en volver");
+            if (typeof window.volverAHistorial === 'function') {
+                window.volverAHistorial();
+            } else {
+                alert("❌ Error: volverAHistorial no está disponible");
+            }
+        };
+    }
+    
+    const btnConfirmar = document.getElementById("btn-confirmar-recarga");
+    if (btnConfirmar) {
+        btnConfirmar.onclick = () => {
+            console.log("Click en confirmar recarga");
+            if (typeof window.procesarRecargaSaldo === 'function') {
+                window.procesarRecargaSaldo();
+            } else {
+                alert("❌ Error: procesarRecargaSaldo no está disponible");
+            }
+        };
+    }
+    
+    console.log("✅ Eventos de perfil configurados");
+});
+</script>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="script.js"></script>
-
-
 </body>
 </html>
