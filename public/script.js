@@ -715,6 +715,7 @@ function mostrarProductosEnTabla(productos) {
                     data-id="${p.id_producto}"
                     data-precio="${precio}"
                     data-nombre="${nombreSeguro}"
+                    data-stock="${stock}"
                     data-imagen="${imagenSrc}"
                     ${stock <= 0 ? 'disabled' : ''}
                 >
