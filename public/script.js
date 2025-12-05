@@ -10,7 +10,7 @@ async function abrirModalHistorial() {
         return;
     }
 
-    const modal = document.getElementById("modal-historial");
+    const modal = document.getElementById("modal-historial-perfil");
     if (modal) {
         modal.showModal();
         await cargarHistorialComprasModal(usuario);
@@ -824,7 +824,7 @@ async function abrirModalEditarPerfil() {
             document.getElementById("modal-edit-nombre").value = data.usuario.nombre;
             document.getElementById("modal-edit-email").value = data.usuario.email;
             
-            document.getElementById("modal-editar")?.showModal();
+            document.getElementById("modal-editar-perfil")?.showModal();
         }
     } catch (err) {
         console.error("Error:", err);
@@ -900,15 +900,15 @@ async function abrirModalRecargarSaldo() {
         return;
     }
 
-    document.getElementById("recarga-usuario-nombre").textContent = usuario.nombre;
+    document.getElementById("recarga-usuario-nombre-perfil").textContent = usuario.nombre;
     document.getElementById("recarga-usuario-saldo").textContent = `$${parseFloat(usuario.saldo || 0).toFixed(2)}`;
     document.getElementById("recarga-monto-input").value = "";
     
-    const modal = document.getElementById("modal-recargar-saldo-simple");
+    const modal = document.getElementById("modal-recargar-saldo-perfil");
     if (modal) {
         modal.showModal();
     } else {
-        console.error("❌ Modal modal-recargar-saldo-simple no encontrado");
+        console.error("❌ Modal modal-recargar-saldo-perfil no encontrado");
     }
 }
 

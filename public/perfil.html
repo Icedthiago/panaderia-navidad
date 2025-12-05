@@ -106,8 +106,8 @@
 </div>
 
 <!-- ✅ MODAL EDITAR PERFIL -->
-<dialog id="abrirModalEditarProducto">
-  <button class="btn-x" onclick="cerrarModalPerfil('abrirModalEditarProducto')">X</button>
+<dialog id="modal-editar-perfil">
+  <button class="btn-x" onclick="cerrarModalPerfil('modal-editar-perfil')">X</button>
   <h2>Editar Perfil</h2>
   <div style="padding:20px;">
     <label>Nombre:</label>
@@ -127,24 +127,24 @@
 </dialog>
 
 <!-- ✅ MODAL HISTORIAL -->
-<dialog id="abrirModalHistorial" style="width:90%;max-width:900px;">
-  <button class="btn-x" onclick="cerrarModalPerfil('abrirModalHistorial')">X</button>
+<dialog id="modal-historial-perfil" style="width:90%;max-width:900px;">
+  <button class="btn-x" onclick="cerrarModalPerfil('modal-historial-perfil')">X</button>
   <h2>Mi Historial</h2>
   <div id="lista-compras-modal-perfil"></div>
-  <button class="btn btn-secondary mt-3" onclick="cerrarModalPerfil('abrirModalHistorial')">Cerrar</button>
+  <button class="btn btn-secondary mt-3" onclick="cerrarModalPerfil('modal-historial-perfil')">Cerrar</button>
 </dialog>
 
 <!-- ✅ MODAL DETALLE COMPRA -->
-<dialog id="verDetalleCompra" style="width:90%;max-width:700px;">
-  <button class="btn-x" onclick="cerrarModalPerfil('verDetalleCompra')">X</button>
+<dialog id="modal-detalle-compra-perfil" style="width:90%;max-width:700px;">
+  <button class="btn-x" onclick="cerrarModalPerfil('modal-detalle-compra-perfil')">X</button>
   <h2>Detalle de Compra</h2>
   <div id="contenido-detalle-compra-perfil"></div>
   <button class="btn btn-secondary mt-3" id="btn-volver-historial-perfil">⬅️ Volver</button>
 </dialog>
 
 <!-- ✅ MODAL RECARGAR SALDO -->
-<dialog id="abrirModalRecargarSaldo" style="width:90%;max-width:500px;">
-  <button class="btn-x" onclick="cerrarModalPerfil('abrirModalRecargarSaldo')">X</button>
+<dialog id="modal-recargar-saldo-perfil" style="width:90%;max-width:500px;">
+  <button class="btn-x" onclick="cerrarModalPerfil('modal-recargar-saldo-perfil')">X</button>
   <h2>Recargar Saldo</h2>
   <div style="padding:20px;">
     <p>Usuario: <b id="recarga-usuario-nombre-perfil"></b></p>
@@ -155,8 +155,8 @@
 </dialog>
 
 <!-- ✅ MODAL USUARIOS (ADMIN) -->
-<dialog id="cargarUsuariosAdmin" style="width:90%;max-width:900px;">
-  <button class="btn-x" onclick="cerrarModalPerfil('cargarUsuariosAdmin')">X</button>
+<dialog id="modal-usuarios-perfil" style="width:90%;max-width:900px;">
+  <button class="btn-x" onclick="cerrarModalPerfil('modal-usuarios-perfil')">X</button>
   <h2>Gestión de Usuarios</h2>
   <table class="table table-striped">
     <thead>
@@ -216,6 +216,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="script.js"></script>
+
 
 </body>
 </html>
