@@ -957,9 +957,39 @@ app.get("/api/estadisticas/productos-mas-vendidos", async (req, res) => {
         });
     }
 });
+// --------------------------------------
+// ✅ PRODUCTOS MÁS VENDIDOS
+// --------------------------------------
+app.get("/api/estadisticas/productos-mas-vendidos", async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT 
+                p.nombre as producto,
+                SUM(dv.cantidad) as total_vendido,
+                SUM(dv.subtotal) as ingresos_totales
+            FROM detalle_venta dv
+            JOIN producto p ON dv.id_producto = p.id_producto
+            GROUP BY p.id_producto, p.nombre
+            ORDER BY total_vendido DESC
+            LIMIT 10
+        `);
+
+        res.json({
+            success: true,
+            productos: result.rows
+        });
+
+    } catch (err) {
+        console.error("Error obteniendo productos más vendidos:", err);
+        res.status(500).json({ 
+            success: false, 
+            message: "Error al obtener estadísticas" 
+        });
+    }
+});
 
 // --------------------------------------
-// ✅ ESTADÍSTICAS: VENTAS POR TEMPORADA
+// ✅ VENTAS POR TEMPORADA
 // --------------------------------------
 app.get("/api/estadisticas/ventas-por-temporada", async (req, res) => {
     try {
@@ -990,17 +1020,17 @@ app.get("/api/estadisticas/ventas-por-temporada", async (req, res) => {
 });
 
 // --------------------------------------
-// ✅ ESTADÍSTICAS: INGRESOS TOTALES
+// ✅ INGRESOS TOTALES
 // --------------------------------------
 app.get("/api/estadisticas/ingresos-totales", async (req, res) => {
     try {
         const result = await pool.query(`
             SELECT 
                 COUNT(*) as total_ventas,
-                SUM(monto_pagado) as ingresos_totales,
-                AVG(monto_pagado) as promedio_venta,
-                MAX(monto_pagado) as venta_maxima,
-                MIN(monto_pagado) as venta_minima
+                COALESCE(SUM(monto_pagado), 0) as ingresos_totales,
+                COALESCE(AVG(monto_pagado), 0) as promedio_venta,
+                COALESCE(MAX(monto_pagado), 0) as venta_maxima,
+                COALESCE(MIN(monto_pagado), 0) as venta_minima
             FROM venta
         `);
 
@@ -1019,7 +1049,7 @@ app.get("/api/estadisticas/ingresos-totales", async (req, res) => {
 });
 
 // --------------------------------------
-// ✅ ESTADÍSTICAS: VENTAS POR MES
+// ✅ VENTAS POR MES (últimos 12 meses)
 // --------------------------------------
 app.get("/api/estadisticas/ventas-por-mes", async (req, res) => {
     try {
@@ -1027,7 +1057,7 @@ app.get("/api/estadisticas/ventas-por-mes", async (req, res) => {
             SELECT 
                 TO_CHAR(fecha, 'YYYY-MM') as mes,
                 COUNT(*) as num_ventas,
-                SUM(monto_pagado) as ingresos
+                COALESCE(SUM(monto_pagado), 0) as ingresos
             FROM venta
             WHERE fecha >= NOW() - INTERVAL '12 months'
             GROUP BY TO_CHAR(fecha, 'YYYY-MM')
@@ -1049,7 +1079,7 @@ app.get("/api/estadisticas/ventas-por-mes", async (req, res) => {
 });
 
 // --------------------------------------
-// ✅ ESTADÍSTICAS: TOP CLIENTES
+// ✅ TOP 10 CLIENTES
 // --------------------------------------
 app.get("/api/estadisticas/top-clientes", async (req, res) => {
     try {
@@ -1058,7 +1088,7 @@ app.get("/api/estadisticas/top-clientes", async (req, res) => {
                 u.nombre,
                 u.email,
                 COUNT(v.id_venta) as num_compras,
-                SUM(v.monto_pagado) as total_gastado
+                COALESCE(SUM(v.monto_pagado), 0) as total_gastado
             FROM usuario u
             JOIN venta v ON u.id_usuario = v.id_usuario
             GROUP BY u.id_usuario, u.nombre, u.email
@@ -1081,7 +1111,7 @@ app.get("/api/estadisticas/top-clientes", async (req, res) => {
 });
 
 // --------------------------------------
-// ✅ ESTADÍSTICAS: STOCK BAJO
+// ✅ PRODUCTOS CON STOCK BAJO (menos de 10)
 // --------------------------------------
 app.get("/api/estadisticas/stock-bajo", async (req, res) => {
     try {
