@@ -1,7 +1,3 @@
-// ==============================================
-// GRAFICAS.JS - REEMPLAZAR TODO EL ARCHIVO
-// ==============================================
-
 const API_URL = "https://panaderia-navidad.onrender.com";
 
 // Colores navideños

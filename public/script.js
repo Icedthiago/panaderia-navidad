@@ -908,140 +908,317 @@ async function cargarVentas() {
     }
 }
 
+// ==============================================
+// ABRIR MODAL DE HISTORIAL
+// ==============================================
 async function abrirModalHistorial() {
     const usuario = obtenerUsuario();
 
     if (!usuario) {
-        alert("⚠️ Debes iniciar sesión");
+        alert("⚠️ Debes iniciar sesión para ver tu historial");
         return;
     }
 
     const modal = document.getElementById("modal-historial");
-    if (modal) {
-        modal.showModal();
-        await cargarHistorialComprasModal(usuario);
-    } else {
+    if (!modal) {
         console.error("❌ Modal modal-historial no encontrado");
+        return;
     }
+
+    // Mostrar el modal
+    modal.showModal();
+
+    // Cargar el historial
+    await cargarHistorialComprasModal(usuario);
 }
 
+// ==============================================
+// CARGAR HISTORIAL EN EL MODAL
+// ==============================================
 async function cargarHistorialComprasModal(usuario) {
     try {
-        const res = await fetch(`${API_URL}/api/usuario/${usuario.id_usuario}/compras`);
-        const data = await res.json();
-
         const listaCompras = document.getElementById("lista-compras-modal");
         const mensajeSinCompras = document.getElementById("mensaje-sin-compras");
 
+        // Mostrar loading
+        if (listaCompras) {
+            listaCompras.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <i class="fas fa-spinner fa-spin fa-3x text-primary"></i>
+                    <p class="mt-3 text-white">Cargando historial...</p>
+                </div>
+            `;
+        }
+
+        // Hacer la petición
+        const res = await fetch(`${API_URL}/api/usuario/${usuario.id_usuario}/historial-compras`);
+        
+        if (!res.ok) {
+            throw new Error(`Error HTTP: ${res.status}`);
+        }
+
+        const data = await res.json();
+
+        console.log("📦 Historial recibido:", data);
+
+        // Si no hay compras
         if (!data.success || !data.compras || data.compras.length === 0) {
-            if (mensajeSinCompras) mensajeSinCompras.classList.remove("d-none");
-            if (listaCompras) listaCompras.innerHTML = "";
+            if (mensajeSinCompras) {
+                mensajeSinCompras.classList.remove("d-none");
+            }
+            if (listaCompras) {
+                listaCompras.innerHTML = "";
+            }
             return;
         }
 
-        if (mensajeSinCompras) mensajeSinCompras.classList.add("d-none");
+        // Ocultar mensaje sin compras
+        if (mensajeSinCompras) {
+            mensajeSinCompras.classList.add("d-none");
+        }
 
-        listaCompras.innerHTML = data.compras.map((compra, index) => `
-            <div class="compra-card" onclick="verDetalleCompra(${compra.id_venta})" style="animation-delay: ${index * 0.1}s;">
-                <div class="compra-header">
-                    <div>
-                        <div class="compra-id">🛒 Compra #${compra.id_venta}</div>
-                        <div class="compra-fecha">
-                            <i class="fas fa-calendar"></i> 
-                            ${new Date(compra.fecha).toLocaleString('es-MX')}
+        // Generar el HTML de las compras
+        if (listaCompras) {
+            listaCompras.innerHTML = data.compras.map((compra, index) => {
+                const fecha = new Date(compra.fecha);
+                const fechaFormateada = fecha.toLocaleDateString('es-MX', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                const horaFormateada = fecha.toLocaleTimeString('es-MX', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                return `
+                    <div class="compra-card" 
+                         onclick="verDetalleCompra(${compra.id_venta})" 
+                         style="animation-delay: ${index * 0.05}s; cursor: pointer;">
+                        <div class="compra-header">
+                            <div>
+                                <div class="compra-id">
+                                    <i class="fas fa-shopping-bag"></i> 
+                                    Compra #${compra.id_venta}
+                                </div>
+                                <div class="compra-fecha">
+                                    <i class="fas fa-calendar"></i> ${fechaFormateada}
+                                    <br>
+                                    <i class="fas fa-clock"></i> ${horaFormateada}
+                                </div>
+                            </div>
+                            <div class="compra-total">
+                                $${parseFloat(compra.total).toFixed(2)}
+                            </div>
+                        </div>
+                        <div class="compra-resumen">
+                            <div class="compra-productos-count">
+                                <i class="fas fa-box"></i> 
+                                ${compra.num_productos} producto${compra.num_productos !== 1 ? 's' : ''}
+                            </div>
+                            <button class="ver-detalle-btn" 
+                                    onclick="event.stopPropagation(); verDetalleCompra(${compra.id_venta})">
+                                Ver Detalle <i class="fas fa-arrow-right"></i>
+                            </button>
                         </div>
                     </div>
-                    <div class="compra-total">
-                        $${parseFloat(compra.total).toFixed(2)}
-                    </div>
-                </div>
-                <div class="compra-resumen">
-                    <div class="compra-productos-count">
-                        <i class="fas fa-box"></i> ${compra.num_productos} producto${compra.num_productos > 1 ? 's' : ''}
-                    </div>
-                    <button class="ver-detalle-btn" onclick="event.stopPropagation(); verDetalleCompra(${compra.id_venta})">
-                        Ver Detalle <i class="fas fa-arrow-right"></i>
-                    </button>
-                </div>
-            </div>
-        `).join("");
+                `;
+            }).join("");
+        }
+
+        console.log("✅ Historial cargado exitosamente");
 
     } catch (err) {
-        console.error("Error:", err);
-        alert("❌ Error al cargar historial");
+        console.error("❌ Error cargando historial:", err);
+        
+        const listaCompras = document.getElementById("lista-compras-modal");
+        if (listaCompras) {
+            listaCompras.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                    <p class="text-white">Error al cargar el historial</p>
+                    <button class="btn btn-primary mt-3" onclick="abrirModalHistorial()">
+                        <i class="fas fa-redo"></i> Reintentar
+                    </button>
+                </div>
+            `;
+        }
+        
+        alert("❌ Error al cargar historial de compras: " + err.message);
     }
 }
 
+// ==============================================
+// VER DETALLE DE UNA COMPRA ESPECÍFICA
+// ==============================================
 async function verDetalleCompra(idVenta) {
     try {
-        const res = await fetch(`${API_URL}/api/venta/${idVenta}`);
+        console.log("🔍 Cargando detalle de venta:", idVenta);
+
+        // Cerrar modal de historial
+        const modalHistorial = document.getElementById("modal-historial");
+        if (modalHistorial) {
+            modalHistorial.close();
+        }
+
+        // Abrir modal de detalle con loading
+        const modalDetalle = document.getElementById("modal-detalle-compra");
+        if (!modalDetalle) {
+            console.error("❌ Modal modal-detalle-compra no encontrado");
+            return;
+        }
+
+        modalDetalle.showModal();
+
+        const contenidoDetalle = document.getElementById("contenido-detalle-compra");
+        if (contenidoDetalle) {
+            contenidoDetalle.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <i class="fas fa-spinner fa-spin fa-3x text-primary"></i>
+                    <p class="mt-3 text-white">Cargando detalle...</p>
+                </div>
+            `;
+        }
+
+        // Hacer la petición
+        const res = await fetch(`${API_URL}/api/venta/${idVenta}/detalle`);
+        
+        if (!res.ok) {
+            throw new Error(`Error HTTP: ${res.status}`);
+        }
+
         const data = await res.json();
 
+        console.log("📋 Detalle recibido:", data);
+
         if (!data.success) {
-            alert("❌ Error al cargar detalle");
-            return;
+            throw new Error(data.message || "Error al cargar detalle");
         }
 
         const venta = data.venta;
         const productos = data.detalles || [];
 
-        document.getElementById("modal-historial")?.close();
+        // Formatear fecha
+        const fecha = new Date(venta.fecha);
+        const fechaFormateada = fecha.toLocaleDateString('es-MX', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        const horaFormateada = fecha.toLocaleTimeString('es-MX', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
 
+        // Generar HTML de productos
         const productosHTML = productos.map(p => `
             <div class="producto-detalle-item">
                 <div class="producto-detalle-info">
-                    <div class="producto-detalle-nombre">${p.nombre_producto}</div>
+                    <div class="producto-detalle-nombre">
+                        <i class="fas fa-bread-slice"></i> ${sanitizarTexto(p.nombre_producto)}
+                    </div>
                     <div class="producto-detalle-cantidad">
                         <i class="fas fa-shopping-cart"></i> 
-                        Cantidad: <strong>${p.cantidad}</strong>
+                        Cantidad: <strong>${p.cantidad}</strong> unidad${p.cantidad !== 1 ? 'es' : ''}
+                    </div>
+                    <div style="font-size: 0.85em; opacity: 0.8; margin-top: 5px;">
+                        <i class="fas fa-tag"></i> ${sanitizarTexto(p.temporada)}
                     </div>
                 </div>
                 <div class="producto-detalle-precio">
-                    <div class="producto-detalle-precio-unitario">$${parseFloat(p.precio).toFixed(2)} c/u</div>
-                    <div class="producto-detalle-precio-total">$${parseFloat(p.subtotal).toFixed(2)}</div>
+                    <div class="producto-detalle-precio-unitario">
+                        $${parseFloat(p.precio).toFixed(2)} c/u
+                    </div>
+                    <div class="producto-detalle-precio-total">
+                        $${parseFloat(p.subtotal).toFixed(2)}
+                    </div>
                 </div>
             </div>
         `).join("");
 
-        const contenidoDetalle = document.getElementById("contenido-detalle-compra");
+        // Mostrar el detalle completo
         if (contenidoDetalle) {
             contenidoDetalle.innerHTML = `
                 <div class="detalle-compra-header">
-                    <h3 style="margin: 0; color: #ffd700;">🛒 Compra #${venta.id_venta}</h3>
+                    <h3 style="margin: 0; color: #ffd700;">
+                        <i class="fas fa-shopping-bag"></i> Compra #${venta.id_venta}
+                    </h3>
                     <div class="detalle-info-grid">
                         <div class="detalle-info-item">
-                            <div class="detalle-info-label">📅 Fecha</div>
-                            <div class="detalle-info-value">${new Date(venta.fecha).toLocaleDateString('es-MX')}</div>
+                            <div class="detalle-info-label">
+                                <i class="fas fa-calendar"></i> Fecha
+                            </div>
+                            <div class="detalle-info-value">${fechaFormateada}</div>
                         </div>
                         <div class="detalle-info-item">
-                            <div class="detalle-info-label">🕐 Hora</div>
-                            <div class="detalle-info-value">${new Date(venta.fecha).toLocaleTimeString('es-MX')}</div>
+                            <div class="detalle-info-label">
+                                <i class="fas fa-clock"></i> Hora
+                            </div>
+                            <div class="detalle-info-value">${horaFormateada}</div>
                         </div>
                     </div>
                 </div>
-                <h4 style="color: #ffd700; margin-bottom: 15px;">
-                    <i class="fas fa-list"></i> Productos comprados:
+
+                <h4 style="color: #ffd700; margin: 25px 0 15px 0;">
+                    <i class="fas fa-list"></i> Productos Comprados:
                 </h4>
+
                 ${productosHTML}
+
                 <div class="total-compra-detalle">
-                    <div class="total-compra-detalle-label">💰 TOTAL PAGADO</div>
-                    <div class="total-compra-detalle-valor">$${parseFloat(venta.monto_pagado).toFixed(2)}</div>
+                    <div class="total-compra-detalle-label">
+                        <i class="fas fa-receipt"></i> TOTAL PAGADO
+                    </div>
+                    <div class="total-compra-detalle-valor">
+                        $${parseFloat(venta.monto_pagado).toFixed(2)}
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; padding: 15px; background: rgba(255,215,0,0.1); border-left: 4px solid #ffd700; border-radius: 5px;">
+                    <small style="color: #ffd700;">
+                        <i class="fas fa-info-circle"></i> 
+                        <strong>Información:</strong> Esta compra incluyó ${productos.length} tipo${productos.length !== 1 ? 's' : ''} de producto${productos.length !== 1 ? 's' : ''} diferente${productos.length !== 1 ? 's' : ''}.
+                    </small>
                 </div>
             `;
         }
 
-        document.getElementById("modal-detalle-compra")?.showModal();
+        console.log("✅ Detalle mostrado exitosamente");
 
     } catch (err) {
-        console.error("Error:", err);
-        alert("❌ Error al cargar detalle");
+        console.error("❌ Error cargando detalle:", err);
+        
+        const contenidoDetalle = document.getElementById("contenido-detalle-compra");
+        if (contenidoDetalle) {
+            contenidoDetalle.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                    <p class="text-white">Error al cargar el detalle</p>
+                    <p class="text-white-50">${err.message}</p>
+                    <button class="btn btn-primary mt-3" onclick="verDetalleCompra(${idVenta})">
+                        <i class="fas fa-redo"></i> Reintentar
+                    </button>
+                </div>
+            `;
+        }
+        
+        alert("❌ Error al cargar detalle: " + err.message);
     }
 }
 
+// ==============================================
+// VOLVER AL HISTORIAL DESDE DETALLE
+// ==============================================
 function volverAHistorial() {
-    document.getElementById("modal-detalle-compra")?.close();
+    const modalDetalle = document.getElementById("modal-detalle-compra");
+    if (modalDetalle) {
+        modalDetalle.close();
+    }
+
     setTimeout(() => {
-        document.getElementById("modal-historial")?.showModal();
+        abrirModalHistorial();
     }, 200);
 }
 

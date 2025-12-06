@@ -923,39 +923,165 @@ app.get("/api/usuario/:id/actualizar-saldo", async (req, res) => {
     }
 });
 
+// ==============================================
+// AGREGAR AL FINAL DE app.js (antes de app.listen)
+// RUTAS PARA HISTORIAL DE COMPRAS
+// ==============================================
+
+// --------------------------------------
+// ✅ OBTENER HISTORIAL DE COMPRAS DE UN USUARIO
+// --------------------------------------
+app.get("/api/usuario/:id/historial-compras", async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Obtener todas las ventas del usuario con información agregada
+        const ventasResult = await pool.query(`
+            SELECT 
+                v.id_venta,
+                v.fecha,
+                v.monto_pagado as total,
+                COUNT(dv.id_detalle) as num_productos
+            FROM venta v
+            LEFT JOIN detalle_venta dv ON v.id_venta = dv.id_venta
+            WHERE v.id_usuario = $1
+            GROUP BY v.id_venta, v.fecha, v.monto_pagado
+            ORDER BY v.fecha DESC
+            LIMIT 100
+        `, [id]);
+
+        if (ventasResult.rows.length === 0) {
+            return res.json({
+                success: true,
+                compras: []
+            });
+        }
+
+        // Para cada venta, obtener los productos
+        const comprasConProductos = await Promise.all(
+            ventasResult.rows.map(async (venta) => {
+                const productosResult = await pool.query(`
+                    SELECT 
+                        dv.id_detalle,
+                        dv.cantidad,
+                        dv.precio,
+                        dv.subtotal,
+                        p.nombre as producto,
+                        p.id_producto
+                    FROM detalle_venta dv
+                    JOIN producto p ON dv.id_producto = p.id_producto
+                    WHERE dv.id_venta = $1
+                    ORDER BY dv.id_detalle
+                `, [venta.id_venta]);
+
+                return {
+                    id_venta: venta.id_venta,
+                    fecha: venta.fecha,
+                    total: parseFloat(venta.total),
+                    num_productos: parseInt(venta.num_productos),
+                    productos: productosResult.rows.map(p => ({
+                        producto: p.producto,
+                        cantidad: parseInt(p.cantidad),
+                        precio: parseFloat(p.precio),
+                        subtotal: parseFloat(p.subtotal)
+                    }))
+                };
+            })
+        );
+
+        res.json({
+            success: true,
+            compras: comprasConProductos
+        });
+
+    } catch (err) {
+        console.error("Error obteniendo historial:", err);
+        res.status(500).json({ 
+            success: false, 
+            message: "Error al obtener historial de compras" 
+        });
+    }
+});
+
+// --------------------------------------
+// ✅ OBTENER DETALLE DE UNA VENTA ESPECÍFICA
+// --------------------------------------
+app.get("/api/venta/:id/detalle", async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Obtener información de la venta
+        const ventaResult = await pool.query(`
+            SELECT 
+                v.id_venta,
+                v.fecha,
+                v.monto_pagado,
+                v.id_usuario,
+                u.nombre as nombre_usuario,
+                u.email as email_usuario
+            FROM venta v
+            JOIN usuario u ON v.id_usuario = u.id_usuario
+            WHERE v.id_venta = $1
+        `, [id]);
+
+        if (ventaResult.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Venta no encontrada"
+            });
+        }
+
+        // Obtener detalles de productos
+        const detallesResult = await pool.query(`
+            SELECT 
+                dv.id_detalle,
+                dv.cantidad,
+                dv.precio,
+                dv.subtotal,
+                dv.id_producto,
+                p.nombre as nombre_producto,
+                p.temporada
+            FROM detalle_venta dv
+            JOIN producto p ON dv.id_producto = p.id_producto
+            WHERE dv.id_venta = $1
+            ORDER BY dv.id_detalle
+        `, [id]);
+
+        res.json({
+            success: true,
+            venta: {
+                id_venta: ventaResult.rows[0].id_venta,
+                fecha: ventaResult.rows[0].fecha,
+                monto_pagado: parseFloat(ventaResult.rows[0].monto_pagado),
+                id_usuario: ventaResult.rows[0].id_usuario,
+                nombre_usuario: ventaResult.rows[0].nombre_usuario,
+                email_usuario: ventaResult.rows[0].email_usuario
+            },
+            detalles: detallesResult.rows.map(d => ({
+                id_detalle: d.id_detalle,
+                cantidad: parseInt(d.cantidad),
+                precio: parseFloat(d.precio),
+                subtotal: parseFloat(d.subtotal),
+                id_producto: d.id_producto,
+                nombre_producto: d.nombre_producto,
+                temporada: d.temporada
+            }))
+        });
+
+    } catch (err) {
+        console.error("Error obteniendo detalle de venta:", err);
+        res.status(500).json({ 
+            success: false, 
+            message: "Error al obtener detalle" 
+        });
+    }
+});
+
 // --------------------------------------
 // INICIAR SERVIDOR
 // --------------------------------------
 app.listen(port, () => {
   console.log("✅ Servidor corriendo en http://localhost:" + port);
-});
-
-app.get("/api/estadisticas/productos-mas-vendidos", async (req, res) => {
-    try {
-        const result = await pool.query(`
-            SELECT 
-                p.nombre as producto,
-                SUM(dv.cantidad) as total_vendido,
-                SUM(dv.subtotal) as ingresos_totales
-            FROM detalle_venta dv
-            JOIN producto p ON dv.id_producto = p.id_producto
-            GROUP BY p.id_producto, p.nombre
-            ORDER BY total_vendido DESC
-            LIMIT 10
-        `);
-
-        res.json({
-            success: true,
-            productos: result.rows
-        });
-
-    } catch (err) {
-        console.error("Error obteniendo productos más vendidos:", err);
-        res.status(500).json({ 
-            success: false, 
-            message: "Error al obtener estadísticas" 
-        });
-    }
 });
 // --------------------------------------
 // ✅ PRODUCTOS MÁS VENDIDOS
