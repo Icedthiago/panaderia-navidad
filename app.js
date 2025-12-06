@@ -929,3 +929,185 @@ app.get("/api/usuario/:id/actualizar-saldo", async (req, res) => {
 app.listen(port, () => {
   console.log("✅ Servidor corriendo en http://localhost:" + port);
 });
+
+app.get("/api/estadisticas/productos-mas-vendidos", async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT 
+                p.nombre as producto,
+                SUM(dv.cantidad) as total_vendido,
+                SUM(dv.subtotal) as ingresos_totales
+            FROM detalle_venta dv
+            JOIN producto p ON dv.id_producto = p.id_producto
+            GROUP BY p.id_producto, p.nombre
+            ORDER BY total_vendido DESC
+            LIMIT 10
+        `);
+
+        res.json({
+            success: true,
+            productos: result.rows
+        });
+
+    } catch (err) {
+        console.error("Error obteniendo productos más vendidos:", err);
+        res.status(500).json({ 
+            success: false, 
+            message: "Error al obtener estadísticas" 
+        });
+    }
+});
+
+// --------------------------------------
+// ✅ ESTADÍSTICAS: VENTAS POR TEMPORADA
+// --------------------------------------
+app.get("/api/estadisticas/ventas-por-temporada", async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT 
+                p.temporada,
+                COUNT(DISTINCT dv.id_venta) as num_ventas,
+                SUM(dv.cantidad) as productos_vendidos,
+                SUM(dv.subtotal) as ingresos
+            FROM detalle_venta dv
+            JOIN producto p ON dv.id_producto = p.id_producto
+            GROUP BY p.temporada
+            ORDER BY ingresos DESC
+        `);
+
+        res.json({
+            success: true,
+            temporadas: result.rows
+        });
+
+    } catch (err) {
+        console.error("Error obteniendo ventas por temporada:", err);
+        res.status(500).json({ 
+            success: false, 
+            message: "Error al obtener estadísticas" 
+        });
+    }
+});
+
+// --------------------------------------
+// ✅ ESTADÍSTICAS: INGRESOS TOTALES
+// --------------------------------------
+app.get("/api/estadisticas/ingresos-totales", async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT 
+                COUNT(*) as total_ventas,
+                SUM(monto_pagado) as ingresos_totales,
+                AVG(monto_pagado) as promedio_venta,
+                MAX(monto_pagado) as venta_maxima,
+                MIN(monto_pagado) as venta_minima
+            FROM venta
+        `);
+
+        res.json({
+            success: true,
+            estadisticas: result.rows[0]
+        });
+
+    } catch (err) {
+        console.error("Error obteniendo ingresos totales:", err);
+        res.status(500).json({ 
+            success: false, 
+            message: "Error al obtener estadísticas" 
+        });
+    }
+});
+
+// --------------------------------------
+// ✅ ESTADÍSTICAS: VENTAS POR MES
+// --------------------------------------
+app.get("/api/estadisticas/ventas-por-mes", async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT 
+                TO_CHAR(fecha, 'YYYY-MM') as mes,
+                COUNT(*) as num_ventas,
+                SUM(monto_pagado) as ingresos
+            FROM venta
+            WHERE fecha >= NOW() - INTERVAL '12 months'
+            GROUP BY TO_CHAR(fecha, 'YYYY-MM')
+            ORDER BY mes ASC
+        `);
+
+        res.json({
+            success: true,
+            meses: result.rows
+        });
+
+    } catch (err) {
+        console.error("Error obteniendo ventas por mes:", err);
+        res.status(500).json({ 
+            success: false, 
+            message: "Error al obtener estadísticas" 
+        });
+    }
+});
+
+// --------------------------------------
+// ✅ ESTADÍSTICAS: TOP CLIENTES
+// --------------------------------------
+app.get("/api/estadisticas/top-clientes", async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT 
+                u.nombre,
+                u.email,
+                COUNT(v.id_venta) as num_compras,
+                SUM(v.monto_pagado) as total_gastado
+            FROM usuario u
+            JOIN venta v ON u.id_usuario = v.id_usuario
+            GROUP BY u.id_usuario, u.nombre, u.email
+            ORDER BY total_gastado DESC
+            LIMIT 10
+        `);
+
+        res.json({
+            success: true,
+            clientes: result.rows
+        });
+
+    } catch (err) {
+        console.error("Error obteniendo top clientes:", err);
+        res.status(500).json({ 
+            success: false, 
+            message: "Error al obtener estadísticas" 
+        });
+    }
+});
+
+// --------------------------------------
+// ✅ ESTADÍSTICAS: STOCK BAJO
+// --------------------------------------
+app.get("/api/estadisticas/stock-bajo", async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT 
+                id_producto,
+                nombre,
+                stock,
+                precio,
+                temporada
+            FROM producto
+            WHERE stock < 10
+            ORDER BY stock ASC
+            LIMIT 20
+        `);
+
+        res.json({
+            success: true,
+            productos: result.rows
+        });
+
+    } catch (err) {
+        console.error("Error obteniendo productos con stock bajo:", err);
+        res.status(500).json({ 
+            success: false, 
+            message: "Error al obtener estadísticas" 
+        });
+    }
+});
