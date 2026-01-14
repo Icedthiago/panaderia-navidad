@@ -909,6 +909,134 @@ async function cargarVentas() {
 }
 
 // ==============================================
+// VER DETALLE DE UNA VENTA (ADMIN)
+// ==============================================
+async function verDetalleVenta(idVenta) {
+    try {
+        console.log("🔍 Cargando detalle de venta:", idVenta);
+
+        const res = await fetch(`${API_URL}/api/venta/${idVenta}`);
+        
+        if (!res.ok) {
+            throw new Error(`Error HTTP: ${res.status}`);
+        }
+
+        const data = await res.json();
+
+        if (!data.success) {
+            throw new Error(data.message || "Error al cargar detalle");
+        }
+
+        const venta = data.venta;
+        const detalles = data.detalles || [];
+
+        // Formatear fecha
+        const fecha = new Date(venta.fecha);
+        const fechaFormateada = fecha.toLocaleDateString('es-MX', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        const horaFormateada = fecha.toLocaleTimeString('es-MX', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        // Generar HTML de productos
+        const productosHTML = detalles.map(p => `
+            <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; margin-bottom: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong style="color: #ffd700; font-size: 1.1em;">
+                            <i class="fas fa-bread-slice"></i> ${sanitizarTexto(p.nombre_producto)}
+                        </strong>
+                        <br>
+                        <small style="opacity: 0.8;">
+                            Cantidad: ${p.cantidad} x $${parseFloat(p.precio).toFixed(2)}
+                        </small>
+                        <br>
+                        <small style="opacity: 0.7;">
+                            <i class="fas fa-tag"></i> ${sanitizarTexto(p.temporada)}
+                        </small>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 1.3em; font-weight: bold; color: #ffd700;">
+                            $${parseFloat(p.subtotal).toFixed(2)}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join("");
+
+        // Crear el HTML completo del detalle
+        const contenidoHTML = `
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                <h3 style="margin: 0; color: #ffd700; text-align: center;">
+                    <i class="fas fa-shopping-bag"></i> Venta #${venta.id_venta}
+                </h3>
+                <div style="margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div style="text-align: center; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;">
+                        <div style="font-size: 0.85em; opacity: 0.8;">
+                            <i class="fas fa-calendar"></i> Fecha
+                        </div>
+                        <div style="font-size: 1.1em; font-weight: bold; margin-top: 5px;">
+                            ${fechaFormateada}
+                        </div>
+                    </div>
+                    <div style="text-align: center; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;">
+                        <div style="font-size: 0.85em; opacity: 0.8;">
+                            <i class="fas fa-clock"></i> Hora
+                        </div>
+                        <div style="font-size: 1.1em; font-weight: bold; margin-top: 5px;">
+                            ${horaFormateada}
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 15px; text-align: center; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;">
+                    <div style="font-size: 0.85em; opacity: 0.8;">
+                        <i class="fas fa-user"></i> Cliente
+                    </div>
+                    <div style="font-size: 1.1em; font-weight: bold; margin-top: 5px;">
+                        ${sanitizarTexto(venta.nombre_usuario)}
+                    </div>
+                    <div style="font-size: 0.85em; opacity: 0.8; margin-top: 3px;">
+                        ${sanitizarTexto(venta.email_usuario)}
+                    </div>
+                </div>
+            </div>
+
+            <h4 style="color: #ffd700; margin: 25px 0 15px 0;">
+                <i class="fas fa-list"></i> Productos Comprados:
+            </h4>
+
+            ${productosHTML}
+
+            <div style="background: rgba(255,215,0,0.2); border: 2px solid #ffd700; padding: 20px; border-radius: 10px; text-align: center; margin-top: 20px;">
+                <div style="font-size: 1.2em; margin-bottom: 10px;">
+                    <i class="fas fa-receipt"></i> TOTAL PAGADO
+                </div>
+                <div style="font-size: 2.5em; font-weight: bold; color: #ffd700; text-shadow: 0 0 15px rgba(255,215,0,0.5);">
+                    $${parseFloat(venta.monto_pagado).toFixed(2)}
+                </div>
+            </div>
+        `;
+
+        // Mostrar en un alert o modal
+        // Opción 1: Alert simple (temporal)
+        alert(`Venta #${venta.id_venta}\n\nCliente: ${venta.nombre_usuario}\nTotal: $${parseFloat(venta.monto_pagado).toFixed(2)}\n\nProductos: ${detalles.length}`);
+
+        console.log("✅ Detalle de venta cargado:", data);
+
+        // TODO: Aquí puedes crear un modal personalizado si lo deseas
+        // Por ahora solo mostramos en consola y alert
+
+    } catch (err) {
+        console.error("❌ Error cargando detalle de venta:", err);
+        alert("❌ Error al cargar detalle de venta: " + err.message);
+    }
+}
+// ==============================================
 // ABRIR MODAL DE HISTORIAL
 // ==============================================
 async function abrirModalHistorial() {
