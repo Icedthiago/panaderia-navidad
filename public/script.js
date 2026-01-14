@@ -1889,6 +1889,16 @@ async function actualizarSaldoUsuario() {
         console.error("Error actualizando saldo:", err);
         alert("❌ Error al actualizar saldo");
     }
+
+    function seleccionarUsuarioRecarga(idUsuario, nombre, saldo) {
+    document.getElementById("recargar-id").value = idUsuario;
+    document.getElementById("recargar-nombre").value = nombre;
+    document.getElementById("recargar-saldo-actual").value = saldo;
+
+    const modal = document.getElementById("modal-recargar-saldo-simple");
+    if (modal) modal.showModal();
+}
+
 }
 
 
