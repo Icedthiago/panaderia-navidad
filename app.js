@@ -400,10 +400,9 @@ app.post("/api/ventas", async (req, res) => {
     }
 });
 
-// --------------------------------------
-// ✅ OBTENER TODOS LOS USUARIOS (ADMIN)
-// Esta ruta faltaba y causaba el error 404
-// --------------------------------------
+// ==============================================
+// ✅ OBTENER TODOS LOS USUARIOS (para admin)
+// ==============================================
 app.get("/api/usuarios", async (req, res) => {
     try {
         const result = await pool.query(`
@@ -640,34 +639,6 @@ app.put("/api/usuario/editar", upload.single("imagen"), async (req, res) => {
         res.status(500).json({ error: "Error al actualizar usuario" });
     }
 }); 
-
-// --------------------------------------
-// ✅ OBTENER TODOS LOS USUARIOS (CORREGIDO)
-// --------------------------------------
-app.get("/api/usuarios", async (req, res) => {
-    try {
-        const result = await pool.query(`
-            SELECT 
-                id_usuario, 
-                nombre, 
-                email, 
-                rol,
-                COALESCE(saldo, 0) as saldo,
-                encode(imagen, 'base64') AS imagen
-            FROM usuario
-            ORDER BY id_usuario ASC
-        `);
-
-        res.json(result.rows);
-
-    } catch (err) {
-        console.error("Error obteniendo usuarios:", err);
-        res.status(500).json({ 
-            success: false, 
-            message: "Error al obtener usuarios" 
-        });
-    }
-});
 
 // --------------------------------------
 // ✅ ELIMINAR USUARIO (CORREGIDO)

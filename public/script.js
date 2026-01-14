@@ -1225,26 +1225,27 @@ function volverAHistorial() {
 // ==============================================
 // 10. ADMIN - GESTIÓN DE USUARIOS
 // ==============================================
-
 async function cargarUsuariosAdmin() {
     try {
         const res = await fetch(`${API_URL}/api/usuarios`);
         
         if (!res.ok) {
-            console.error("Error en la respuesta:", res.status);
-            alert("❌ Error al cargar usuarios");
-            return;
+            throw new Error(`Error HTTP: ${res.status}`);
         }
 
         const data = await res.json();
         const tbody = document.getElementById("tablaUsuarios");
-        if (!tbody) return;
+        
+        if (!tbody) {
+            console.error("❌ Elemento tablaUsuarios no encontrado");
+            return;
+        }
 
         // Si data es un array directamente
         const usuarios = Array.isArray(data) ? data : (data.usuarios || []);
 
         if (usuarios.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No hay usuarios registrados</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 30px;">No hay usuarios registrados</td></tr>';
             return;
         }
 
@@ -1253,19 +1254,48 @@ async function cargarUsuariosAdmin() {
                 <td>${u.id_usuario}</td>
                 <td>${sanitizarTexto(u.nombre)}</td>
                 <td>${sanitizarTexto(u.email)}</td>
-                <td><span class="badge bg-${u.rol === 'admin' ? 'danger' : 'primary'}">${sanitizarTexto(u.rol)}</span></td>
-                <td>${parseFloat(u.saldo || 0).toFixed(2)}</td>
                 <td>
-                    <button class="btn btn-danger btn-sm" onclick="eliminarUsuario(${u.id_usuario})">
-                        🗑️ Eliminar
+                    <span class="badge bg-${u.rol === 'admin' ? 'danger' : 'primary'}">
+                        ${sanitizarTexto(u.rol)}
+                    </span>
+                </td>
+                <td>$${parseFloat(u.saldo || 0).toFixed(2)}</td>
+                <td>
+                    <button class="btn btn-success btn-sm" 
+                            onclick="seleccionarUsuarioRecarga(${u.id_usuario}, '${sanitizarTexto(u.nombre)}', ${u.saldo || 0})"
+                            title="Recargar saldo">
+                        💰
+                    </button>
+                    <button class="btn btn-danger btn-sm" 
+                            onclick="eliminarUsuario(${u.id_usuario})"
+                            title="Eliminar usuario">
+                        🗑️
                     </button>
                 </td>
             </tr>
         `).join("");
 
+        console.log("✅ Usuarios cargados exitosamente");
+
     } catch (err) {
-        console.error("Error cargando usuarios:", err);
-        alert("❌ Error al cargar usuarios");
+        console.error("❌ Error cargando usuarios:", err);
+        
+        const tbody = document.getElementById("tablaUsuarios");
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align:center; padding: 30px; color: #dc3545;">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                        <p>Error al cargar usuarios</p>
+                        <button class="btn btn-primary" onclick="cargarUsuariosAdmin()">
+                            <i class="fas fa-redo"></i> Reintentar
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }
+        
+        alert("❌ Error al cargar usuarios: " + err.message);
     }
 }
 
@@ -1890,15 +1920,38 @@ async function actualizarSaldoUsuario() {
         alert("❌ Error al actualizar saldo");
     }
 
-    function seleccionarUsuarioRecarga(idUsuario, nombre, saldo) {
-    document.getElementById("recargar-id").value = idUsuario;
-    document.getElementById("recargar-nombre").value = nombre;
-    document.getElementById("recargar-saldo-actual").value = saldo;
-
-    const modal = document.getElementById("modal-recargar-saldo-simple");
-    if (modal) modal.showModal();
+    
 }
 
+// ==============================================
+// FUNCIÓN PARA SELECCIONAR USUARIO PARA RECARGA (ADMIN)
+// ==============================================
+async function seleccionarUsuarioRecarga(idUsuario, nombre, saldo) {
+    try {
+        // Rellenar los datos del usuario seleccionado
+        document.getElementById("recarga-usuario-id").value = idUsuario;
+        document.getElementById("recarga-usuario-nombre-admin").textContent = nombre;
+        document.getElementById("recarga-usuario-saldo-admin").textContent = `$${parseFloat(saldo).toFixed(2)}`;
+        document.getElementById("recarga-monto-admin").value = "";
+
+        // Cerrar modal de usuarios
+        const modalUsuarios = document.getElementById("modal-usuarios");
+        if (modalUsuarios) {
+            modalUsuarios.close();
+        }
+
+        // Abrir modal de recarga
+        setTimeout(() => {
+            const modalRecarga = document.getElementById("modal-recargar-saldo");
+            if (modalRecarga) {
+                modalRecarga.showModal();
+            }
+        }, 200);
+
+    } catch (err) {
+        console.error("Error al seleccionar usuario:", err);
+        alert("❌ Error al seleccionar usuario");
+    }
 }
 
 
