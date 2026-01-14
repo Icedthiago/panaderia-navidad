@@ -725,17 +725,18 @@ async function cargarDatosPerfil(usuario) {
         const data = await res.json();
 
         if (data.success && data.usuario) {
-            const perfilFoto = document.getElementById("perfil-foto");
-            if (perfilFoto && data.usuario.imagen) {
-                perfilFoto.src = `data:image/jpeg;base64,${data.usuario.imagen}`;
-            }
-
             const saldoActualizado = parseFloat(data.usuario.saldo || 0);
             document.getElementById("perfil-saldo").textContent = 
                 `$${saldoActualizado.toFixed(2)}`;
 
             usuario.saldo = saldoActualizado;
             localStorage.setItem("usuario", JSON.stringify(usuario));
+            
+            // Actualizar saldo en navbar
+            const saldoNav = document.getElementById("nav-usuario-saldo");
+            if (saldoNav) {
+                saldoNav.textContent = `$${saldoActualizado.toFixed(2)}`;
+            }
         }
 
     } catch (err) {
@@ -754,6 +755,7 @@ async function abrirModalEditarPerfil() {
         if (data.success && data.usuario) {
             document.getElementById("modal-edit-nombre").value = data.usuario.nombre;
             document.getElementById("modal-edit-email").value = data.usuario.email;
+            document.getElementById("modal-edit-password").value = ""; // Limpiar password
             
             document.getElementById("modal-editar")?.showModal();
         }
@@ -770,7 +772,6 @@ async function actualizarPerfil() {
     const nombre = sanitizarTexto(document.getElementById("modal-edit-nombre").value);
     const email = sanitizarTexto(document.getElementById("modal-edit-email").value);
     const password = document.getElementById("modal-edit-password").value;
-    const imagenInput = document.getElementById("modal-edit-imagen");
 
     // Validaciones
     if (!nombre || nombre.length < 2) {
@@ -787,17 +788,23 @@ async function actualizarPerfil() {
         return;
     }
 
-    const formData = new FormData();
-    formData.append("id_usuario", usuario.id_usuario);
-    formData.append("nombre", nombre);
-    formData.append("email", email);
-    if (password) formData.append("password", password);
-    if (imagenInput.files[0]) formData.append("imagen", imagenInput.files[0]);
-
     try {
+        const body = {
+            id_usuario: usuario.id_usuario,
+            nombre: nombre,
+            email: email
+        };
+
+        if (password) {
+            body.password = password;
+        }
+
         const res = await fetch(`${API_URL}/api/usuario/editar`, {
             method: "PUT",
-            body: formData
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(body)
         });
 
         const data = await res.json();
@@ -822,7 +829,6 @@ async function actualizarPerfil() {
         alert("❌ Error de conexión");
     }
 }
-
 async function abrirModalRecargarSaldo() {
     document.getElementById("modal-recargar-saldo")?.showModal();
 }

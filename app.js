@@ -411,8 +411,7 @@ app.get("/api/usuarios", async (req, res) => {
                 nombre, 
                 email, 
                 rol,
-                COALESCE(saldo, 0) as saldo,
-                encode(imagen, 'base64') AS imagen
+                COALESCE(saldo, 0) as saldo
             FROM usuario
             ORDER BY id_usuario ASC
         `);
@@ -423,7 +422,7 @@ app.get("/api/usuarios", async (req, res) => {
         console.error("Error obteniendo usuarios:", err);
         res.status(500).json({ 
             success: false, 
-            message: "Error al obtener usuarios" 
+            message: "Error al obtener usuarios: " + err.message 
         });
     }
 });
@@ -585,12 +584,15 @@ app.get("/api/usuario/:id/saldo-actual", async (req, res) => {
 // --------------------------------------
 // ✅ EDITAR USUARIO (CORREGIDO)
 // --------------------------------------
-app.put("/api/usuario/editar", upload.single("imagen"), async (req, res) => {
+app.put("/api/usuario/editar", async (req, res) => {
     try {
         const { id_usuario, nombre, email, password } = req.body;
 
         if (!id_usuario) {
-            return res.status(400).json({ error: "Falta id_usuario" });
+            return res.status(400).json({ 
+                success: false,
+                error: "Falta id_usuario" 
+            });
         }
 
         let sql = "UPDATE usuario SET ";
@@ -614,16 +616,14 @@ app.put("/api/usuario/editar", upload.single("imagen"), async (req, res) => {
             valores.push(hashed);
         }
 
-        if (req.file) {
-            updates.push(`imagen = $${index++}`);
-            valores.push(req.file.buffer);
-        }
-
         if (updates.length === 0) {
-            return res.json({ message: "Nada para actualizar" });
+            return res.json({ 
+                success: false,
+                message: "Nada para actualizar" 
+            });
         }
 
-        sql += updates.join(", ") + ` WHERE id_usuario = $${index} RETURNING id_usuario, nombre, email, rol, encode(imagen,'base64') AS imagen`;
+        sql += updates.join(", ") + ` WHERE id_usuario = $${index} RETURNING id_usuario, nombre, email, rol, COALESCE(saldo, 0) as saldo`;
 
         valores.push(id_usuario);
 
@@ -636,9 +636,12 @@ app.put("/api/usuario/editar", upload.single("imagen"), async (req, res) => {
 
     } catch (err) {
         console.error("Error actualizando usuario:", err);
-        res.status(500).json({ error: "Error al actualizar usuario" });
+        res.status(500).json({ 
+            success: false,
+            error: "Error al actualizar usuario: " + err.message 
+        });
     }
-}); 
+});
 
 // --------------------------------------
 // ✅ ELIMINAR USUARIO (CORREGIDO)
@@ -748,27 +751,39 @@ app.get("/api/usuario/saldo/:id", async (req, res) => {
 // --------------------------------------
 // ✅ OBTENER TODOS LOS USUARIOS (para admin)
 // --------------------------------------
-app.get("/api/usuarios", async (req, res) => {
+app.get("/api/usuario/perfil/:id", async (req, res) => {
     try {
-        const result = await pool.query(`
-            SELECT 
+        const { id } = req.params;
+
+        const result = await pool.query(
+            `SELECT 
                 id_usuario, 
                 nombre, 
                 email, 
                 rol,
-                COALESCE(saldo, 0) as saldo,
-                encode(imagen, 'base64') AS imagen
-            FROM usuario
-            ORDER BY id_usuario ASC
-        `);
+                COALESCE(saldo, 0) as saldo
+             FROM usuario 
+             WHERE id_usuario = $1`,
+            [id]
+        );
 
-        res.json(result.rows);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: "Usuario no encontrado" 
+            });
+        }
+
+        res.json({
+            success: true,
+            usuario: result.rows[0]
+        });
 
     } catch (err) {
-        console.error("Error obteniendo usuarios:", err);
+        console.error("Error obteniendo perfil:", err);
         res.status(500).json({ 
             success: false, 
-            message: "Error al obtener usuarios" 
+            message: "Error al obtener perfil: " + err.message 
         });
     }
 });
