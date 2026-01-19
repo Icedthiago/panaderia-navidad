@@ -1,5 +1,3 @@
-const API_URL = "https://panaderia-navidad.onrender.com";
-
 // Colores navideños
 const COLORES = {
     rojo: 'rgba(200, 35, 51, 0.8)',
